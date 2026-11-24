@@ -1,0 +1,28 @@
+---
+"@itwin/presentation-hierarchies": minor
+---
+
+Added `createPagingHierarchyProvider` for creating a hierarchy provider that loads iModel-based hierarchy levels in pages.
+
+Instead of requesting all nodes of a hierarchy level at once, the provider requests them page by page as they're read, so a hierarchy level of any size can be loaded in full. The page size defaults to 10 000 rows and can be changed through the `pageSize` prop. Each returned node has a `continuationToken`, which can be passed to `getNodes` to continue loading the hierarchy level from that node:
+
+```ts
+using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition });
+
+// read the first 100 root nodes
+const nodes = [];
+for await (const node of provider.getNodes({ parentNode: undefined })) {
+  nodes.push(node);
+  if (nodes.length === 100) {
+    break;
+  }
+}
+
+// later, continue from the node that follows the last one
+const { continuationToken } = nodes[nodes.length - 1];
+for await (const node of provider.getNodes({ parentNode: undefined, continuationToken })) {
+  nodes.push(node);
+}
+```
+
+`getNodes` fails with the new `InvalidContinuationTokenError` when the given `continuationToken` can't be used, and with the new `HierarchyRequestInterruptedError` when the hierarchy changes or the provider is disposed before all nodes are loaded.

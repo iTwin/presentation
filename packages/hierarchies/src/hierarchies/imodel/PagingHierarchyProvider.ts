@@ -1,0 +1,817 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import "../internal/DisposePolyfill.js";
+
+import {
+  BehaviorSubject,
+  concatMap,
+  defaultIfEmpty,
+  defer,
+  EMPTY,
+  filter,
+  finalize,
+  from,
+  map,
+  Observable,
+  of,
+  repeat,
+  Subject,
+  take,
+  tap,
+  throwError,
+} from "rxjs";
+import { BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
+import {
+  createDefaultValueFormatter,
+  createIModelInstanceLabelSelectClauseFactory,
+  eachValueFrom,
+  formatConcatenatedValue,
+} from "@itwin/presentation-shared";
+import { HierarchyRequestInterruptedError, InvalidContinuationTokenError } from "../HierarchyErrors.js";
+import { HierarchyNode } from "../HierarchyNode.js";
+import {
+  LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
+  createNodeIdentifierForLogging,
+  hasChildren,
+} from "../internal/Common.js";
+import { doLog } from "../internal/LoggingUtils.js";
+import { getRxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
+import { HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
+import { createNodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
+import { defaultNodesParser } from "./TreeNodesReader.js";
+
+import type { MonoTypeOperatorFunction } from "rxjs";
+import type { GenericInstanceFilter } from "@itwin/core-common";
+import type {
+  ECSchemaProvider,
+  ECSqlQueryDef,
+  ECSqlQueryRow,
+  Event,
+  EventListener,
+  IInstanceLabelSelectClauseFactory,
+  IPrimitiveValueFormatter,
+} from "@itwin/presentation-shared";
+import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
+import type { GenericNodeKey } from "../HierarchyNodeKey.js";
+import type { HierarchyProvider } from "../HierarchyProvider.js";
+import type { RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
+import type {
+  GenericHierarchyNodeDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  InstanceNodesQueryDefinition,
+} from "./IModelHierarchyDefinition.js";
+import type {
+  ProcessedGenericHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+  SourceGenericHierarchyNode,
+  SourceInstanceHierarchyNode,
+} from "./IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
+import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
+
+const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.PagingHierarchyProvider`;
+const DEFAULT_PAGE_SIZE = 10_000;
+
+/**
+ * Props for `createPagingHierarchyProvider`.
+ * @beta
+ */
+export interface PagingHierarchyProviderProps {
+  /**
+   * An object that provides access to iModel's data and metadata.
+   *
+   * @note The provider limits the number of rows returned by its queries on its own (see `pageSize`), so it runs
+   * them with `limit: "unbounded"`.
+   *
+   * @see `ECSchemaProvider`
+   * @see `LimitingECSqlQueryExecutor`
+   */
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
+
+  /**
+   * An event that is raised when iModel data, that may affect the hierarchy, changes. The created provider
+   * subscribes to the event to know that it needs to reload the data, and unsubscribes on disposal.
+   */
+  imodelChanged?: Event<() => void>;
+
+  /**
+   * A definition that describes how to create each level of the hierarchy. Its `defineHierarchyLevel` method is called
+   * as needed to get the definitions for requested parent nodes.
+   *
+   * The provider doesn't group, sort or merge nodes, so grouping processing params assigned to nodes are ignored. Nodes
+   * are returned in the order of hierarchy level definitions and, within each instance nodes query definition, in the
+   * order of query results. Queries must have a deterministic order (e.g. use `ORDER BY`) for paging and continuation
+   * tokens to be reliable.
+   */
+  hierarchyDefinition: HierarchyDefinition;
+
+  /**
+   * Maximum number of rows requested from the iModel by a single query. Results of hierarchy level definition queries
+   * are loaded in pages of this size - the next page is requested only when the consumer requests a node that's not
+   * in the already loaded pages.
+   *
+   * Must be a positive integer. Defaults to `10 000`.
+   */
+  pageSize?: number;
+
+  /**
+   * A values formatter for formatting node labels. Defaults to the result of `createDefaultValueFormatter` called with
+   * default parameters. May be overridden by calling `setFormatter` on the provider instance.
+   */
+  formatter?: IPrimitiveValueFormatter;
+
+  /**
+   * A factory for creating ECSQL select clauses for instance labels. The clause is injected into
+   * hierarchy node queries to select labels for instance-based nodes.
+   *
+   * Defaults to the result of `createIModelInstanceLabelSelectClauseFactory` called with the provided `imodelAccess`.
+   */
+  instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
+}
+
+/**
+ * Props for `PagingHierarchyProvider.getNodes` call.
+ * @beta
+ */
+export interface GetPagedHierarchyNodesProps {
+  /** Parent node to get children for. Pass `undefined` to get root nodes. */
+  parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
+
+  /** Optional hierarchy level filter. */
+  instanceFilter?: GenericInstanceFilter;
+
+  /**
+   * A `PagedHierarchyNode.continuationToken` of a node, previously returned for the same parent node and instance filter.
+   * When specified, the provider continues streaming nodes from the one that follows the node, the token belongs to.
+   * Continuing from the last node in the hierarchy level returns no nodes.
+   */
+  continuationToken?: string;
+}
+
+/**
+ * A hierarchy node returned by `PagingHierarchyProvider`.
+ * @beta
+ */
+export type PagedHierarchyNode = NonGroupingHierarchyNode & {
+  /**
+   * An opaque token that identifies node's position in its hierarchy level. Pass it to `PagingHierarchyProvider.getNodes`
+   * to continue streaming nodes from the one that follows this node.
+   */
+  continuationToken: string;
+};
+
+/**
+ * A hierarchy provider that streams hierarchy level nodes as they're requested, loading them from the iModel in
+ * pages, and allows continuing from any returned node using node's continuation token.
+ *
+ * @beta
+ */
+export interface PagingHierarchyProvider extends Disposable {
+  /**
+   * An event that provider raises due to a hierarchy change that requires a reload. When raised due to an iModel change,
+   * in-flight `getNodes` requests fail with `HierarchyRequestInterruptedError`. Continuation tokens of nodes
+   * returned before the event may point to different positions in the hierarchy after it.
+   */
+  readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
+
+  /**
+   * Streams child nodes of the specified parent node, in the order of hierarchy level definitions and, within each
+   * instance nodes query definition, in the order of query results.
+   *
+   * Nodes are loaded on demand - the provider doesn't run queries until a node that needs them is requested, and
+   * stopping the iteration stops loading. Query results are loaded in pages of `PagingHierarchyProviderProps.pageSize`
+   * rows.
+   *
+   * Nodes with `hideInHierarchy` processing param are replaced by their children in place. Nodes with `hideIfNoChildren`
+   * processing param are omitted if they have no children.
+   *
+   * @throws `InvalidContinuationTokenError` if the given `continuationToken` is malformed.
+   * @throws `InvalidContinuationTokenError` from the iterator, if the given `continuationToken` points to a hierarchy
+   * level definition that doesn't exist.
+   * @throws `HierarchyRequestInterruptedError` from the iterator, if the hierarchy changes or the provider is disposed
+   * before all nodes are streamed. The iterator only finishes without an error after the last node of the hierarchy level.
+   */
+  getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode>;
+
+  /**
+   * Overrides the property value formatter used to format node labels. Setting to `undefined` resets the formatter
+   * to the result of `createDefaultValueFormatter` called with default parameters.
+   *
+   * @note Changing formatter triggers the `hierarchyChanged` event with `formatterChange` arg.
+   */
+  setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
+}
+
+/**
+ * Creates a `PagingHierarchyProvider` that creates a hierarchy based on the given iModel and a hierarchy definition,
+ * which defines each hierarchy level through ECSQL queries.
+ *
+ * Unlike the provider created by `createIModelHierarchyProvider`, this one doesn't group, sort or merge nodes. Instead,
+ * it streams nodes in hierarchy definition order, loading them in pages as they're requested, and assigns each node
+ * a continuation token that allows continuing the stream from that node.
+ *
+ * @throws `Error` if `pageSize` is not a positive integer.
+ * @beta
+ */
+export function createPagingHierarchyProvider(props: PagingHierarchyProviderProps): PagingHierarchyProvider {
+  return new PagingHierarchyProviderImpl(props);
+}
+
+type PagingParentNode = ParentHierarchyNode<NonGroupingHierarchyNode>;
+type PagingProcessedNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode;
+type PagingSourceNode =
+  | SourceInstanceHierarchyNode
+  | (Omit<SourceGenericHierarchyNode, "key"> & { key: GenericNodeKey });
+
+/**
+ * Identifies a node in a hierarchy level: `definitionIndex` is the index of hierarchy level definition the node was
+ * created from and `offset` is the index of query row the node was created from (always `0` for generic nodes).
+ */
+interface LevelPosition {
+  definitionIndex: number;
+  offset: number;
+}
+
+/**
+ * Identifies position of a node in a hierarchy level. Consists of a list of `LevelPosition`s, where each position,
+ * except the last one, points to a hidden node (one with `hideInHierarchy` processing param), and each subsequent
+ * position points to a node in that hidden node's child hierarchy level.
+ *
+ * Exposed to consumers as an opaque `string` through `PagedHierarchyNode.continuationToken` and
+ * `GetPagedHierarchyNodesProps.continuationToken` - see `encodeContinuationToken` and `decodeContinuationToken`.
+ *
+ * Example: root hierarchy level is defined by a single query that returns `[a, b, hidden, d, e]`. The `hidden` node's
+ * child hierarchy level is defined by a single query that returns `[c1, c2, cHidden, c4]`, and `cHidden` node's children
+ * query returns `[c3_1, c3_2]`. The provider streams `[a, b, c1, c2, c3_1, c3_2, c4, d, e]` with these token paths
+ * (as `definitionIndex:offset`):
+ * - `d`: `[0:3]` - row `3` of definition `0`,
+ * - `c1`: `[0:2, 0:0]` - row `0` of definition `0` under the hidden node at row `2` of definition `0`,
+ * - `c3_1`: `[0:2, 0:2, 0:0]` - row `0` under `cHidden` (row `2`), which is under `hidden` (row `2`).
+ */
+type ContinuationToken = LevelPosition[];
+
+interface ResumeProps {
+  /** Offset of the row, at which to resume. */
+  offset: number;
+  /**
+   * Continuation token in child hierarchy level of the (hidden) node at `offset`. If not set, the node at `offset` has
+   * already been returned and should be skipped.
+   */
+  nestedContinuationToken?: ContinuationToken;
+}
+
+interface LevelNode {
+  node: PagingProcessedNode;
+  /** Position of the node in its hierarchy level. */
+  position: LevelPosition;
+  /** Set if the node is hidden and reading should resume inside its child hierarchy level. */
+  nestedContinuationToken?: ContinuationToken;
+}
+
+interface ReadLevelProps<TResult> {
+  parentNode: PagingParentNode | undefined;
+  instanceFilter?: GenericInstanceFilter;
+  /** Continuation token to resume reading from, relative to this hierarchy level. */
+  continuationToken?: ContinuationToken;
+  /** Emits when the next node should be read. Awaited before requesting each query page and processing each node. */
+  demand: Observable<unknown>;
+  processNode: (node: LevelNode) => Observable<TResult>;
+}
+
+interface StreamLevelProps extends Omit<ReadLevelProps<never>, "processNode"> {
+  /** Parent node of the requested hierarchy level - an ancestor of `parentNode` when that one is hidden. */
+  requestedParentNode: PagingParentNode | undefined;
+  /** Continuation token of the hidden parent node, used as a prefix for continuation tokens of this level's nodes. */
+  parentContinuationToken: ContinuationToken;
+}
+
+interface ReadSourceNode {
+  sourceNode: PagingSourceNode;
+  offset: number;
+  nestedContinuationToken?: ContinuationToken;
+}
+
+class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
+  readonly #imodelAccess: PagingHierarchyProviderProps["imodelAccess"];
+  readonly #hierarchyDefinition: RxjsHierarchyDefinition;
+  readonly #hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
+  readonly #createNodesQueryClauseFactory: () => NodesQueryClauseFactory;
+  readonly #componentId = Guid.createValue();
+  readonly #sourceName: string;
+  readonly #pageSize: number;
+  // emits whenever the hierarchy changes or the provider is disposed - in-flight requests fail when that happens
+  readonly #interrupt = new Subject<void>();
+  #nodesQueryClauseFactory: NodesQueryClauseFactory;
+  #valuesFormatter: IPrimitiveValueFormatter;
+  #unsubscribe?: () => void;
+
+  public constructor(props: PagingHierarchyProviderProps & { sourceName?: string }) {
+    this.#pageSize = props.pageSize ?? DEFAULT_PAGE_SIZE;
+    if (!Number.isInteger(this.#pageSize) || this.#pageSize < 1) {
+      throw new Error(`Invalid page size: ${this.#pageSize}. Expected a positive integer.`);
+    }
+    this.#imodelAccess = props.imodelAccess;
+    this.#hierarchyDefinition = getRxjsHierarchyDefinition(props.hierarchyDefinition);
+    this.#sourceName = props.sourceName ?? `PagingHierarchyProvider:${this.#componentId}`;
+    this.#valuesFormatter = props.formatter ?? createDefaultValueFormatter();
+    this.#createNodesQueryClauseFactory = () =>
+      createNodesQueryClauseFactory({
+        imodelAccess: props.imodelAccess,
+        instanceLabelSelectClauseFactory:
+          props.instanceLabelSelectClauseFactory ??
+          createIModelInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess }),
+      });
+    this.#nodesQueryClauseFactory = this.#createNodesQueryClauseFactory();
+
+    if (props.imodelChanged) {
+      const imodelChanged = props.imodelChanged;
+      const onIModelChanged = () => {
+        /* v8 ignore next -- @preserve */
+        doLog({
+          category: `${LOGGING_NAMESPACE}.Events`,
+          message: () => `Data source changed: "${this.#imodelAccess.imodelKey}"`,
+        });
+        this.#interrupt.next();
+        // the iModel's schemas may have changed, so re-create the query factory to drop its schema-derived caches
+        this.#nodesQueryClauseFactory = this.#createNodesQueryClauseFactory();
+        this.#hierarchyChanged.raiseEvent({});
+      };
+      imodelChanged.addListener(onIModelChanged);
+      this.#unsubscribe = () => imodelChanged.removeListener(onIModelChanged);
+    }
+  }
+
+  public [Symbol.dispose]() {
+    this.#interrupt.next();
+    this.#unsubscribe?.();
+    this.#unsubscribe = undefined;
+  }
+
+  public get hierarchyChanged() {
+    return this.#hierarchyChanged;
+  }
+
+  public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+    this.#valuesFormatter = formatter ?? createDefaultValueFormatter();
+    this.#hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this.#valuesFormatter } });
+  }
+
+  public getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode> {
+    // decode the token eagerly to fail early on invalid input
+    const continuationToken =
+      props.continuationToken !== undefined ? decodeContinuationToken(props.continuationToken) : undefined;
+    // number of nodes that the consumer has requested, but hasn't received yet
+    const pendingRequestsCount = new BehaviorSubject(0);
+    return requestOnDemand({
+      iterator: eachValueFrom(this.#getNodesObservable({ ...props, continuationToken, pendingRequestsCount })),
+      onRequest: () => pendingRequestsCount.next(pendingRequestsCount.value + 1),
+    });
+  }
+
+  #getNodesObservable({
+    parentNode,
+    instanceFilter,
+    continuationToken,
+    pendingRequestsCount,
+  }: Omit<GetPagedHierarchyNodesProps, "continuationToken"> & {
+    continuationToken: ContinuationToken | undefined;
+    pendingRequestsCount: BehaviorSubject<number>;
+  }): Observable<PagedHierarchyNode> {
+    return defer(() => {
+      const timer = new StopWatch(undefined, true);
+      let nodesCount = 0;
+      const requestedParentNode = parentNode ? toDefinitionParentNode(parentNode) : undefined;
+      return this.#streamLevel({
+        parentNode: requestedParentNode,
+        requestedParentNode,
+        instanceFilter,
+        continuationToken,
+        parentContinuationToken: [],
+        // only read nodes that the consumer is waiting for
+        demand: pendingRequestsCount.pipe(filter((count) => count > 0)),
+      }).pipe(
+        tap(() => {
+          ++nodesCount;
+          pendingRequestsCount.next(pendingRequestsCount.value - 1);
+        }),
+        throwOnInterrupt(this.#interrupt),
+        finalize(() => {
+          /* v8 ignore next -- @preserve */
+          doLog({
+            category: `${LOGGING_NAMESPACE}.GetNodes`,
+            message: () =>
+              `Returned ${nodesCount} child nodes for ${createNodeIdentifierForLogging(parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
+          });
+        }),
+      );
+    });
+  }
+
+  /**
+   * Streams nodes of a hierarchy level the way they're returned by `getNodes`, replacing hidden nodes with their
+   * children.
+   */
+  #streamLevel(props: StreamLevelProps): Observable<PagedHierarchyNode> {
+    const { parentNode, requestedParentNode, instanceFilter, parentContinuationToken, demand } = props;
+    return this.#readLevel({
+      parentNode,
+      instanceFilter,
+      continuationToken: props.continuationToken,
+      demand,
+      processNode: ({ node, position, nestedContinuationToken }) => {
+        const nodeContinuationToken = [...parentContinuationToken, position];
+        if (!node.processingParams?.hideInHierarchy) {
+          return this.#finalizeNode({ node, parentNode: requestedParentNode }).pipe(
+            map((finalNode): PagedHierarchyNode => ({
+              ...finalNode,
+              continuationToken: encodeContinuationToken(nodeContinuationToken),
+            })),
+          );
+        }
+        if (node.children === false) {
+          return EMPTY;
+        }
+        return this.#streamLevel({
+          parentNode: node,
+          requestedParentNode,
+          instanceFilter,
+          continuationToken: nestedContinuationToken,
+          parentContinuationToken: nodeContinuationToken,
+          demand,
+        });
+      },
+    });
+  }
+
+  /**
+   * Reads pre-processed nodes of a hierarchy level and processes them using the given `processNode` function. Nodes
+   * are processed one by one, each of them - only after `demand` emits.
+   */
+  #readLevel<TResult>(props: ReadLevelProps<TResult>): Observable<TResult> {
+    const { parentNode, instanceFilter, demand, processNode } = props;
+    if (parentNode && !this.#canHaveChildren(parentNode)) {
+      return EMPTY;
+    }
+    const resumePosition: LevelPosition | undefined = props.continuationToken?.[0];
+    const resumeNestedContinuationToken = props.continuationToken?.slice(1) ?? [];
+    const startDefinitionIndex = resumePosition?.definitionIndex ?? 0;
+    return this.#defineHierarchyLevel({ parentNode, instanceFilter }).pipe(
+      concatMap((definitions) => {
+        if (startDefinitionIndex >= definitions.length && resumePosition) {
+          return throwError(
+            () =>
+              new InvalidContinuationTokenError(
+                "Continuation token points to a hierarchy level definition that doesn't exist.",
+              ),
+          );
+        }
+        return from(definitions.slice(startDefinitionIndex)).pipe(
+          concatMap((definition, index) => {
+            const definitionIndex = startDefinitionIndex + index;
+            const resume: ResumeProps | undefined =
+              resumePosition?.definitionIndex === definitionIndex
+                ? {
+                    offset: resumePosition.offset,
+                    ...(resumeNestedContinuationToken.length
+                      ? { nestedContinuationToken: resumeNestedContinuationToken }
+                      : undefined),
+                  }
+                : undefined;
+            const processSourceNode = ({ sourceNode, offset, nestedContinuationToken }: ReadSourceNode) =>
+              this.#preProcessNode({ sourceNode, parentNode }).pipe(
+                concatMap((node) =>
+                  processNode({
+                    node,
+                    position: { definitionIndex, offset },
+                    ...(nestedContinuationToken ? { nestedContinuationToken } : undefined),
+                  }),
+                ),
+              );
+            return HierarchyNodesDefinition.isGenericNode(definition)
+              ? from(this.#readGenericNode({ definition, resume })).pipe(
+                  concatMap((sourceNode) => onDemand(demand, () => processSourceNode(sourceNode))),
+                )
+              : this.#readInstanceNodes({ definition, parentNode, resume, demand, processSourceNode });
+          }),
+        );
+      }),
+    );
+  }
+
+  #readGenericNode({
+    definition,
+    resume,
+  }: {
+    definition: GenericHierarchyNodeDefinition;
+    resume: ResumeProps | undefined;
+  }): ReadSourceNode[] {
+    if (resume && !resume.nestedContinuationToken) {
+      return [];
+    }
+    return [
+      {
+        sourceNode: { ...definition.node, key: { type: "generic", id: definition.node.key, source: this.#sourceName } },
+        offset: 0,
+        ...(resume ? { nestedContinuationToken: resume.nestedContinuationToken } : undefined),
+      },
+    ];
+  }
+
+  /**
+   * Reads results of the given query in pages, processing each row using `processSourceNode`. A page is requested
+   * when `demand` emits after all rows of the previous page are processed. Similarly, the next row is processed when
+   * `demand` emits after the previous row is processed.
+   */
+  #readInstanceNodes<TResult>({
+    definition,
+    parentNode,
+    resume,
+    demand,
+    processSourceNode,
+  }: {
+    definition: InstanceNodesQueryDefinition;
+    parentNode: PagingParentNode | undefined;
+    resume: ResumeProps | undefined;
+    demand: Observable<unknown>;
+    processSourceNode: (sourceNode: ReadSourceNode) => Observable<TResult>;
+  }): Observable<TResult> {
+    // when resuming after a visible node, start at the row that follows it; when resuming inside a hidden
+    // node's children, start at the hidden node's row to re-create it
+    const startOffset = resume ? (resume.nestedContinuationToken ? resume.offset : resume.offset + 1) : 0;
+    return defer(() => {
+      let pagesCount = 0;
+      let pageRowsCount = 0;
+      const readNextPage = defer(() => {
+        const pageOffset = startOffset + pagesCount++ * this.#pageSize;
+        pageRowsCount = 0;
+        return this.#readQueryPage({ query: definition.query, offset: pageOffset }).pipe(
+          tap(() => ++pageRowsCount),
+          // rows of the page are read right away, but each of them is processed only when it's needed
+          concatMap((row, index) =>
+            onDemand(demand, () => {
+              const offset = pageOffset + index;
+              return this.#parseNode({ row, parentNode }).pipe(
+                concatMap((sourceNode) =>
+                  processSourceNode({
+                    sourceNode,
+                    offset,
+                    ...(resume?.nestedContinuationToken && offset === resume.offset
+                      ? { nestedContinuationToken: resume.nestedContinuationToken }
+                      : undefined),
+                  }),
+                ),
+              );
+            }),
+          ),
+        );
+      });
+      return onDemand(demand, () =>
+        readNextPage.pipe(
+          // a page that has less rows than requested is the last one
+          repeat({ delay: () => (pageRowsCount < this.#pageSize ? EMPTY : demand.pipe(take(1))) }),
+        ),
+      );
+    });
+  }
+
+  #readQueryPage({ query, offset }: { query: ECSqlQueryDef; offset: number }): Observable<ECSqlQueryRow> {
+    return defer(() =>
+      from(
+        this.#imodelAccess.createQueryReader(createPageQuery({ query, offset, limit: this.#pageSize }), {
+          rowFormat: "ECSqlPropertyNames",
+          // the query has its own limit - reaching it means there's another page rather than a failure
+          limit: "unbounded",
+          restartToken: `PagingHierarchyProvider/${this.#componentId}/${Guid.createValue()}`,
+        }),
+      ),
+    );
+  }
+
+  /** Finalizes the node the way it's returned by `getNodes`. Completes without a value if the node should be omitted. */
+  #finalizeNode({
+    node,
+    parentNode,
+  }: {
+    node: PagingProcessedNode;
+    parentNode: PagingParentNode | undefined;
+  }): Observable<NonGroupingHierarchyNode> {
+    const { postProcessNode } = this.#hierarchyDefinition;
+    return this.#determineChildren(node).pipe(
+      filter((children) => children || !node.processingParams?.hideIfNoChildren),
+      concatMap((children) =>
+        postProcessNode ? postProcessNode({ node: { ...node, children }, parentNode }) : of({ ...node, children }),
+      ),
+      map((postProcessed) => {
+        const { processingParams: _, ...finalNode } = postProcessed as PagingProcessedNode;
+        return { ...finalNode, children: hasChildren(finalNode) };
+      }),
+    );
+  }
+
+  #defineHierarchyLevel({
+    parentNode,
+    instanceFilter,
+  }: Pick<ReadLevelProps<never>, "parentNode" | "instanceFilter">): Observable<HierarchyLevelDefinition> {
+    return defer(() => {
+      const nodesQueryClauseFactory = this.#nodesQueryClauseFactory;
+      return this.#hierarchyDefinition.defineHierarchyLevel({
+        parentNode,
+        ...(instanceFilter ? { instanceFilter } : undefined),
+        createSelectClause: async (selectClauseProps) => nodesQueryClauseFactory.createSelectClause(selectClauseProps),
+        createFilterClauses: async (filterClausesProps) =>
+          nodesQueryClauseFactory.createFilterClauses(filterClausesProps),
+      });
+    });
+  }
+
+  #parseNode({
+    row,
+    parentNode,
+  }: {
+    row: ECSqlQueryRow;
+    parentNode: PagingParentNode | undefined;
+  }): Observable<PagingSourceNode> {
+    const imodelKey = this.#imodelAccess.imodelKey;
+    const parse = this.#hierarchyDefinition.parseNode ?? ((props) => of(defaultNodesParser(props)));
+    return parse({ row, parentNode, imodelKey }).pipe(
+      map((node) => ({
+        ...node,
+        key: { ...node.key, instanceKeys: node.key.instanceKeys.map((key) => ({ ...key, imodelKey })) },
+      })),
+    );
+  }
+
+  /** Pre-processes the given source node. Completes without a value if the node is omitted. */
+  #preProcessNode({
+    sourceNode,
+    parentNode,
+  }: {
+    sourceNode: PagingSourceNode;
+    parentNode: PagingParentNode | undefined;
+  }): Observable<PagingProcessedNode> {
+    const { preProcessNode } = this.#hierarchyDefinition;
+    return from(formatConcatenatedValue({ value: sourceNode.label, valueFormatter: this.#valuesFormatter })).pipe(
+      map((label) => ({
+        ...sourceNode,
+        label,
+        parentKeys: parentNode ? [...parentNode.parentKeys, parentNode.key] : [],
+      })),
+      concatMap((node) => (preProcessNode ? preProcessNode({ node, parentNode }) : of(node))),
+      map((node) => omitGroupingParams(node)),
+    );
+  }
+
+  #determineChildren(node: PagingProcessedNode): Observable<boolean> {
+    return node.children !== undefined ? of(node.children) : this.#hasChildren(node);
+  }
+
+  #hasChildren(node: PagingProcessedNode): Observable<boolean> {
+    return this.#readLevel({
+      parentNode: node,
+      // determining children isn't limited by what the consumer has requested - it stops at the first child instead
+      demand: of(undefined),
+      // hidden children and children with `hideIfNoChildren` flag only count if they have children themselves - their
+      // `children` attribute is used if set, otherwise their child hierarchy level is checked
+      processNode: ({ node: child }) =>
+        child.processingParams?.hideInHierarchy || child.processingParams?.hideIfNoChildren
+          ? this.#determineChildren(child)
+          : of(true),
+    }).pipe(
+      filter((childHasChildren) => childHasChildren),
+      take(1),
+      defaultIfEmpty(false),
+    );
+  }
+
+  #canHaveChildren(parentNode: PagingParentNode) {
+    if (HierarchyNode.isGroupingNode(parentNode)) {
+      return false;
+    }
+    if (HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this.#sourceName) {
+      return false;
+    }
+    return true;
+  }
+}
+
+/** Fails the stream with `HierarchyRequestInterruptedError` if `interrupt` emits before the stream finishes. */
+function throwOnInterrupt<T>(interrupt: Observable<void>): MonoTypeOperatorFunction<T> {
+  return (source) =>
+    new Observable<T>((subscriber) => {
+      subscriber.add(interrupt.subscribe(() => subscriber.error(new HierarchyRequestInterruptedError())));
+      subscriber.add(source.subscribe(subscriber));
+    });
+}
+
+/** Runs the given `work` when `demand` emits. */
+function onDemand<T>(demand: Observable<unknown>, work: () => Observable<T>): Observable<T> {
+  return demand.pipe(take(1), concatMap(work));
+}
+
+/**
+ * Converts the given iterator into one that calls `onRequest` whenever the consumer requests the next value, before
+ * the value is requested from the source iterator.
+ */
+async function* requestOnDemand<T>({
+  iterator,
+  onRequest,
+}: {
+  iterator: AsyncIterableIterator<T>;
+  onRequest: () => void;
+}): AsyncIterableIterator<T> {
+  try {
+    while (true) {
+      onRequest();
+      const result = await iterator.next();
+      if (result.done) {
+        return;
+      }
+      yield result.value;
+    }
+  } finally {
+    await iterator.return?.();
+  }
+}
+
+function toDefinitionParentNode(parentNode: PagingParentNode): PagingParentNode {
+  if ("continuationToken" in parentNode) {
+    const { continuationToken: _, ...rest } = parentNode;
+    return rest;
+  }
+  return parentNode;
+}
+
+function omitGroupingParams<TNode extends PagingProcessedNode>(node: TNode): TNode {
+  if (!node.processingParams || !("grouping" in node.processingParams)) {
+    return node;
+  }
+  const { grouping: _, ...processingParams } = node.processingParams;
+  return { ...node, processingParams };
+}
+
+/** Creates a query that returns up to `limit` rows of the given query, skipping the first `offset` rows. */
+function createPageQuery({
+  query,
+  offset,
+  limit,
+}: {
+  query: ECSqlQueryDef;
+  offset: number;
+  limit: number;
+}): ECSqlQueryDef {
+  return { ...query, ecsql: `SELECT * FROM (${query.ecsql}) LIMIT ${limit} OFFSET ${offset}` };
+}
+
+const CONTINUATION_TOKEN_VERSION = 1;
+
+/** Serialized form of a continuation token. */
+interface ContinuationTokenPayload {
+  /** Format version. */
+  v: typeof CONTINUATION_TOKEN_VERSION;
+  /** Token path as `[definitionIndex, offset]` pairs. */
+  p: Array<[number, number]>;
+}
+
+function encodeContinuationToken(token: ContinuationToken): string {
+  const payload: ContinuationTokenPayload = {
+    v: CONTINUATION_TOKEN_VERSION,
+    p: token.map(({ definitionIndex, offset }) => [definitionIndex, offset]),
+  };
+  // the payload only contains ASCII characters, so `btoa` can encode it; use URL-safe base64 alphabet without padding
+  return btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function decodeContinuationToken(token: string): ContinuationToken {
+  let payload: unknown;
+  try {
+    payload = JSON.parse(atob(token.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    payload = undefined;
+  }
+  if (!isContinuationTokenPayload(payload)) {
+    throw new InvalidContinuationTokenError(`Invalid continuation token: "${token}".`);
+  }
+  return payload.p.map(([definitionIndex, offset]) => ({ definitionIndex, offset }));
+}
+
+function isContinuationTokenPayload(value: unknown): value is ContinuationTokenPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const { v, p } = value as { [key in keyof ContinuationTokenPayload]?: unknown };
+  return (
+    v === CONTINUATION_TOKEN_VERSION &&
+    Array.isArray(p) &&
+    p.length > 0 &&
+    p.every(
+      (position) =>
+        Array.isArray(position) &&
+        position.length === 2 &&
+        position.every((item) => Number.isInteger(item) && item >= 0),
+    )
+  );
+}

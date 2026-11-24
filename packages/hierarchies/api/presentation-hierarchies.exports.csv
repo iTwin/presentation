@@ -7,6 +7,7 @@ beta;function;createIModelHierarchyNodePaths
 public;function;createIModelHierarchyProvider
 public;function;createLimitingECSqlQueryExecutor
 public;function;createMergedIModelHierarchyProvider
+beta;function;createPagingHierarchyProvider
 public;function;createPredicateBasedHierarchyDefinition
 public;type;DefineGenericNodeChildHierarchyLevelProps
 public;interface;DefineHierarchyLevelProps
@@ -15,6 +16,7 @@ public;type;DefineRootHierarchyLevelProps
 public;interface;GenericNodeKey
 public;interface;GetHierarchyNodesProps
 public;function;getLogger
+beta;interface;GetPagedHierarchyNodesProps
 public;interface;GroupingHierarchyNode
 public;type;GroupingNodeKey
 public;interface;HierarchyDefinition
@@ -30,6 +32,7 @@ public;namespace;HierarchyNodeKey
 public;type;HierarchyNodesDefinition
 public;namespace;HierarchyNodesDefinition
 public;interface;HierarchyProvider
+beta;class;HierarchyRequestInterruptedError
 public;type;HierarchySearchPath
 public;namespace;HierarchySearchPath
 public;interface;HierarchySearchPathOptions
@@ -38,6 +41,7 @@ public;namespace;HierarchySearchTree
 public;type;IModelHierarchyNodeKey
 public;interface;IModelInstanceKey
 public;interface;InstancesNodeKey
+beta;class;InvalidContinuationTokenError
 public;interface;LabelGroupingNodeKey
 public;interface;LimitingECSqlQueryExecutor
 public;function;mergeProviders
@@ -46,6 +50,8 @@ public;type;NodePostProcessor
 public;type;NodePreProcessor
 beta;class;NodesQueryRowsLimitExceededError
 public;interface;NonGroupingHierarchyNode
+beta;type;PagedHierarchyNode
+beta;interface;PagingHierarchyProvider
 beta;interface;PathBasedDefineHierarchyLevelProps
 beta;interface;PathBasedHierarchyDefinition
 public;type;ProcessedHierarchyNode

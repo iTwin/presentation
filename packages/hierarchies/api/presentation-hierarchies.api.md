@@ -87,6 +87,9 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
 // @public
 export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
+// @beta
+export function createPagingHierarchyProvider(props: PagingHierarchyProviderProps): PagingHierarchyProvider;
+
 // @public
 export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition;
 
@@ -222,6 +225,13 @@ export interface GetHierarchyNodesProps {
 
 // @public
 export function getLogger(): ILogger;
+
+// @beta
+export interface GetPagedHierarchyNodesProps {
+    continuationToken?: string;
+    instanceFilter?: GenericInstanceFilter;
+    parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
+}
 
 // @public
 export interface GroupingHierarchyNode extends BaseHierarchyNode {
@@ -463,6 +473,11 @@ export interface HierarchyProvider {
     } | undefined): void;
 }
 
+// @beta
+export class HierarchyRequestInterruptedError extends Error {
+    constructor();
+}
+
 // @public
 export type HierarchySearchPath = HierarchyNodeIdentifiersPath | {
     path: HierarchyNodeIdentifiersPath;
@@ -604,6 +619,11 @@ export interface InstancesNodeKey {
     type: "instances";
 }
 
+// @beta
+export class InvalidContinuationTokenError extends Error {
+    constructor(message: string);
+}
+
 // @public
 export interface LabelGroupingNodeKey {
     groupId?: string;
@@ -728,6 +748,30 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
     key: GenericNodeKey | InstancesNodeKey;
     search?: HierarchyNodeSearchProps;
     supportsFiltering?: boolean;
+}
+
+// @beta
+export type PagedHierarchyNode = NonGroupingHierarchyNode & {
+    continuationToken: string;
+};
+
+// @beta
+export interface PagingHierarchyProvider extends Disposable {
+    getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode>;
+    readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
+    setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
+}
+
+// @beta
+interface PagingHierarchyProviderProps {
+    formatter?: IPrimitiveValueFormatter;
+    hierarchyDefinition: HierarchyDefinition;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
+    imodelChanged?: Event_2<() => void>;
+    instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
+    pageSize?: number;
 }
 
 // @public
