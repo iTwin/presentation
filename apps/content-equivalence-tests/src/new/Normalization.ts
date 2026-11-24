@@ -49,7 +49,7 @@ function getCategoryPath(
   reference: CategoryDefinition["parent"],
   categories: Readonly<Record<string, Readonly<CategoryDefinition>>>,
 ): string[] {
-  if (reference.type !== "category") {
+  if (reference?.type !== "category") {
     return [];
   }
   const category = categories[reference.id];

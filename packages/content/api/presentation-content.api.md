@@ -21,7 +21,7 @@ import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
 interface BaseField {
-    category: FieldCategoryReference;
+    category: CategoryReference;
     hidden?: boolean;
     id: string;
     label: string;
@@ -73,6 +73,7 @@ type CardinalityHint = "one" | "many";
 type CategoryContext = {
     stepIndex: number;
     kind: "targetClass" | "relationshipClass";
+    relationshipMeaning?: "relatedInstance" | "sameInstance";
 }[];
 
 // @public
@@ -80,7 +81,7 @@ export interface CategoryDefinition {
     description?: string;
     id: string;
     label: string;
-    parent: CategoryParentReference;
+    parent?: CategoryReference;
 }
 
 // @public (undocumented)
@@ -95,10 +96,7 @@ export namespace CategoryDefinition {
 }
 
 // @public
-type CategoryParentReference = FieldCategoryReference | TopLevelCategoryReference;
-
-// @public
-type CategoryRoot = "target" | "topLevel";
+type CategoryReference = DefinedCategoryReference | TargetCategoryReference;
 
 // @public
 interface ClassPropertySpec {
@@ -304,9 +302,6 @@ type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration
 export type Field = PropertyField | CalculatedField | ExternalField;
 
 // @public
-type FieldCategoryReference = DefinedCategoryReference | TargetCategoryReference;
-
-// @public
 interface FieldsProviderContribution {
     calculatedFields?: CalculatedFieldDeclaration[];
     categories?: Record<CategoryDefinition["id"], CategoryDefinition>;
@@ -481,7 +476,6 @@ interface ResolvedDeclarationGroup {
         anchorClassName: EC.FullClassNameDotNotation;
         prefixStepCount: number;
         categoryContext: CategoryContext;
-        categoryRoot: CategoryRoot;
         effectiveCardinalityHint?: CardinalityHint;
     };
     paths: ResolvedPath[];
@@ -516,12 +510,6 @@ interface StepPropertySpec {
 interface TargetCategoryReference {
     // (undocumented)
     type: "target";
-}
-
-// @public
-interface TopLevelCategoryReference {
-    // (undocumented)
-    type: "topLevel";
 }
 
 // @public

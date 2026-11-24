@@ -22,7 +22,7 @@ export function getCategoryLabelChain(descriptor: Descriptor, field: Field): str
     seen.add(id);
     const category: Descriptor["categories"][string] = descriptor.categories[id];
     labelsLeafToRoot.push(category.label);
-    id = category.parent.type === "category" ? category.parent.id : undefined;
+    id = category.parent?.type === "category" ? category.parent.id : undefined;
   }
   return labelsLeafToRoot.reverse();
 }
@@ -30,10 +30,10 @@ export function getCategoryLabelChain(descriptor: Descriptor, field: Field): str
 /** Returns where the outermost category of a field's chain is placed: in the content target's category or at the top level. */
 export function getCategoryChainBase(descriptor: Descriptor, field: Field): "target" | "topLevel" {
   let reference: Descriptor["categories"][string]["parent"] = field.category;
-  while (reference.type === "category") {
+  while (reference?.type === "category") {
     reference = descriptor.categories[reference.id].parent;
   }
-  return reference.type;
+  return reference ? "target" : "topLevel";
 }
 
 /** Validates a field's root-to-leaf category label chain. */

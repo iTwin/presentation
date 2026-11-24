@@ -6,7 +6,7 @@
 import { isSchemaVersionAtLeast, isSchemaVersionBelow } from "../../InternalUtils.js";
 
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
-import type { CategoryDefinition, CategoryParentReference } from "../../model/Category.js";
+import type { CategoryDefinition, CategoryReference } from "../../model/Category.js";
 import type * as PresentationRules from "./PresentationRules.js";
 
 /**
@@ -60,9 +60,7 @@ export function resolveCategoryId(id: PresentationRules.PropertySpecification["c
  * Maps a `PropertyCategorySpecification.parentId` to the category's placement: an ID (plain or `Id` form) places it in
  * that category, other forms aren't supported and fall back to the content target's category.
  */
-function resolveCategoryParent(
-  id: PresentationRules.PropertyCategorySpecification["parentId"],
-): CategoryParentReference {
+function resolveCategoryParent(id: PresentationRules.PropertyCategorySpecification["parentId"]): CategoryReference {
   const categoryId = resolveCategoryId(id);
   return categoryId !== undefined ? { type: "category", id: categoryId } : { type: "target" };
 }

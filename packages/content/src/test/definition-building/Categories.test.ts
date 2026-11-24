@@ -90,20 +90,11 @@ function createCategorizedField(props: {
   overrideCategoryId?: string;
   relationshipMeaning?: FieldCategorization["relationshipMeaning"];
   categoryContext?: FieldCategorization["categoryContext"];
-  /** Defaults to the content target's category for direct fields and same-instance fields without context. */
-  categoryRoot?: FieldCategorization["categoryRoot"];
 }): CategorizedField {
   const id = props.id ?? "field";
-  const anchor = props.anchor ?? (props.pathFromTarget?.length ? "targetClass" : "none");
-  const categoryContext = props.categoryContext ?? [];
   const categorization: FieldCategorization = {
-    anchor,
-    categoryContext,
-    categoryRoot:
-      props.categoryRoot ??
-      (anchor === "none" || (props.relationshipMeaning === "sameInstance" && categoryContext.length === 0)
-        ? "target"
-        : "topLevel"),
+    anchor: props.anchor ?? (props.pathFromTarget?.length ? "targetClass" : "none"),
+    categoryContext: props.categoryContext ?? [],
   };
   if (props.relationshipMeaning !== undefined) {
     categorization.relationshipMeaning = props.relationshipMeaning;
@@ -327,7 +318,7 @@ describe("collectCategories", () => {
       fields: [field],
     });
     const id = CategoryDefinition.computeId({ path: [aToB] });
-    expect(categories[id]).to.deep.equal({ id, label: "The B", parent: { type: "topLevel" } });
+    expect(categories[id]).to.deep.equal({ id, label: "The B" });
     expect(field.field.category).to.deep.equal({ type: "category", id });
   });
 
@@ -363,7 +354,7 @@ describe("collectCategories", () => {
     });
     const dId = CategoryDefinition.computeId({ path: [aToB, bToC, cToD] });
     expect(Object.keys(categories)).to.deep.equal([dId]);
-    expect(categories[dId]).to.deep.equal({ id: dId, label: "The D", parent: { type: "topLevel" } });
+    expect(categories[dId]).to.deep.equal({ id: dId, label: "The D" });
     expect(field.field.category).to.deep.equal({ type: "category", id: dId });
   });
 
@@ -390,7 +381,7 @@ describe("collectCategories", () => {
     const bId = CategoryDefinition.computeId({ path: [aToB] });
     const dId = CategoryDefinition.computeId({ path: [aToB, bToC, cToD] });
     expect(new Set(Object.keys(categories))).to.deep.equal(new Set([bId, dId]));
-    expect(categories[bId]).to.deep.equal({ id: bId, label: "The B", parent: { type: "topLevel" } });
+    expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
     expect(categories[dId]).to.deep.equal({ id: dId, label: "The D", parent: { type: "category", id: bId } });
   });
 
@@ -427,7 +418,7 @@ describe("collectCategories", () => {
     const bId = CategoryDefinition.computeId({ path: [aToB] });
     const cId = CategoryDefinition.computeId({ path: [aToB, bToC] });
     const dId = CategoryDefinition.computeId({ path: [aToB, bToC, cToD] });
-    expect(categories[bId]).to.deep.equal({ id: bId, label: "The B", parent: { type: "topLevel" } });
+    expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
     expect(categories[cId]).to.deep.equal({ id: cId, label: "The C", parent: { type: "category", id: bId } });
     expect(categories[dId]).to.deep.equal({ id: dId, label: "The D", parent: { type: "category", id: cId } });
   });
@@ -455,8 +446,8 @@ describe("collectCategories", () => {
     });
     const yId = CategoryDefinition.computeId({ path: [aToY] });
     const cId = CategoryDefinition.computeId({ path: [aToB, bToC] });
-    expect(categories[yId]).to.deep.equal({ id: yId, label: "The Y", parent: { type: "topLevel" } });
-    expect(categories[cId]).to.deep.equal({ id: cId, label: "The C", parent: { type: "topLevel" } });
+    expect(categories[yId]).to.deep.equal({ id: yId, label: "The Y" });
+    expect(categories[cId]).to.deep.equal({ id: cId, label: "The C" });
   });
 
   it("does not auto-create for direct fields or fields that already have a category", async () => {
@@ -483,7 +474,7 @@ describe("collectCategories", () => {
   it("does not auto-create when a provider already declared the field's path category", async () => {
     const id = CategoryDefinition.computeId({ path: [aToB] });
     const field = createCategorizedField({ pathFromTarget: [aToB] });
-    const provider = createProvider("p_v1", { [id]: { id, label: "Provider Category", parent: { type: "topLevel" } } });
+    const provider = createProvider("p_v1", { [id]: { id, label: "Provider Category" } });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "Should not be used" })]),
       sources: [createSource()],
@@ -500,9 +491,7 @@ describe("collectCategories", () => {
   it("does not auto-create when a provider already declared a relationship category", async () => {
     const id = CategoryDefinition.computeId({ path: [aToB], omitTargetClass: true });
     const field = createCategorizedField({ pathFromTarget: [aToB], anchor: "relationshipClass" });
-    const provider = createProvider("p_v1", {
-      [id]: { id, label: "Provider Relationship", parent: { type: "topLevel" } },
-    });
+    const provider = createProvider("p_v1", { [id]: { id, label: "Provider Relationship" } });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
@@ -540,7 +529,7 @@ describe("collectCategories", () => {
       label: "Geometry",
       parent: { type: "category", id: parentId },
     });
-    expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label", parent: { type: "topLevel" } });
+    expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
   });
 
   it("nests the target category and both schema sub-categories under the relationship category", async () => {
@@ -602,7 +591,7 @@ describe("collectCategories", () => {
     //   - relationship property category
     //   - target class category ("The B", under the relationship category)
     //     - target property category
-    expect(categories[relId]).to.deep.equal({ id: relId, label: "A to B", parent: { type: "topLevel" } });
+    expect(categories[relId]).to.deep.equal({ id: relId, label: "A to B" });
     expect(categories[relSchemaId]).to.deep.equal({
       id: relSchemaId,
       label: "Geometry",
@@ -653,7 +642,7 @@ describe("collectCategories", () => {
     expect(bcField.field.category).to.deep.equal({ type: "category", id: bcId });
     // - "b" (target class category, top-level)
     //   - "bc" (relationship category, nested under "b")
-    expect(categories[bId]).to.deep.equal({ id: bId, label: "The B", parent: { type: "topLevel" } });
+    expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
     expect(categories[bcId]).to.deep.equal({ id: bcId, label: "B to C", parent: { type: "category", id: bId } });
   });
 
@@ -688,7 +677,7 @@ describe("collectCategories", () => {
     const bcId = CategoryDefinition.computeId({ path: [aToB, bToC], omitTargetClass: true });
     // - "ab" (relationship category, top-level)
     //   - "bc" (relationship category, nested under "ab" — the field-less `b` target is skipped)
-    expect(categories[abId]).to.deep.equal({ id: abId, label: "A to B", parent: { type: "topLevel" } });
+    expect(categories[abId]).to.deep.equal({ id: abId, label: "A to B" });
     expect(categories[bcId]).to.deep.equal({ id: bcId, label: "B to C", parent: { type: "category", id: abId } });
   });
 
@@ -763,7 +752,6 @@ describe("collectCategories", () => {
             anchorClassName: "TestSchema.B",
             prefixStepCount: 1,
             categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-            categoryRoot: "topLevel",
           },
         },
       ],
@@ -818,7 +806,7 @@ describe("collectCategories", () => {
         parent: { type: "category", id: cId },
       });
       expect(categories[cId]).to.deep.equal({ id: cId, label: "The C", parent: { type: "category", id: bId } });
-      expect(categories[bId]).to.deep.equal({ id: bId, label: "The B", parent: { type: "topLevel" } });
+      expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
     });
 
     it("attaches a same-instance nested declaration's property category to the anchor category", async () => {
@@ -848,7 +836,7 @@ describe("collectCategories", () => {
       });
       expect(categories[cId]).to.deep.equal({ id: cId, label: "The C", parent: { type: "category", id: bId } });
       // The anchor category exists although no field of the anchor itself is displayed.
-      expect(categories[bId]).to.deep.equal({ id: bId, label: "The B", parent: { type: "topLevel" } });
+      expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
     });
 
     it("shares a class category reached over different paths under the same parent", async () => {
@@ -936,7 +924,7 @@ describe("collectCategories", () => {
       const cId = CategoryDefinition.computeId({ path: [aToB, bToC] });
       expect(categories).to.deep.equal({
         [bId]: { id: bId, label: "The B", parent: { type: "target" } },
-        [topLevelBId]: { id: topLevelBId, label: "The B", parent: { type: "topLevel" } },
+        [topLevelBId]: { id: topLevelBId, label: "The B" },
         [cId]: { id: cId, label: "The C", parent: { type: "category", id: topLevelBId } },
       });
       expect(reversed).to.deep.equal(categories);
@@ -960,7 +948,7 @@ describe("collectCategories", () => {
       const firstId = CategoryDefinition.computeId({ path: [aToB] });
       const secondId = CategoryDefinition.computeId({ path: [aToB2] });
       expect(categories).to.deep.equal({
-        [firstId]: { id: firstId, label: "The B", parent: { type: "topLevel" } },
+        [firstId]: { id: firstId, label: "The B" },
         [secondId]: { id: secondId, label: "The B", parent: { type: "target" } },
       });
     });
@@ -1012,7 +1000,7 @@ describe("collectCategories", () => {
 
       const categories = await collect([viaFirstPath, viaOtherPath, customField], { child });
       expect(categories).to.deep.equal({
-        [sharedParentId]: { id: sharedParentId, label: "B", parent: { type: "topLevel" } },
+        [sharedParentId]: { id: sharedParentId, label: "B" },
         child: { id: "child", label: "Child", parent: { type: "category", id: sharedParentId } },
       });
 
@@ -1022,15 +1010,16 @@ describe("collectCategories", () => {
       expect(child).to.deep.equal({ id: "child", label: "Child", parent: { type: "category", id: originalParentId } });
     });
 
-    it("keeps declared categories placed at the top level or in the target category unchanged", async () => {
+    it("keeps declared categories placed at the top level or in the target category unchanged, without sharing parent references", async () => {
       const declared: Record<string, CategoryDefinition> = {
-        top: { id: "top", label: "Top", parent: { type: "topLevel" } },
+        top: { id: "top", label: "Top" },
         target: { id: "target", label: "Target", parent: { type: "target" } },
         implicitTarget: { id: "implicitTarget", label: "Implicit target", parent: { type: "target" } },
       };
       const fields = Object.keys(declared).map((id) => createCategorizedField({ id, overrideCategoryId: id }));
       const categories = await collect(fields, declared);
       expect(categories).to.deep.equal(declared);
+      expect(categories.target.parent).not.to.equal(declared.target.parent);
       expect(fields.map(({ field }) => field.category)).to.deep.equal(
         Object.keys(declared).map((id) => ({ type: "category", id })),
       );
@@ -1064,7 +1053,7 @@ describe("collectCategories", () => {
       const categories = await collect([prefixField, terminalField]);
 
       expect(categories).to.deep.equal({
-        [prefixCategoryId]: { id: prefixCategoryId, label: "B", parent: { type: "topLevel" } },
+        [prefixCategoryId]: { id: prefixCategoryId, label: "B" },
         [terminalCategoryId]: { id: terminalCategoryId, label: "C", parent: { type: "target" } },
       });
       expect(prefixField.field.category).to.deep.equal({ type: "category", id: prefixCategoryId });
@@ -1093,8 +1082,8 @@ describe("collectCategories", () => {
       const categories = await collect([testClassField, otherClassField, testGeometryField, otherGeometryField]);
 
       expect(categories).to.deep.equal({
-        [testClassId]: { id: testClassId, label: "B", parent: { type: "topLevel" } },
-        [otherClassId]: { id: otherClassId, label: "B", parent: { type: "topLevel" } },
+        [testClassId]: { id: testClassId, label: "B" },
+        [otherClassId]: { id: otherClassId, label: "B" },
         "TestSchema.Geometry": { id: "TestSchema.Geometry", label: "First", parent: { type: "target" } },
         "OtherSchema.Geometry": { id: "OtherSchema.Geometry", label: "Second", parent: { type: "target" } },
       });
@@ -1151,7 +1140,6 @@ describe("collectCategories", () => {
               anchorClassName: props.anchorClassName,
               prefixStepCount: 1,
               categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-              categoryRoot: "topLevel",
             },
           },
         ],
@@ -1239,7 +1227,6 @@ describe("collectCategories", () => {
               anchorClassName: "TestSchema.B",
               prefixStepCount: 1,
               categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-              categoryRoot: "topLevel",
             },
           },
           {
@@ -1250,7 +1237,6 @@ describe("collectCategories", () => {
               anchorClassName: "TestSchema.B",
               prefixStepCount: 1,
               categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-              categoryRoot: "topLevel",
             },
           },
         ],
@@ -1288,10 +1274,10 @@ describe("pruneUnreferencedCategories", () => {
 
   it("stops walking the parent chain at the target category and the top level", () => {
     const categories: Record<string, CategoryDefinition> = {
-      top: { id: "top", label: "Top", parent: { type: "topLevel" } },
+      top: { id: "top", label: "Top" },
       inTop: { id: "inTop", label: "In top", parent: { type: "category", id: "top" } },
       inTarget: { id: "inTarget", label: "In target", parent: { type: "target" } },
-      orphan: { id: "orphan", label: "Orphan", parent: { type: "topLevel" } },
+      orphan: { id: "orphan", label: "Orphan" },
     };
     const inTopField = createFieldWithCategory({ id: "inTopField", category: { type: "category", id: "inTop" } });
     const inTargetField = createFieldWithCategory({

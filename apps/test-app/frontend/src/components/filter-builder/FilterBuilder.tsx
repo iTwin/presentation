@@ -219,7 +219,7 @@ function getCategoryLabel(property: ReadonlyPropertyField, descriptor: ReadonlyC
   while (category && !visited.has(category.id)) {
     labels.unshift(category.label);
     visited.add(category.id);
-    category = category.parent.type === "category" ? descriptor.categories[category.parent.id] : undefined;
+    category = category.parent?.type === "category" ? descriptor.categories[category.parent.id] : undefined;
   }
   return labels.join(" | ");
 }

@@ -98,9 +98,8 @@ describe("CategoryDefinition", () => {
       const result = CategoryDefinition.create({
         path: [{ sourceClassName: "S.A", targetClassName: "S.B", relationshipName: "S.Rel" }],
         label: "Related B",
-        parent: { type: "topLevel" },
       });
-      expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B", parent: { type: "topLevel" } });
+      expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B" });
     });
 
     it("includes parent when provided", () => {

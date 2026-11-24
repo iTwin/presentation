@@ -144,7 +144,7 @@ describe("Content", () => {
         id: "provider_v1",
         async getContribution() {
           return {
-            categories: { custom: { id: "custom", label: "Custom Category", parent: { type: "topLevel" } } },
+            categories: { custom: { id: "custom", label: "Custom Category" } },
             relatedProperties: [
               {
                 path: [
@@ -204,7 +204,7 @@ describe("Content", () => {
         async getContribution() {
           return {
             categories: {
-              parent: { id: "parent", label: "Parent Category", parent: { type: "topLevel" } },
+              parent: { id: "parent", label: "Parent Category" },
               child: { id: "child", label: "Child Category", parent: { type: "category", id: "parent" } },
             },
             relatedProperties: [
@@ -333,7 +333,7 @@ describe("Content", () => {
         id: "provider_v1",
         async getContribution() {
           return {
-            categories: { custom: { id: "custom", label: "Custom Category", parent: { type: "topLevel" } } },
+            categories: { custom: { id: "custom", label: "Custom Category" } },
             relatedProperties: [
               {
                 path,
@@ -809,7 +809,7 @@ describe("Content", () => {
             createMeaningProvider(
               setup,
               [{ relationship: "AtoB", meaning, defaultOverrides: { categoryId: "custom" } }],
-              { custom: { id: "custom", label: "Custom", parent: { type: "topLevel" } } },
+              { custom: { id: "custom", label: "Custom" } },
             ),
           );
 

@@ -6,28 +6,32 @@
 import { getClass } from "@itwin/presentation-shared";
 
 import type { DeepReadonly, EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { CategoryContext, CategoryRoot } from "./ContentTarget.js";
-import type { RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
+import type { CategoryContext } from "./ContentTarget.js";
 import type { StepPropertySpec } from "./model/PropertySpec.js";
 
 /**
  * Appends the classes named by step specs to inherited ancestry. Every `target` and `relationship` spec
  * counts, whether or not it selects properties, if `include` accepts it. Classes are ordered by path
  * step with relationship classes first, deduplicated, and offset by `stepIndexOffset` into full-path
- * indexes. Inputs are not modified.
+ * indexes. Each entry records its step's relationship meaning — the spec's own, else `relationshipMeaning`. Inputs
+ * are not modified.
  */
 export function buildCategoryContext(props: {
   inheritedContext: Readonly<CategoryContext>;
   properties: DeepReadonly<StepPropertySpec[]>;
+  /** The declaration's relationship meaning, used for steps that don't set their own. */
+  relationshipMeaning: StepPropertySpec["relationshipMeaning"];
   stepIndexOffset: number;
   include: (entry: CategoryContext[number]) => boolean;
 }): CategoryContext {
   const entries = props.properties
     .flatMap((spec): CategoryContext => {
       const stepIndex = props.stepIndexOffset + spec.stepIndex;
+      const relationshipMeaning = spec.relationshipMeaning ?? props.relationshipMeaning;
+      const meaning = relationshipMeaning ? { relationshipMeaning } : undefined;
       return [
-        ...(spec.relationship ? [{ stepIndex, kind: "relationshipClass" as const }] : []),
-        ...(spec.target ? [{ stepIndex, kind: "targetClass" as const }] : []),
+        ...(spec.relationship ? [{ stepIndex, kind: "relationshipClass" as const, ...meaning }] : []),
+        ...(spec.target ? [{ stepIndex, kind: "targetClass" as const, ...meaning }] : []),
       ];
     })
     .filter(props.include)
@@ -38,24 +42,6 @@ export function buildCategoryContext(props: {
     );
   const uniqueEntries = new Map(entries.map((entry) => [`${entry.stepIndex}:${entry.kind}`, entry]));
   return [...props.inheritedContext, ...uniqueEntries.values()];
-}
-
-/**
- * Returns where the category chain of a declaration applied on the content target is placed, per the relationship
- * meaning of its earliest step that names a class. Declarations applied on nested anchors inherit the placement of
- * the declaration they extend instead.
- */
-export function getDeclarationCategoryRoot(
-  declaration: DeepReadonly<Pick<RelatedPropertiesDeclaration, "properties" | "relationshipMeaning">>,
-): CategoryRoot {
-  const firstStep = (declaration.properties ?? [])
-    .filter((spec) => spec.target || spec.relationship)
-    .reduce<DeepReadonly<StepPropertySpec> | undefined>(
-      (first, spec) => (first === undefined || spec.stepIndex < first.stepIndex ? spec : first),
-      undefined,
-    );
-  const meaning = firstStep?.relationshipMeaning ?? declaration.relationshipMeaning;
-  return meaning === "sameInstance" ? "target" : "topLevel";
 }
 
 /**

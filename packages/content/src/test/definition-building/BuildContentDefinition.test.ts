@@ -262,11 +262,7 @@ describe("buildContentDefinition", () => {
     // The related field gets an auto-created path category labelled by its terminal class.
     const categoryId = CategoryDefinition.computeId({ path });
     expect(related.category).to.deep.equal({ type: "category", id: categoryId });
-    expect(descriptor.categories[categoryId]).to.deep.equal({
-      id: categoryId,
-      label: "B",
-      parent: { type: "topLevel" },
-    });
+    expect(descriptor.categories[categoryId]).to.deep.equal({ id: categoryId, label: "B" });
   });
 
   it("merges a related property reached from different targets into one field", async () => {

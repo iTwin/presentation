@@ -11,6 +11,7 @@ import { toSortedUniqueClassNames } from "../model/Utils.js";
 import { resolveCardinality } from "../PathCardinality.js";
 
 import type { ValueDescriptor } from "@itwin/presentation-shared";
+import type { CategoryContext } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { Field } from "../model/Field.js";
 import type { CategorizedField, FieldCategorization } from "./ClassPropertyFields.js";
@@ -29,6 +30,13 @@ interface PropertyFieldCandidate extends CategorizedField {
    * Omitted for schema-derived direct fields, which have no contributing provider.
    */
   provider?: Pick<IModelFieldsProvider, "id" | "priority">;
+  /**
+   * For a candidate of a declaration applied on a nested anchor, the category context inherited from the
+   * declarations it was applied below. Different ancestor declarations can place the same nested property
+   * differently, which isn't a bug of the candidate's provider, so candidates with different inherited contexts are
+   * resolved like candidates of different providers.
+   */
+  inheritedCategoryContext?: Readonly<CategoryContext>;
 }
 
 /**
@@ -42,11 +50,11 @@ interface PropertyFieldCandidate extends CategorizedField {
  * - Each group produces a single field whose `valueClassNames` and `primaryClassNames` are each the
  *   sorted, de-duplicated union of the group's respective value-supplier and primary classes.
  * - Field metadata (`label`, `hidden`, `readOnly`, `type`) and category facts are resolved as follows:
- *   - **Intra-provider** (candidates sharing the same `providerId`) must agree — a divergence is a
- *     provider bug and throws.
- *   - **Inter-provider** (candidates from different providers) may disagree; the candidate with the
- *     highest `priority` wins (ties resolve to input order). `valueClassNames` and `primaryClassNames`
- *     are still unioned.
+ *   - **Intra-provider** (candidates sharing the same `providerId` and inherited category context) must
+ *     agree — a divergence is a provider bug and throws.
+ *   - **Inter-provider** (candidates from different providers, or from the same provider applied below
+ *     different ancestors) may disagree; the candidate with the highest `priority` wins (ties resolve to
+ *     input order). `valueClassNames` and `primaryClassNames` are still unioned.
  * - `pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority (see
  *   {@link resolveCardinality}). This merges candidates of the same property field, not the shapes
  *   of other fields or external inputs that happen to use the same path.
@@ -85,13 +93,17 @@ function priorityOf(candidate: PropertyFieldCandidate): number {
   return candidate.provider?.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
 }
 
-/** Throws if two candidates from the same provider produced divergent metadata for one field id. */
+/**
+ * Throws if two candidates from the same provider and inherited category context produced divergent metadata for one
+ * field id.
+ */
 function assertNoIntraProviderDivergence(baseId: Field["id"], group: PropertyFieldCandidate[]): void {
-  const representativeByProvider = new Map<IModelFieldsProvider["id"] | undefined, PropertyFieldCandidate>();
+  const representativeBySource = new Map<string, PropertyFieldCandidate>();
   for (const candidate of group) {
-    const representative = representativeByProvider.get(candidate.provider?.id);
+    const sourceKey = JSON.stringify([candidate.provider?.id ?? null, candidate.inheritedCategoryContext ?? []]);
+    const representative = representativeBySource.get(sourceKey);
     if (!representative) {
-      representativeByProvider.set(candidate.provider?.id, candidate);
+      representativeBySource.set(sourceKey, candidate);
     } else if (!metadataAgrees(representative, candidate)) {
       throw new Error(
         `Cannot merge property field "${baseId}": ${
@@ -113,27 +125,35 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
 }
 
 /**
- * Compares category facts and their resolved ancestry. A field's own relationship meaning only affects placement of
- * a property category, so it only needs to agree for fields with one.
+ * Compares category facts and their resolved ancestry. Relationship meanings only need to agree where they affect
+ * placement: the outermost ancestry entry's meaning, and the field's own meaning when it has a property category or
+ * no ancestry.
  */
 function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
   if (a.category?.source === "override") {
     return b.category?.source === "override" && a.category.id === b.category.id;
   }
+  const ownMeaningAffectsPlacement = a.category?.source === "propertyCategory" || a.categoryContext.length === 0;
   return (
     a.anchor === b.anchor &&
     a.category?.source === b.category?.source &&
     a.category?.id === b.category?.id &&
-    (a.category?.source !== "propertyCategory" ||
-      (a.relationshipMeaning ?? "relatedInstance") === (b.relationshipMeaning ?? "relatedInstance")) &&
-    a.categoryRoot === b.categoryRoot &&
+    (!ownMeaningAffectsPlacement || meaningsAgree(a.relationshipMeaning, b.relationshipMeaning)) &&
     a.categoryContext.length === b.categoryContext.length &&
     a.categoryContext.every(
       (context, index) =>
         context.stepIndex === b.categoryContext[index].stepIndex && context.kind === b.categoryContext[index].kind,
     ) &&
+    meaningsAgree(a.categoryContext[0]?.relationshipMeaning, b.categoryContext[0]?.relationshipMeaning) &&
     propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
+}
+
+function meaningsAgree(
+  a: FieldCategorization["relationshipMeaning"],
+  b: FieldCategorization["relationshipMeaning"],
+): boolean {
+  return (a ?? "relatedInstance") === (b ?? "relatedInstance");
 }
 
 /** The property category's label, or `undefined` for an override / no category. */

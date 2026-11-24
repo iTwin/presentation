@@ -30,7 +30,8 @@ Fields are grouped into categories, which the descriptor's `categories` defines.
 
 - `{ type: "category", id }` — in a category defined in `categories`.
 - `{ type: "target" }` — in the category of the content target's own properties: direct properties and properties of related classes shown as if they belonged to the target, such as element aspects. It has no definition in `categories`, so its label is up to the UI (e.g. "Selected Item(s)").
-- `{ type: "topLevel" }` — categories only: at the top level, next to the content target's category. Categories of related instances, such as element links, start here.
+
+A category without a `parent` is at the top level, next to the content target's category. Categories of related instances, such as element links, start there.
 
 ### Fields
 

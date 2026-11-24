@@ -7,7 +7,6 @@ import { EMPTY, filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, 
 import { ECSql, getClass } from "@itwin/presentation-shared";
 import {
   buildCategoryContext,
-  getDeclarationCategoryRoot,
   ECSQL_PREFIX,
   getOrCreate,
   getStepSourceConstraintClassName,
@@ -32,14 +31,7 @@ import type {
   Props,
   RelationshipPath,
 } from "@itwin/presentation-shared";
-import type {
-  CardinalityHint,
-  CategoryContext,
-  CategoryRoot,
-  ContentSource,
-  ContentTarget,
-  ResolvedPath,
-} from "./ContentTarget.js";
+import type { CardinalityHint, CategoryContext, ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
 import type { ExternalFieldsProvider, InputPropertyDeclaration } from "./extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
@@ -572,8 +564,6 @@ function createNestedQueueEntries(props: {
   parentCardinalityHint: CardinalityHint | undefined;
   /** Category context inherited from the parent, extended per entry by `createNestedCategoryContext`. */
   categoryContext: CategoryContext;
-  /** Placement of the category chain, carried over to the created entries. */
-  categoryRoot: CategoryRoot;
 }): NestedQueueEntry[] {
   const { declaration, declaredPath, paths, stepIndexOffset, appliedPairs, parentCardinalityHint } = props;
   const specAnchorIndices = declaration.properties
@@ -601,7 +591,6 @@ function createNestedQueueEntries(props: {
           anchorStepIndex: anchorIdx,
           inheritedContext: props.categoryContext,
         }),
-        categoryRoot: props.categoryRoot,
       });
     }
   }
@@ -661,6 +650,7 @@ function createNestedCategoryContext(props: {
   return buildCategoryContext({
     inheritedContext,
     properties: selections,
+    relationshipMeaning: declaration.relationshipMeaning,
     stepIndexOffset,
     include: (entry) => entry.stepIndex <= anchorStepIndex,
   });
@@ -689,7 +679,6 @@ interface NestedQueueEntry {
   /** Combined cardinality hint of the path up to and including the anchor's producing declaration. */
   parentCardinalityHint: CardinalityHint | undefined;
   categoryContext: CategoryContext;
-  categoryRoot: CategoryRoot;
 }
 
 const EMPTY_APPLIED_PAIRS: ReadonlySet<string> = new Set();
@@ -762,12 +751,11 @@ async function resolveNestedGroups({
       appliedPairs: EMPTY_APPLIED_PAIRS,
       parentCardinalityHint: group.declaration.cardinalityHint,
       categoryContext: [],
-      categoryRoot: getDeclarationCategoryRoot(group.declaration),
     }),
   );
 
   // Merged discoveries across all expansion levels, keyed by `(providerId, declarationIndex,
-  // anchorClassName, prefixStepCount, categoryContext, categoryRoot)` in deterministic (breadth-first, then provider order, then
+  // anchorClassName, prefixStepCount, categoryContext)` in deterministic (breadth-first, then provider order, then
   // declaration order) first-discovery order. Distinct branches reaching the same anchor class at the
   // same prefix depth merge into one group, de-duplicated by serialized path.
   interface MergedNestedGroup {
@@ -776,7 +764,6 @@ async function resolveNestedGroups({
     anchorClassName: EC.FullClassNameDotNotation;
     prefixStepCount: number;
     categoryContext: CategoryContext;
-    categoryRoot: CategoryRoot;
     effectiveCardinalityHint: CardinalityHint | undefined;
     pathsByKey: Map<string, ResolvedPath>;
   }
@@ -855,7 +842,6 @@ async function resolveNestedGroups({
         entry.anchorClassName,
         entry.prefixSteps.length,
         entry.categoryContext,
-        entry.categoryRoot,
       ]);
       let merged = groupsByKey.get(groupKey);
       if (!merged) {
@@ -865,7 +851,6 @@ async function resolveNestedGroups({
           anchorClassName: entry.anchorClassName,
           prefixStepCount: entry.prefixSteps.length,
           categoryContext: entry.categoryContext,
-          categoryRoot: entry.categoryRoot,
           effectiveCardinalityHint,
           pathsByKey: new Map(),
         };
@@ -907,7 +892,6 @@ async function resolveNestedGroups({
           appliedPairs: nextAppliedPairs,
           parentCardinalityHint: effectiveCardinalityHint,
           categoryContext: entry.categoryContext,
-          categoryRoot: entry.categoryRoot,
         }),
       );
     }
@@ -921,7 +905,6 @@ async function resolveNestedGroups({
       anchorClassName: merged.anchorClassName,
       prefixStepCount: merged.prefixStepCount,
       categoryContext: merged.categoryContext,
-      categoryRoot: merged.categoryRoot,
       ...(merged.effectiveCardinalityHint !== undefined
         ? { effectiveCardinalityHint: merged.effectiveCardinalityHint }
         : {}),

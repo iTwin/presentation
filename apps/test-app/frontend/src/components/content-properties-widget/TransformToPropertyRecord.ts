@@ -232,15 +232,15 @@ function createCategoryTree(definitions: Partial<CategoryDefinitions>) {
     if (!category) {
       category = { name: props.name, label: props.label, expand: true, childCategories: [] };
       created.set(props.name, category);
-      (props.parent.type === "topLevel" ? roots : get(props.parent).childCategories!).push(category);
+      (props.parent ? get(props.parent).childCategories! : roots).push(category);
     }
     return category;
   }
-  function get(reference: DeepReadonly<CategoryDefinition["parent"]>): PropertyCategory {
+  function get(reference: DeepReadonly<Field["category"]>): PropertyCategory {
     const definition = reference.type === "category" ? definitions[reference.id] : undefined;
     return definition
       ? getOrCreate({ name: definition.id, label: definition.label, parent: definition.parent })
-      : getOrCreate({ ...TARGET_CATEGORY, parent: { type: "topLevel" } });
+      : getOrCreate({ ...TARGET_CATEGORY, parent: undefined });
   }
   return { roots, get };
 }

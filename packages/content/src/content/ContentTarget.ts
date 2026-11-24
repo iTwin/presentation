@@ -201,21 +201,18 @@ export interface ResolvedPath {
 
 /**
  * Ordered class categories enclosing a related-properties declaration, from root to leaf.
- * Each entry identifies a class at a zero-based step of the resolved relationship path.
+ * Each entry identifies a class at a zero-based step of the resolved relationship path, along with the
+ * `relationshipMeaning` of that step. The outermost entry's meaning decides where the categories are placed: in the
+ * content target's category for `"sameInstance"`, at the top level otherwise.
  * An empty context places categories at the root.
  *
  * @public
  */
-export type CategoryContext = { stepIndex: number; kind: "targetClass" | "relationshipClass" }[];
-
-/**
- * Where the outermost class category of a related-properties chain is placed: in the content target's own category,
- * for classes whose properties are shown as part of the target (`relationshipMeaning: "sameInstance"`), or at the top
- * level next to it.
- *
- * @public
- */
-export type CategoryRoot = "target" | "topLevel";
+export type CategoryContext = {
+  stepIndex: number;
+  kind: "targetClass" | "relationshipClass";
+  relationshipMeaning?: "relatedInstance" | "sameInstance";
+}[];
 
 /**
  * A group of concrete relationship paths resolved from a single provider declaration.
@@ -275,9 +272,6 @@ interface ResolvedDeclarationGroup {
 
     /** Resolved category ancestry inherited from the enclosing declaration. */
     categoryContext: CategoryContext;
-
-    /** Where the outermost category of `categoryContext` is placed, inherited from the enclosing declaration. */
-    categoryRoot: CategoryRoot;
 
     /**
      * The effective cardinality of the full path — `"many"` if either the parent path's producing

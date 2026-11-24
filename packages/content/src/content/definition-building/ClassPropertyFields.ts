@@ -7,7 +7,7 @@ import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext, CategoryRoot } from "../ContentTarget.js";
+import type { CardinalityHint, CategoryContext } from "../ContentTarget.js";
 import type { RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
@@ -44,8 +44,6 @@ export interface FieldCategorization {
    * property category of a `"sameInstance"` step, excludes the field's own step.
    */
   categoryContext: Readonly<CategoryContext>;
-  /** Where the outermost category of the field's chain is placed. */
-  categoryRoot: CategoryRoot;
 }
 
 /** A property field paired with the category facts the categorization pass needs. */
@@ -86,8 +84,6 @@ interface CreatePropertyFieldsProps {
   relationshipMeaning?: FieldCategorization["relationshipMeaning"];
   /** See {@link FieldCategorization.categoryContext}. */
   categoryContext: CategoryContext;
-  /** See {@link FieldCategorization.categoryRoot}. */
-  categoryRoot: CategoryRoot;
 }
 
 /**
@@ -115,16 +111,7 @@ interface CreatePropertyFieldsProps {
  * `mergePropertyFieldsByIdentity`.
  */
 export function createPropertyFields(props: CreatePropertyFieldsProps): CategorizedField[] {
-  const {
-    properties,
-    relationshipInfo,
-    valueClassNames,
-    spec,
-    anchor,
-    relationshipMeaning,
-    categoryContext,
-    categoryRoot,
-  } = props;
+  const { properties, relationshipInfo, valueClassNames, spec, anchor, relationshipMeaning, categoryContext } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
   const pathCardinality = relationshipInfo?.pathCardinality ?? "one";
   const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
@@ -168,7 +155,7 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       field.hidden = overrides.hidden;
     }
     // Report the raw category facts: an explicit spec override, else the EC schema property category.
-    const categorization: FieldCategorization = { anchor, categoryContext, categoryRoot };
+    const categorization: FieldCategorization = { anchor, categoryContext };
     if (relationshipMeaning !== undefined) {
       categorization.relationshipMeaning = relationshipMeaning;
     }

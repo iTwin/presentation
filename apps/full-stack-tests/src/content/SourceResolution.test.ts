@@ -494,7 +494,6 @@ describe("Content", () => {
         anchorClassName: setup.schema.items.B.fullName,
         prefixStepCount: 1,
         categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-        categoryRoot: "topLevel",
       });
       expect(nestedGroup.paths).toHaveLength(1);
       // The nested group's path is the *full* path from the original target `A` — the concrete A-to-B

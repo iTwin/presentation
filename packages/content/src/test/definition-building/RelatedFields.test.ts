@@ -136,7 +136,6 @@ describe("collectRelatedPropertyFields", () => {
         name: field.propertyName,
         meaning: categorization.relationshipMeaning,
         context: categorization.categoryContext,
-        root: categorization.categoryRoot,
       })),
     ).toEqual([
       {
@@ -144,16 +143,10 @@ describe("collectRelatedPropertyFields", () => {
         meaning: "sameInstance",
         context: [
           { stepIndex: 0, kind: "targetClass" },
-          { stepIndex: 1, kind: "relationshipClass" },
+          { stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "sameInstance" },
         ],
-        root: "topLevel",
       },
-      {
-        name: "Categorized",
-        meaning: "sameInstance",
-        context: [{ stepIndex: 0, kind: "targetClass" }],
-        root: "topLevel",
-      },
+      { name: "Categorized", meaning: "sameInstance", context: [{ stepIndex: 0, kind: "targetClass" }] },
     ]);
   });
 
@@ -203,7 +196,7 @@ describe("collectRelatedPropertyFields", () => {
         relationshipMeaning: "sameInstance",
         properties: [{ stepIndex: 1, relationship: { select: { include: ["RelProp"] } }, target: { select: "all" } }],
       },
-      expected: [{ stepIndex: 1, kind: "relationshipClass" }],
+      expected: [{ stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "sameInstance" }],
     },
   ])("encloses later fields in $name", async ({ declaration, expected }) => {
     const imodelAccess = createSchemaAccess([
@@ -269,7 +262,6 @@ describe("collectRelatedPropertyFields", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -279,6 +271,9 @@ describe("collectRelatedPropertyFields", () => {
         { stepIndex: 0, kind: "targetClass" },
         { stepIndex: 1, kind: "relationshipClass" },
       ],
+    ]);
+    expect(fields.map(({ inheritedCategoryContext }) => inheritedCategoryContext)).toEqual([
+      [{ stepIndex: 0, kind: "targetClass" }],
     ]);
   });
 
@@ -297,6 +292,7 @@ describe("collectRelatedPropertyFields", () => {
     const candidates = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
     expect(candidates).to.have.lengthOf(1);
     expect(candidates[0].provider).to.equal(provider);
+    expect(candidates[0]).not.toHaveProperty("inheritedCategoryContext");
   });
 
   it("loads all properties of the final step's target class when the declaration omits `properties`", async () => {
@@ -427,9 +423,8 @@ describe("collectRelatedPropertyFields", () => {
         anchor: "targetClass",
         category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
         categoryContext: [],
-        categoryRoot: "topLevel",
       },
-      { anchor: "targetClass", categoryContext: [], categoryRoot: "topLevel" },
+      { anchor: "targetClass", categoryContext: [] },
     ]);
   });
 
@@ -482,7 +477,6 @@ describe("collectRelatedPropertyFields", () => {
       anchor: "relationshipClass",
       category: { source: "override", id: "custom" },
       categoryContext: [],
-      categoryRoot: "topLevel",
     });
   });
 
@@ -521,7 +515,7 @@ describe("collectRelatedPropertyFields", () => {
           providerId: nestedProvider.id,
           declarationIndex: 0,
           paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-          nested: { categoryContext: [], categoryRoot: "target", anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+          nested: { categoryContext: [], anchorClassName: "TestSchema.B", prefixStepCount: 1 },
         },
       ]);
 
@@ -532,12 +526,11 @@ describe("collectRelatedPropertyFields", () => {
       });
 
       expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
-        { anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: [], categoryRoot: "target" },
+        { anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: [] },
         {
           anchor: "targetClass",
           relationshipMeaning: "sameInstance",
           categoryContext: [],
-          categoryRoot: "target",
           category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
         },
       ]);
@@ -696,7 +689,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -729,7 +721,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           prefixStepCount: 1,
           effectiveCardinalityHint: "many",
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -763,7 +754,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -793,7 +783,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -819,7 +808,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -840,7 +828,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -862,7 +849,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -901,7 +887,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
       {
@@ -912,7 +897,6 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-          categoryRoot: "topLevel",
         },
       },
     ]);

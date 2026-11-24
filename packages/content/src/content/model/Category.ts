@@ -30,27 +30,11 @@ export interface TargetCategoryReference {
 }
 
 /**
- * Places a category at the top level, next to the content target's own category. Fields can't be placed there.
+ * Where a field or category is placed.
  *
  * @public
  */
-export interface TopLevelCategoryReference {
-  type: "topLevel";
-}
-
-/**
- * Where a field is placed.
- *
- * @public
- */
-export type FieldCategoryReference = DefinedCategoryReference | TargetCategoryReference;
-
-/**
- * Where a category is placed.
- *
- * @public
- */
-export type CategoryParentReference = FieldCategoryReference | TopLevelCategoryReference;
+export type CategoryReference = DefinedCategoryReference | TargetCategoryReference;
 
 /**
  * A lightweight category definition used by providers to logically group fields for display.
@@ -67,8 +51,11 @@ export interface CategoryDefinition {
   id: string;
   /** Display label shown to the user. */
   label: string;
-  /** Where the category is placed. */
-  parent: CategoryParentReference;
+  /**
+   * Where the category is placed: in another category, or in the content target's category. Omitted for a category
+   * at the top level, next to the content target's category.
+   */
+  parent?: CategoryReference;
   /** Optional description for the category. */
   description?: string;
 }

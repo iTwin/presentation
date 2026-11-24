@@ -56,10 +56,7 @@ describe("mergePropertyFieldsByIdentity", () => {
   function merge(fields: PropertyField[]) {
     return toRecord(
       mergePropertyFieldsByIdentity(
-        fields.map((field) => ({
-          field,
-          categorization: { anchor: "none" as const, categoryContext: [], categoryRoot: "target" as const },
-        })),
+        fields.map((field) => ({ field, categorization: { anchor: "none" as const, categoryContext: [] } })),
       ),
     );
   }
@@ -302,21 +299,11 @@ describe("mergePropertyFieldsByIdentity", () => {
       mergePropertyFieldsByIdentity([
         {
           field: a,
-          categorization: {
-            anchor: "none",
-            categoryContext: [],
-            categoryRoot: "target",
-            category: { source: "override", id: "a" },
-          },
+          categorization: { anchor: "none", categoryContext: [], category: { source: "override", id: "a" } },
         },
         {
           field: b,
-          categorization: {
-            anchor: "none",
-            categoryContext: [],
-            categoryRoot: "target",
-            category: { source: "override", id: "b" },
-          },
+          categorization: { anchor: "none", categoryContext: [], category: { source: "override", id: "b" } },
         },
       ]),
     ).to.throw(/divergent metadata/);
@@ -325,7 +312,6 @@ describe("mergePropertyFieldsByIdentity", () => {
   it.each<{ name: string; placement: Partial<FieldCategorization> }>([
     { name: "ancestry", placement: { categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }] } },
     { name: "relationship meaning", placement: { relationshipMeaning: "sameInstance" } },
-    { name: "root", placement: { categoryRoot: "target" } },
     { name: "anchor", placement: { anchor: "relationshipClass" } },
   ])("merges identical explicit category overrides with different $name", ({ placement }) => {
     const field = createField({
@@ -339,7 +325,6 @@ describe("mergePropertyFieldsByIdentity", () => {
     const categorization: FieldCategorization = {
       anchor: "targetClass",
       categoryContext: [],
-      categoryRoot: "topLevel",
       category: { source: "override", id: "custom" },
     };
     const provider = { id: "provider_v1" } as const;
@@ -370,7 +355,6 @@ describe("mergePropertyFieldsByIdentity", () => {
     const categorization: FieldCategorization = {
       anchor: "targetClass",
       categoryContext: [],
-      categoryRoot: "topLevel",
       category: { source: "override", id: "Stuff.Custom" },
     };
     const provider = { id: "provider_v1" } as const;
@@ -394,54 +378,45 @@ describe("mergePropertyFieldsByIdentity", () => {
       candidates: Array<{
         meaning?: "relatedInstance" | "sameInstance";
         context?: Readonly<CategoryContext>;
-        root?: FieldCategorization["categoryRoot"];
         category?: FieldCategorization["category"];
         providerId: `${string}_v${number}`;
         priority?: number;
       }>,
     ) =>
       mergePropertyFieldsByIdentity(
-        candidates.map(({ meaning, context, root, category, providerId, priority }, index) => ({
+        candidates.map(({ meaning, context, category, providerId, priority }, index) => ({
           field: create(`Stuff.V${index}`),
           categorization: {
             anchor: "targetClass" as const,
             ...(meaning ? { relationshipMeaning: meaning } : undefined),
             ...(category ? { category } : undefined),
             categoryContext: context ?? [],
-            categoryRoot: root ?? "topLevel",
           },
           provider: { id: providerId, ...(priority !== undefined ? { priority } : undefined) },
         })),
       )[0].categorization;
 
-    it("keeps meaning, context and root when every winning candidate agrees", () => {
-      const candidate = { meaning: "sameInstance", context: innerContext, root: "target" } as const;
+    it("keeps meaning and context when every winning candidate agrees", () => {
+      const candidate = { meaning: "sameInstance", context: innerContext } as const;
       expect(
         placementOf([
           { ...candidate, providerId: "a_v1" },
           { ...candidate, providerId: "b_v1" },
         ]),
-      ).to.deep.equal({
-        anchor: "targetClass",
-        relationshipMeaning: "sameInstance",
-        categoryContext: innerContext,
-        categoryRoot: "target",
-      });
+      ).to.deep.equal({ anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: innerContext });
     });
 
     it("keeps the first candidate's placement when priorities tie", () => {
-      const sameInstance = { meaning: "sameInstance", root: "target", providerId: "a_v1" } as const;
+      const sameInstance = { meaning: "sameInstance", providerId: "a_v1" } as const;
       const related = { context: outerContext, providerId: "b_v1" } as const;
       expect(placementOf([sameInstance, related])).to.deep.equal({
         anchor: "targetClass",
         relationshipMeaning: "sameInstance",
         categoryContext: [],
-        categoryRoot: "target",
       });
       expect(placementOf([related, sameInstance])).to.deep.equal({
         anchor: "targetClass",
         categoryContext: outerContext,
-        categoryRoot: "topLevel",
       });
     });
 
@@ -449,14 +424,9 @@ describe("mergePropertyFieldsByIdentity", () => {
       expect(
         placementOf([
           { providerId: "a_v1", priority: 1 },
-          { meaning: "sameInstance", context: innerContext, root: "target", providerId: "b_v1", priority: 2 },
+          { meaning: "sameInstance", context: innerContext, providerId: "b_v1", priority: 2 },
         ]),
-      ).to.deep.equal({
-        anchor: "targetClass",
-        relationshipMeaning: "sameInstance",
-        categoryContext: innerContext,
-        categoryRoot: "target",
-      });
+      ).to.deep.equal({ anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: innerContext });
     });
 
     it("accepts equivalent omitted and explicit default meanings of property categories from the same provider", () => {
@@ -466,7 +436,6 @@ describe("mergePropertyFieldsByIdentity", () => {
         anchor: "targetClass",
         category: geometry,
         categoryContext: [],
-        categoryRoot: "topLevel",
       });
     });
 
@@ -485,16 +454,34 @@ describe("mergePropertyFieldsByIdentity", () => {
           { providerId: "a_v1", context: outerContext },
           { providerId: "a_v1", context: outerContext, meaning: "sameInstance" },
         ]),
-      ).to.deep.equal({ anchor: "targetClass", categoryContext: outerContext, categoryRoot: "topLevel" });
+      ).to.deep.equal({ anchor: "targetClass", categoryContext: outerContext });
     });
 
-    it("rejects divergent roots from the same provider", () => {
+    it("rejects divergent meanings of fields without property categories and context from the same provider", () => {
+      expect(() => placementOf([{ providerId: "a_v1", meaning: "sameInstance" }, { providerId: "a_v1" }])).to.throw(
+        /divergent metadata/,
+      );
+    });
+
+    it("rejects contexts with divergent outermost meanings from the same provider", () => {
       expect(() =>
         placementOf([
-          { providerId: "a_v1", context: outerContext, root: "target" },
+          { providerId: "a_v1", context: [{ ...outerContext[0], relationshipMeaning: "sameInstance" }] },
           { providerId: "a_v1", context: outerContext },
         ]),
       ).to.throw(/divergent metadata/);
+    });
+
+    it("accepts contexts that differ only in later entries' meanings from the same provider", () => {
+      expect(
+        placementOf([
+          { providerId: "a_v1", context: innerContext },
+          {
+            providerId: "a_v1",
+            context: [innerContext[0], { ...innerContext[1], relationshipMeaning: "sameInstance" }],
+          },
+        ]),
+      ).to.deep.equal({ anchor: "targetClass", categoryContext: innerContext });
     });
 
     it("rejects divergent contexts from the same provider", () => {
@@ -506,13 +493,40 @@ describe("mergePropertyFieldsByIdentity", () => {
       ).to.throw(/divergent metadata/);
     });
 
+    it.each([
+      { name: "the same", inherited: [outerContext, outerContext], throws: true },
+      {
+        name: "different",
+        inherited: [outerContext, [{ ...outerContext[0], relationshipMeaning: "sameInstance" }]],
+        throws: false,
+      },
+    ] as const)(
+      "resolves divergent placements of a nested provider applied below $name ancestors",
+      ({ inherited, throws }) => {
+        // The second candidate's ancestry also includes its own declaration's class, so placements diverge.
+        const contexts: CategoryContext[] = [[...inherited[0]], [...inherited[1], innerContext[1]]];
+        const candidates = inherited.map((inheritedCategoryContext, index) => ({
+          field: create(`Stuff.V${index}`),
+          categorization: { anchor: "targetClass" as const, categoryContext: contexts[index] },
+          provider: { id: "nested_v1" as const },
+          inheritedCategoryContext,
+        }));
+        const mergeCandidates = () => mergePropertyFieldsByIdentity(candidates)[0].categorization;
+        if (throws) {
+          expect(mergeCandidates).to.throw(/divergent metadata/);
+        } else {
+          expect(mergeCandidates()).to.deep.equal({ anchor: "targetClass", categoryContext: outerContext });
+        }
+      },
+    );
+
     it("accepts equal contexts from the same provider", () => {
       expect(
         placementOf([
           { providerId: "a_v1", context: innerContext },
           { providerId: "a_v1", context: [...innerContext] },
         ]),
-      ).to.deep.equal({ anchor: "targetClass", categoryContext: innerContext, categoryRoot: "topLevel" });
+      ).to.deep.equal({ anchor: "targetClass", categoryContext: innerContext });
     });
 
     it("rejects same-length contexts with divergent step indexes from the same provider", () => {
@@ -548,7 +562,6 @@ describe("mergePropertyFieldsByIdentity", () => {
     const categorization = {
       anchor: "targetClass",
       categoryContext: [],
-      categoryRoot: "topLevel",
       category: { source: "propertyCategory", id: "Stuff.Geo", label: "Geometry" },
     } as const;
     const result = toRecord(
@@ -752,16 +765,8 @@ describe("mergePropertyFieldsByIdentity", () => {
     });
     const result = toRecord(
       mergePropertyFieldsByIdentity([
-        {
-          field: a,
-          categorization: { anchor: "none", categoryContext: [], categoryRoot: "target" },
-          provider: { id: "a_v1", priority: 1 },
-        },
-        {
-          field: b,
-          categorization: { anchor: "none", categoryContext: [], categoryRoot: "target" },
-          provider: { id: "b_v1", priority: 2 },
-        },
+        { field: a, categorization: { anchor: "none", categoryContext: [] }, provider: { id: "a_v1", priority: 1 } },
+        { field: b, categorization: { anchor: "none", categoryContext: [] }, provider: { id: "b_v1", priority: 2 } },
       ]),
     );
     const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
@@ -784,16 +789,8 @@ describe("mergePropertyFieldsByIdentity", () => {
     });
     const result = toRecord(
       mergePropertyFieldsByIdentity([
-        {
-          field: a,
-          categorization: { anchor: "none", categoryContext: [], categoryRoot: "target" },
-          provider: { id: "a_v1", priority: 5 },
-        },
-        {
-          field: b,
-          categorization: { anchor: "none", categoryContext: [], categoryRoot: "target" },
-          provider: { id: "b_v1", priority: 5 },
-        },
+        { field: a, categorization: { anchor: "none", categoryContext: [] }, provider: { id: "a_v1", priority: 5 } },
+        { field: b, categorization: { anchor: "none", categoryContext: [] }, provider: { id: "b_v1", priority: 5 } },
       ]),
     );
     const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
@@ -815,16 +812,8 @@ describe("mergePropertyFieldsByIdentity", () => {
     });
     expect(() =>
       mergePropertyFieldsByIdentity([
-        {
-          field: a,
-          categorization: { anchor: "none", categoryContext: [], categoryRoot: "target" },
-          provider: { id: "p_v1" },
-        },
-        {
-          field: b,
-          categorization: { anchor: "none", categoryContext: [], categoryRoot: "target" },
-          provider: { id: "p_v1" },
-        },
+        { field: a, categorization: { anchor: "none", categoryContext: [] }, provider: { id: "p_v1" } },
+        { field: b, categorization: { anchor: "none", categoryContext: [] }, provider: { id: "p_v1" } },
       ]),
     ).to.throw(/provider "p_v1"/);
   });

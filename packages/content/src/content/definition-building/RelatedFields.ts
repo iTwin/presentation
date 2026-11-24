@@ -4,19 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
-import { buildCategoryContext, collectInParallel, getDeclarationCategoryRoot } from "../InternalUtils.js";
+import { buildCategoryContext, collectInParallel } from "../InternalUtils.js";
 import { createPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider, Props, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext, CategoryRoot, ContentSource } from "../ContentTarget.js";
+import type { CardinalityHint, CategoryContext, ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { PathCardinalityClassifier } from "../PathCardinality.js";
 import type { CategorizedField } from "./ClassPropertyFields.js";
 import type { GetAnchorContributionFn, GetContributionFn } from "./ContributionMemoizer.js";
 
-/** A related property field paired with its category facts and the provider that contributed it. */
-type RelatedCandidate = CategorizedField & { provider: IModelFieldsProvider };
+/**
+ * A related property field paired with its category facts, the provider that contributed it and, for a nested
+ * declaration, the category context inherited from the declarations it was applied below.
+ */
+type RelatedCandidate = CategorizedField & {
+  provider: IModelFieldsProvider;
+  inheritedCategoryContext?: CategoryContext;
+};
 
 /**
  * Enumerates the **related** property fields of a content source — the properties reached by
@@ -94,11 +100,17 @@ export async function collectRelatedPropertyFields(props: {
             stepIndexOffset,
             relationshipMeaning: declaration.relationshipMeaning,
             categoryContext: group.nested ? group.nested.categoryContext : [],
-            categoryRoot: group.nested ? group.nested.categoryRoot : getDeclarationCategoryRoot(declaration),
           }),
         ),
       );
-      return perPath.flat().map((enumerated) => ({ ...enumerated, provider }));
+      const inheritedCategoryContext = group.nested?.categoryContext;
+      return perPath
+        .flat()
+        .map((enumerated) => ({
+          ...enumerated,
+          provider,
+          ...(inheritedCategoryContext ? { inheritedCategoryContext } : {}),
+        }));
     },
   });
 }
@@ -134,7 +146,6 @@ async function createFieldsForPath(props: {
   stepIndexOffset: number;
   relationshipMeaning: RelatedPropertiesDeclaration["relationshipMeaning"];
   categoryContext: CategoryContext;
-  categoryRoot: CategoryRoot;
 }): Promise<CategorizedField[]> {
   const {
     imodelAccess,
@@ -145,7 +156,6 @@ async function createFieldsForPath(props: {
     primaryClassNames,
     relationshipMeaning,
     stepIndexOffset,
-    categoryRoot,
   } = props;
 
   // Default (no per-step specs): all properties of the final step's target class. `path` is always the
@@ -165,7 +175,6 @@ async function createFieldsForPath(props: {
       anchor: "targetClass",
       relationshipMeaning,
       categoryContext: props.categoryContext,
-      categoryRoot,
     });
   }
 
@@ -182,7 +191,6 @@ async function createFieldsForPath(props: {
         stepIndexOffset,
         relationshipMeaning,
         categoryContext: props.categoryContext,
-        categoryRoot,
       }),
     ),
   );
@@ -195,6 +203,7 @@ async function createFieldsForPath(props: {
     categorization.categoryContext = buildCategoryContext({
       inheritedContext: props.categoryContext,
       properties,
+      relationshipMeaning,
       stepIndexOffset,
       include: (entry) => {
         if (entry.stepIndex === stepIndex) {
@@ -221,7 +230,6 @@ async function createFieldsForStep(props: {
   stepIndexOffset: number;
   relationshipMeaning: RelatedPropertiesDeclaration["relationshipMeaning"];
   categoryContext: CategoryContext;
-  categoryRoot: CategoryRoot;
 }): Promise<CategorizedField[]> {
   const {
     imodelAccess,
@@ -232,7 +240,6 @@ async function createFieldsForStep(props: {
     primaryClassNames,
     relationshipMeaning,
     stepIndexOffset,
-    categoryRoot,
   } = props;
   const effectiveStepIndex = stepIndexOffset + stepSpec.stepIndex;
   if (effectiveStepIndex < 0 || effectiveStepIndex >= path.length) {
@@ -265,7 +272,6 @@ async function createFieldsForStep(props: {
         anchor: "targetClass",
         relationshipMeaning: stepRelationshipMeaning,
         categoryContext: props.categoryContext,
-        categoryRoot,
       }),
     );
   }
@@ -279,7 +285,6 @@ async function createFieldsForStep(props: {
         anchor: "relationshipClass",
         relationshipMeaning: stepRelationshipMeaning,
         categoryContext: props.categoryContext,
-        categoryRoot,
       }),
     );
   }

@@ -312,7 +312,6 @@ describe("Content", () => {
         anchorClassName: setup.schema.items.Node.fullName,
         prefixStepCount: 1,
         categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
-        categoryRoot: "topLevel",
       });
       expect(nestedGroup!.paths).toHaveLength(1);
       expect(nestedGroup!.paths[0].path).toHaveLength(2);
@@ -785,6 +784,55 @@ describe("Content", () => {
         validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
         expect(getCategoryChainBase(descriptor, field("AspectCategorized"))).toBe(base);
       });
+
+      it.each([
+        { first: "relatedInstance", second: "sameInstance", base: "topLevel" },
+        { first: "sameInstance", second: "relatedInstance", base: "target" },
+      ] as const)(
+        "places nested fields under the first of ancestors declared with $first and $second meanings",
+        async ({ first, second, base }) => {
+          const { items } = setup.schema;
+          const config = createChainConfig(setup, { type: first });
+          config.imodelFieldsProviders.splice(
+            1,
+            0,
+            defineIModelFieldsProvider({
+              id: "wallToTypeOther_v1",
+              async getContribution({ target }) {
+                if (target.primaryClass !== items.Wall.fullName) {
+                  return undefined;
+                }
+                return {
+                  relatedProperties: [
+                    {
+                      path: [
+                        {
+                          sourceClassName: items.Wall.fullName,
+                          targetClassName: items.WallType.fullName,
+                          relationshipName: items.HasPhysicalType.fullName,
+                        },
+                      ],
+                      cardinalityHint: "one" as const,
+                      relationshipMeaning: second,
+                    },
+                  ],
+                };
+              },
+            }),
+          );
+          const descriptor = await buildDescriptor({
+            imodelAccess: createContentIModelAccess(setup.ecdb),
+            targets: [{ primaryClass: items.Wall.fullName }],
+            config,
+          });
+          const field = (name: string) => getRelatedPropertyFields(descriptor).find((f) => f.propertyName === name)!;
+
+          validateCategoryChain(descriptor, field("TypeName"), ["WallType"]);
+          validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
+          expect(getCategoryChainBase(descriptor, field("TypeName"))).toBe(base);
+          expect(getCategoryChainBase(descriptor, field("AspectUncategorized"))).toBe(base);
+        },
+      );
 
       it.each([false, true])(
         "keeps a direct multi-step declaration's categories independent of a separate prefix declaration: %s",
