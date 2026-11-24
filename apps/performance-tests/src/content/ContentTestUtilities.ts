@@ -34,9 +34,6 @@ export function getPropertyFields({
 /** Number of items the content provider loads per page. Tests that load only the first page read this many items. */
 export const PAGE_SIZE = 1000;
 
-/** Number of pages loaded by tests that iterate multiple pages, but not all items. */
-export const BOUNDED_PAGE_COUNT = 5;
-
 export interface ContentTestContext<TName extends IModelName = IModelName> {
   imodel: SnapshotDb;
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;

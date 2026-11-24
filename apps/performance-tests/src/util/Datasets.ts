@@ -162,9 +162,11 @@ export class Datasets {
       factory: async (props) => this.downloadIModel({ ...props, downloadUrl: this.#BAYTOWN_DOWNLOAD_URL }),
     });
 
-    const promises = IMODEL_NAMES.map(async (key) => {
+    // Keep generation sequential: generators do their work synchronously, so Promise.all would not parallelize them
+    // and would make per-iModel timings overlap.
+    for (const key of IMODEL_NAMES) {
       if (key === "baytown") {
-        return;
+        continue;
       }
       this.#iModels[key] = await this.getOrCreateIModelPath({
         name: key,
@@ -172,8 +174,7 @@ export class Datasets {
         factory: this.createIModelFactory({ name: key }),
         force: !!process.env.RECREATE,
       });
-    });
-    await Promise.all(promises);
+    }
   }
 
   private static async getOrCreateIModelPath({
@@ -189,9 +190,10 @@ export class Datasets {
   }) {
     const localPath = path.join(folderPath, `${name}.bim`);
     if (force || !fs.existsSync(localPath)) {
+      const start = Date.now();
       console.log(`"${name}" iModel: Creating...`);
       await factory({ name, localPath });
-      console.log(`"${name}" iModel: Done.`);
+      console.log(`"${name}" iModel: Done in ${((Date.now() - start) / 1000).toFixed(1)}s.`);
     }
     return path.resolve(localPath);
   }
@@ -532,6 +534,8 @@ export class Datasets {
             userLabel: `${userLabelPrefix}_${i}`,
             ...propertyValues,
           });
+          // TODO: `insertAspect` updates the owning element on every call, so inserting these 350k aspects takes
+          // minutes. Switch to bulk aspect insertion once https://github.com/iTwin/itwinjs-core/pull/9884 is available.
           for (let aspect = type; aspect < aspectClassCount; aspect += typeCount) {
             const aspectProps = {
               classFullName: getAspectClassName(aspect),
