@@ -134,6 +134,6 @@ function isErrorNode(node: TreeNode): boolean {
   return node.errors.length > 0;
 }
 
-function isErrorBlockingExpansion(error: ErrorInfo): boolean {
+export function isErrorBlockingExpansion(error: ErrorInfo): boolean {
   return error.type !== "Generic" || !error.isNodeExpandable;
 }

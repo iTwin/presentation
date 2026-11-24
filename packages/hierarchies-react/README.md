@@ -372,7 +372,7 @@ import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierar
 // view. The node must already be loaded; if it's under a collapsed parent or deep in the hierarchy, its
 // collapsed ancestors are expanded first.
 const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
-const revealMyModel = () => treeRef.current?.scrollToNode((node) => node.label === "My Model A");
+const revealMyModel = () => treeRef.current?.scrollToNode({ nodePredicate: (node) => node.label === "My Model A" });
 
 <>
   <button onClick={revealMyModel}>Show model</button>

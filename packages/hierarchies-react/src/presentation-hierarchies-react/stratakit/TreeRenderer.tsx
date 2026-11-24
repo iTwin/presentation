@@ -6,7 +6,7 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
+import { isErrorBlockingExpansion, isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
 import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { TreeNodeLabelEditorOverlay } from "./LabelEditor.js";
@@ -82,12 +82,13 @@ export interface StrataKitTreeRendererAttributes {
    *
    * The optional `onComplete` callback is called with the target node after it's scrolled into view.
    *
-   * Returns "node-not-found" if no node matches the predicate, "success" if scrolling was initiated.
+   * Returns "node-not-found" if no node matches the predicate or the matching node can't be displayed (e.g. one of its
+   * ancestors has an error that blocks expansion), "success" if scrolling was initiated.
    */
-  scrollToNode: (
-    nodePredicate: (node: TreeNode) => boolean,
-    onComplete?: (node: TreeNode) => void,
-  ) => "node-not-found" | "success";
+  scrollToNode: (props: {
+    nodePredicate: (node: TreeNode) => boolean;
+    onComplete?: (node: TreeNode) => void;
+  }) => "node-not-found" | "success";
 }
 
 /** @alpha */
@@ -148,7 +149,7 @@ export const StrataKitTreeRenderer: FC<
     useImperativeHandle(forwardedRef, () => ({
       renameNode: (nodePredicate) =>
         expandAndScrollToNode({ nodePredicate, onComplete: (targetNode) => renameContext.startRename(targetNode) }),
-      scrollToNode: (nodePredicate, onComplete) => expandAndScrollToNode({ nodePredicate, onComplete }),
+      scrollToNode: expandAndScrollToNode,
     }));
 
     const cancelRename = renameContext.cancelRename;
@@ -348,7 +349,8 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
     if (nodePredicate(parent)) {
       return [parent];
     }
-    if (parent.children !== true) {
+    // children of nodes with expansion-blocking errors are never rendered
+    if (parent.children !== true && !parent.errors.some(isErrorBlockingExpansion)) {
       const childPath = findPathToNode(parent.children, nodePredicate);
       if (childPath) {
         return [parent, ...childPath];

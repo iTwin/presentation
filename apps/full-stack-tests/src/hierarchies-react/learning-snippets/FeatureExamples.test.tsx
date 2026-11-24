@@ -258,7 +258,8 @@ describe("Hierarchies React", () => {
           // view. The node must already be loaded; if it's under a collapsed parent or deep in the hierarchy, its
           // collapsed ancestors are expanded first.
           const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
-          const revealMyModel = () => treeRef.current?.scrollToNode((node) => node.label === "My Model A");
+          const revealMyModel = () =>
+            treeRef.current?.scrollToNode({ nodePredicate: (node) => node.label === "My Model A" });
           // __PUBLISH_EXTRACT_END__
           const treeProps = useTree({ getHierarchyProvider });
           if (treeProps.rootErrorRendererProps) {

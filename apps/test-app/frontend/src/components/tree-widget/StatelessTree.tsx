@@ -226,9 +226,10 @@ function Tree({
         </Button>
         <Button
           onClick={() =>
-            treeRef.current?.scrollToNode(createSelectedNodePredicate(imodel), (node) =>
-              console.log(`Scrolled to node "${node.label}"`),
-            )
+            treeRef.current?.scrollToNode({
+              nodePredicate: createSelectedNodePredicate(imodel),
+              onComplete: (node) => console.log(`Scrolled to node "${node.label}"`),
+            })
           }
         >
           Scroll to selected node
