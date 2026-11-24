@@ -285,7 +285,9 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           { colorScheme },
         );
 
-        expect(ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "missing", onComplete })).toBe("node-not-found");
+        expect(ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "missing", onComplete })).toBe(
+          "node-not-found",
+        );
         expect(onComplete).not.toHaveBeenCalled();
       });
 
@@ -332,7 +334,9 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         );
         await expect.element(locator.getByRole("treeitem", { name: "Node 99" })).not.toBeInTheDocument();
 
-        expect(ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "node-99", onComplete })).toBe("success");
+        expect(ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "node-99", onComplete })).toBe(
+          "success",
+        );
 
         await expect.element(locator.getByRole("treeitem", { name: "Node 99" })).toBeInViewport();
         await vi.waitFor(() =>
