@@ -172,9 +172,9 @@ export type PagedHierarchyNode = NonGroupingHierarchyNode & {
  */
 export interface PagingHierarchyProvider extends Disposable {
   /**
-   * An event that provider raises due to a hierarchy change that requires a reload. When raised due to an iModel change,
-   * in-flight `getNodes` requests fail with `HierarchyRequestInterruptedError`. Continuation tokens of nodes
-   * returned before the event may point to different positions in the hierarchy after it.
+   * An event that provider raises due to a hierarchy change that requires a reload. In-flight `getNodes` requests fail
+   * with `HierarchyRequestInterruptedError` when the event is raised. Continuation tokens of nodes returned before an
+   * iModel change may point to different positions in the hierarchy after it.
    */
   readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
 
@@ -201,7 +201,8 @@ export interface PagingHierarchyProvider extends Disposable {
    * Overrides the property value formatter used to format node labels. Setting to `undefined` resets the formatter
    * to the result of `createDefaultValueFormatter` called with default parameters.
    *
-   * @note Changing formatter triggers the `hierarchyChanged` event with `formatterChange` arg.
+   * @note Changing formatter fails in-flight `getNodes` requests with `HierarchyRequestInterruptedError` and triggers
+   * the `hierarchyChanged` event with `formatterChange` arg.
    */
   setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 }
@@ -356,6 +357,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   }
 
   public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+    this.#interrupt.next();
     this.#valuesFormatter = formatter ?? createDefaultValueFormatter();
     this.#hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this.#valuesFormatter } });
   }

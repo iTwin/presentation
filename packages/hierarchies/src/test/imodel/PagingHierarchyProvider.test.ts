@@ -1069,6 +1069,18 @@ describe("createPagingHierarchyProvider", () => {
       await expect(iterator.next()).rejects.toThrow(HierarchyRequestInterruptedError);
     });
 
+    it("fails in-flight requests when formatter changes", async () => {
+      setupQueries({ Q: createRows(2) });
+      using provider = createPagingHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
+      });
+      const iterator = provider.getNodes({ parentNode: undefined });
+      expect((await iterator.next()).value.label).toBe("0x1");
+      provider.setFormatter(async () => "x");
+      await expect(iterator.next()).rejects.toThrow(HierarchyRequestInterruptedError);
+    });
+
     it("unsubscribes from iModel changes and fails in-flight requests on dispose", async () => {
       const imodelChanged = new BeEvent<() => void>();
       const definitionsPromise = new ResolvablePromise<HierarchyLevelDefinition>();
