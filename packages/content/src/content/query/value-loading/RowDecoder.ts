@@ -338,34 +338,54 @@ export function getRelatedSelectorValues(props: { values: GroupValues; selectorI
   return selectorValues;
 }
 
+export type ContentValuesProjector = (props: { primaryKey: InstanceKey; values: GroupValues }) => ContentValues;
+
 /**
- * Projects decoded selector values onto descriptor fields through private field bindings, producing
- * the `ContentValues` for one instance. External fields have no binding and are left `undefined`.
+ * Creates a projector of decoded selector values onto descriptor fields through private field bindings,
+ * producing the `ContentValues` for one instance. External fields have no binding and are left `undefined`.
  * Property fields apply their own cardinality and value-class scope without changing shared selector values.
+ * Field bindings and value-class lookups are prepared once and reused for every projected instance.
  */
-export function toContentValues(props: {
+export function createContentValuesProjector(props: {
   descriptor: ContentDescriptor;
   fieldSelectorIds: Partial<Record<string, string>>;
-  primaryKey: InstanceKey;
-  values: GroupValues;
-}): ContentValues {
-  const { descriptor, fieldSelectorIds, primaryKey, values: groupValues } = props;
-  const values: Record<string, Value> = {};
-  for (const field of Object.values(descriptor.fields)) {
+}): ContentValuesProjector {
+  const { descriptor, fieldSelectorIds } = props;
+  const fieldProjectors = Object.values(descriptor.fields).flatMap((field) => {
     const selectorId = fieldSelectorIds[field.id];
     if (selectorId === undefined) {
-      continue;
+      return [];
     }
-    const value =
-      field.kind === "property"
-        ? projectPropertyFieldValue({ field, primaryKey, selectorId, groupValues })
-        : convertDateTimeValues(groupValues.selectorValues.get(selectorId)?.[0], field.type);
-    if (value !== undefined) {
-      values[field.id] = value;
+    if (field.kind !== "property") {
+      return [
+        {
+          fieldId: field.id,
+          project: ({ values }: Parameters<ContentValuesProjector>[0]) =>
+            convertDateTimeValues(values.selectorValues.get(selectorId)?.[0], field.type),
+        },
+      ];
     }
-  }
+    const valueClassNames = new Set(field.valueClassNames);
+    const hasValueClass = (className: EC.FullClassNameDotNotation) => valueClassNames.has(className);
+    return [
+      {
+        fieldId: field.id,
+        project: ({ primaryKey, values }: Parameters<ContentValuesProjector>[0]) =>
+          projectPropertyFieldValue({ field, primaryKey, selectorId, groupValues: values, hasValueClass }),
+      },
+    ];
+  });
 
-  return { primaryKey, values, relatedInstances: Object.fromEntries(groupValues.relatedInstances) };
+  return ({ primaryKey, values: groupValues }) => {
+    const values: Record<string, Value> = {};
+    for (const { fieldId, project } of fieldProjectors) {
+      const value = project({ primaryKey, values: groupValues });
+      if (value !== undefined) {
+        values[fieldId] = value;
+      }
+    }
+    return { primaryKey, values, relatedInstances: Object.fromEntries(groupValues.relatedInstances) };
+  };
 }
 
 function projectPropertyFieldValue(props: {
@@ -373,11 +393,11 @@ function projectPropertyFieldValue(props: {
   primaryKey: InstanceKey;
   selectorId: string;
   groupValues: GroupValues;
+  hasValueClass: (className: EC.FullClassNameDotNotation) => boolean;
 }): Value {
-  const { field, primaryKey, selectorId, groupValues } = props;
-  const applicableClassNames = new Set(field.valueClassNames);
+  const { field, primaryKey, selectorId, groupValues, hasValueClass } = props;
   if (field.pathFromTarget.length === 0) {
-    return applicableClassNames.has(primaryKey.className) ? groupValues.selectorValues.get(selectorId)?.[0] : undefined;
+    return hasValueClass(primaryKey.className) ? groupValues.selectorValues.get(selectorId)?.[0] : undefined;
   }
 
   const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
@@ -393,7 +413,7 @@ function projectPropertyFieldValue(props: {
   const values = getRelatedSelectorValues({ values: groupValues, selectorId, pathKey });
   const appliesToEntry = (entry: RelatedInstanceEntry | undefined): boolean => {
     const key = field.propertyClassKind === "relationship" ? entry?.relationshipKey : entry?.key;
-    return key !== undefined && applicableClassNames.has(key.className);
+    return key !== undefined && hasValueClass(key.className);
   };
   if (field.pathCardinality === "many") {
     // Mask rather than filter so values stay aligned with the path's related-instance entries.
