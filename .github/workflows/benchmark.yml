@@ -240,7 +240,7 @@ jobs:
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./apps/performance-tests/datasets/*.bim
-          key: ${{ needs.prepare-head-datasets.outputs.key }}
+          key: ${{ needs.check-head-datasets.outputs.key }}
 
       - name: Run benchmark tests
         run: |
@@ -263,7 +263,8 @@ jobs:
     name: Merge benchmark results
     needs: [select-suites, benchmark]
     if: >-
-      ${{ needs.select-suites.outputs.suites != '[]' &&
+      ${{ !cancelled() &&
+      needs.select-suites.outputs.suites != '[]' &&
       needs.benchmark.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
@@ -415,7 +416,8 @@ jobs:
     name: '${{ matrix.suite.name }}: Compare A/B benchmark results'
     needs: [select-suites, benchmark-pr]
     if: >-
-      ${{ needs.select-suites.outputs.suites != '[]' &&
+      ${{ !cancelled() &&
+      needs.select-suites.outputs.suites != '[]' &&
       needs.benchmark-pr.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
