@@ -9,7 +9,7 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyRequestInterruptedError, InvalidContinuationTokenError } from "../../hierarchies/HierarchyErrors.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { createPagingHierarchyProvider as origCreatePagingHierarchyProvider } from "../../hierarchies/imodel/PagingHierarchyProvider.js";
+import { createStreamingIModelHierarchyProvider as origCreateStreamingIModelHierarchyProvider } from "../../hierarchies/imodel/StreamingIModelHierarchyProvider.js";
 import {
   createIModelAccessStub,
   createInstanceLabelSelectClauseFactoryStub,
@@ -27,12 +27,12 @@ import type {
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
-describe("createPagingHierarchyProvider", () => {
+describe("createStreamingIModelHierarchyProvider", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & { imodelKey: string };
   const sourceName = "test-source-name";
 
-  function createPagingHierarchyProvider(props: Props<typeof origCreatePagingHierarchyProvider>) {
-    return origCreatePagingHierarchyProvider({
+  function createStreamingIModelHierarchyProvider(props: Props<typeof origCreateStreamingIModelHierarchyProvider>) {
+    return origCreateStreamingIModelHierarchyProvider({
       instanceLabelSelectClauseFactory: createInstanceLabelSelectClauseFactoryStub(),
       ...props,
       // @ts-expect-error: using non-exposed way to override source name
@@ -116,7 +116,7 @@ describe("createPagingHierarchyProvider", () => {
 
   it("loads root generic nodes", async () => {
     const node = createTestSourceGenericNode({ key: "root" });
-    using provider = createPagingHierarchyProvider({
+    using provider = createStreamingIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [{ node }]) },
     });
@@ -135,7 +135,7 @@ describe("createPagingHierarchyProvider", () => {
   it("loads root instance nodes using a query limited to 10 000 rows", async () => {
     imodelAccess.createQueryReader.mockReturnValue(createAsyncIterator([createRow("0x1", { HasChildren: true })]));
     const query: ECSqlQueryDef = { ecsql: "QUERY", bindings: [{ type: "string", value: "binding" }], ctes: ["CTE"] };
-    using provider = createPagingHierarchyProvider({
+    using provider = createStreamingIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: { defineHierarchyLevel: async () => [{ fullClassName: "a.b", query }] },
     });
@@ -161,12 +161,15 @@ describe("createPagingHierarchyProvider", () => {
     const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
       { node: createTestSourceGenericNode({ key: "root", children: false }) },
     ]);
-    using provider = origCreatePagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+    using provider = origCreateStreamingIModelHierarchyProvider({
+      imodelAccess,
+      hierarchyDefinition: { defineHierarchyLevel },
+    });
     const nodes = await collect(provider.getNodes({ parentNode: undefined }));
     expect(nodes[0].key).toEqual({
       type: "generic",
       id: "root",
-      source: expect.stringContaining("PagingHierarchyProvider"),
+      source: expect.stringContaining("StreamingIModelHierarchyProvider"),
     });
     const { createSelectClause, createFilterClauses } = defineHierarchyLevel.mock.calls[0][0];
     expect(await createFilterClauses({ filter: undefined, contentClass: { fullName: "x.y", alias: "this" } })).toEqual({
@@ -186,7 +189,7 @@ describe("createPagingHierarchyProvider", () => {
   it("throws when page size is not a positive integer", () => {
     for (const pageSize of [0, -1, 1.5, Number.NaN]) {
       expect(() =>
-        createPagingHierarchyProvider({
+        createStreamingIModelHierarchyProvider({
           imodelAccess,
           pageSize,
           hierarchyDefinition: { defineHierarchyLevel: async () => [] },
@@ -197,7 +200,7 @@ describe("createPagingHierarchyProvider", () => {
 
   describe("paging", () => {
     function createQueryProvider(pageSize: number) {
-      return createPagingHierarchyProvider({
+      return createStreamingIModelHierarchyProvider({
         imodelAccess,
         pageSize,
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
@@ -229,7 +232,10 @@ describe("createPagingHierarchyProvider", () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         createQueryDefinition("Q"),
       ]);
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       const iterator = provider.getNodes({ parentNode: undefined });
       expect(defineHierarchyLevel).not.toHaveBeenCalled();
       expect(await collectLabels(iterator)).toEqual(["0x1"]);
@@ -268,7 +274,7 @@ describe("createPagingHierarchyProvider", () => {
       // Every root node gets its children from query `CHILDREN`, which returns no rows.
       const rows = new ResolvablePromise<RowDef[]>();
       setupQueries({ Q: rows, CHILDREN: [] });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           defineHierarchyLevel: async ({ parentNode }) => [createQueryDefinition(parentNode ? "CHILDREN" : "Q")],
@@ -304,7 +310,10 @@ describe("createPagingHierarchyProvider", () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async ({ parentNode }) =>
         parentNode ? [] : definitions,
       );
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       const iterator = provider.getNodes({ parentNode: undefined });
 
       // the first definition's node is returned, but the second definition's query is not run
@@ -357,7 +366,10 @@ describe("createPagingHierarchyProvider", () => {
       const definitions = new ResolvablePromise<HierarchyLevelDefinition>();
       setupQueries({ Q: createRows(1) });
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => definitions);
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       const iterator = provider.getNodes({ parentNode: undefined });
 
       const result = iterator.next();
@@ -387,7 +399,7 @@ describe("createPagingHierarchyProvider", () => {
 
     it("streams nodes of multiple definitions in definitions' order", async () => {
       setupQueries({ Q1: createRows(4), Q2: [createRow("x", { HasChildren: false })] });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         pageSize: 3,
         hierarchyDefinition: {
@@ -469,7 +481,7 @@ describe("createPagingHierarchyProvider", () => {
         }
         return [];
       });
-      const provider = createPagingHierarchyProvider({
+      const provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: { defineHierarchyLevel },
         ...providerProps,
@@ -556,7 +568,7 @@ describe("createPagingHierarchyProvider", () => {
     it("post-processes children of hidden nodes with the requested parent node", async () => {
       const postProcessNode = vi.fn<NonNullable<HierarchyDefinition["postProcessNode"]>>(async ({ node }) => node);
       setupQueries({ CHILDREN: [createRow("child", { HasChildren: false })] });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           postProcessNode,
@@ -629,7 +641,7 @@ describe("createPagingHierarchyProvider", () => {
 
     it("throws when the token was created for a different parent node or instance filter", async () => {
       setupQueries({ Q: createRows(1) });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
       });
@@ -651,7 +663,7 @@ describe("createPagingHierarchyProvider", () => {
       ]) {
         expect(() => provider.getNodes({ ...props, continuationToken })).toThrow(
           new InvalidContinuationTokenError(
-            `Continuation token "${continuationToken}" was created for a different parent node or instance filter.`,
+            `Continuation token "${continuationToken}" was created for a different parent node, instance filter or hierarchy search.`,
           ),
         );
       }
@@ -659,7 +671,7 @@ describe("createPagingHierarchyProvider", () => {
 
     it("accepts the token for an equal parent node key, parent keys and instance filter", async () => {
       setupQueries({ Q: createRows(2) });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
       });
@@ -696,7 +708,7 @@ describe("createPagingHierarchyProvider", () => {
     });
 
     it("omits hidden nodes that don't have children", async () => {
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           defineHierarchyLevel: async ({ parentNode }) =>
@@ -720,7 +732,7 @@ describe("createPagingHierarchyProvider", () => {
 
   describe("determining children", () => {
     it("determines children by loading child hierarchy level", async () => {
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           defineHierarchyLevel: async ({ parentNode }) => {
@@ -763,7 +775,10 @@ describe("createPagingHierarchyProvider", () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async ({ parentNode }) =>
         parentNode ? [createQueryDefinition("CHILDREN")] : [{ node: createTestSourceGenericNode({ key: "root" }) }],
       );
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
 
       // The first row of the children query is enough to know the root node has children - the node is returned
       // without waiting for the second row.
@@ -788,7 +803,7 @@ describe("createPagingHierarchyProvider", () => {
           ...createRows(7),
         ],
       });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         pageSize: 3,
         hierarchyDefinition: {
@@ -807,7 +822,7 @@ describe("createPagingHierarchyProvider", () => {
     });
 
     it("determines children through hidden child nodes", async () => {
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           defineHierarchyLevel: async ({ parentNode }) => {
@@ -831,7 +846,7 @@ describe("createPagingHierarchyProvider", () => {
     });
 
     it("doesn't count hidden child nodes without children as children", async () => {
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           defineHierarchyLevel: async ({ parentNode }) => {
@@ -882,14 +897,17 @@ describe("createPagingHierarchyProvider", () => {
         }
         return [];
       });
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       const nodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(nodes.map((n) => n.children)).toEqual([true]);
       expect(defineHierarchyLevel).toHaveBeenCalledTimes(2);
     });
 
     it("hides nodes with `hideIfNoChildren` flag when they don't have children", async () => {
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           defineHierarchyLevel: async ({ parentNode }) => {
@@ -931,7 +949,10 @@ describe("createPagingHierarchyProvider", () => {
   describe("parent nodes", () => {
     it("passes parent node without continuation token to hierarchy definition", async () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => []);
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       const parentNode = {
         key: createTestGenericNodeKey({ id: "parent", source: sourceName }),
         label: "parent",
@@ -950,7 +971,10 @@ describe("createPagingHierarchyProvider", () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         { node: createTestSourceGenericNode() },
       ]);
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       expect(
         await collect(
           provider.getNodes({ parentNode: createTestGroupingNode() as unknown as NonGroupingHierarchyNode }),
@@ -981,7 +1005,10 @@ describe("createPagingHierarchyProvider", () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         { node: createTestSourceGenericNode({ key: "child", children: false }) },
       ]);
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       const parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> = {
         key: {
           type: "instances",
@@ -1017,7 +1044,7 @@ describe("createPagingHierarchyProvider", () => {
   describe("node processing", () => {
     it("uses custom node parser", async () => {
       imodelAccess.createQueryReader.mockReturnValue(createAsyncIterator([{ custom: "0x1" }]));
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           parseNode: async ({ row }) => ({
@@ -1040,7 +1067,7 @@ describe("createPagingHierarchyProvider", () => {
     });
 
     it("pre-processes and post-processes nodes, and ignores grouping params", async () => {
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           preProcessNode: async ({ node }) =>
@@ -1085,7 +1112,7 @@ describe("createPagingHierarchyProvider", () => {
         ] as any,
         children: false,
       });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         formatter: async () => "_x_",
         hierarchyDefinition: { defineHierarchyLevel: async () => [{ node }] },
@@ -1113,7 +1140,7 @@ describe("createPagingHierarchyProvider", () => {
         .fn<HierarchyDefinition["defineHierarchyLevel"]>()
         .mockImplementationOnce(async () => definitionsPromise)
         .mockImplementation(async () => [createQueryDefinition("Q")]);
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         imodelChanged,
         hierarchyDefinition: { defineHierarchyLevel },
@@ -1135,7 +1162,7 @@ describe("createPagingHierarchyProvider", () => {
     it("fails the stream, instead of finishing it, when iModel changes after some nodes are streamed", async () => {
       const imodelChanged = new BeEvent<() => void>();
       setupQueries({ Q: createRows(2) });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         imodelChanged,
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
@@ -1148,7 +1175,7 @@ describe("createPagingHierarchyProvider", () => {
 
     it("fails in-flight requests when formatter changes", async () => {
       setupQueries({ Q: createRows(2) });
-      using provider = createPagingHierarchyProvider({
+      using provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
       });
@@ -1162,7 +1189,10 @@ describe("createPagingHierarchyProvider", () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         createQueryDefinition("Q"),
       ]);
-      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       const iterator = provider.getNodes({ parentNode: undefined });
       provider.setFormatter(undefined);
       await expect(iterator.next()).rejects.toThrow(HierarchyRequestInterruptedError);
@@ -1173,7 +1203,10 @@ describe("createPagingHierarchyProvider", () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         createQueryDefinition("Q"),
       ]);
-      const provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      const provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
       provider[Symbol.dispose]();
       await expect(provider.getNodes({ parentNode: undefined }).next()).rejects.toThrow(
         HierarchyRequestInterruptedError,
@@ -1189,12 +1222,12 @@ describe("createPagingHierarchyProvider", () => {
         imodelChanged,
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
       };
-      using provider = createPagingHierarchyProvider(props);
+      using provider = createStreamingIModelHierarchyProvider(props);
       const [{ continuationToken }] = await collect(provider.getNodes({ parentNode: undefined }));
 
       provider.setFormatter(undefined);
       expect(await collectLabels(provider.getNodes({ parentNode: undefined, continuationToken }))).toEqual(["0x2"]);
-      using otherProvider = createPagingHierarchyProvider(props);
+      using otherProvider = createStreamingIModelHierarchyProvider(props);
       expect(await collectLabels(otherProvider.getNodes({ parentNode: undefined, continuationToken }))).toEqual([
         "0x2",
       ]);
@@ -1211,7 +1244,7 @@ describe("createPagingHierarchyProvider", () => {
       const imodelChanged = new BeEvent<() => void>();
       const definitionsPromise = new ResolvablePromise<HierarchyLevelDefinition>();
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => definitionsPromise);
-      const provider = createPagingHierarchyProvider({
+      const provider = createStreamingIModelHierarchyProvider({
         imodelAccess,
         imodelChanged,
         hierarchyDefinition: { defineHierarchyLevel },
@@ -1225,6 +1258,175 @@ describe("createPagingHierarchyProvider", () => {
       await expect(result).rejects.toThrow(HierarchyRequestInterruptedError);
       await definitionsPromise.resolve([createQueryDefinition("Q")]);
       expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("grouping parent nodes", () => {
+    const groupingNode = {
+      key: { type: "class-grouping" as const, className: "a.b" as const },
+      groupedInstanceKeys: [{ className: "a.b" as const, id: "0x1" }],
+      label: "group",
+      parentKeys: [],
+    };
+
+    it("returns no child nodes", async () => {
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => []);
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
+      expect(await collect(provider.getNodes({ parentNode: groupingNode }))).toEqual([]);
+      expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+
+    it("returns grouped instance keys", async () => {
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => []);
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
+      expect(await collect(provider.getNodeInstanceKeys({ parentNode: groupingNode }))).toEqual(
+        groupingNode.groupedInstanceKeys,
+      );
+      expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("node instance keys", () => {
+    it("returns instance keys of child nodes, replacing hidden nodes with their children's keys", async () => {
+      setupQueries({
+        Q: [createRow("0x1"), createRow("0x2"), createRow("0x3", { HideNodeInHierarchy: true })],
+        HIDDEN_GENERIC_CHILDREN: [createRow("0x4")],
+        HIDDEN_INSTANCE_CHILDREN: [createRow("0x5")],
+      });
+      const instanceFilter: GenericInstanceFilter = {
+        propertyClassNames: ["a.b"],
+        relatedInstances: [],
+        rules: { operator: "and", rules: [] },
+      };
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async ({ parentNode }) => {
+        if (!parentNode) {
+          return [
+            { node: createTestSourceGenericNode({ key: "visible" }) },
+            { node: createTestSourceGenericNode({ key: "hidden", processingParams: { hideInHierarchy: true } }) },
+            {
+              node: createTestSourceGenericNode({
+                key: "hidden-without-children",
+                children: false,
+                processingParams: { hideInHierarchy: true },
+              }),
+            },
+            createQueryDefinition("Q"),
+          ];
+        }
+        if (isParent(parentNode, "hidden")) {
+          return [createQueryDefinition("HIDDEN_GENERIC_CHILDREN")];
+        }
+        if (isParent(parentNode, "0x3")) {
+          return [createQueryDefinition("HIDDEN_INSTANCE_CHILDREN")];
+        }
+        throw new Error("Unexpected parent node");
+      });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
+      expect(await collect(provider.getNodeInstanceKeys({ parentNode: undefined, instanceFilter }))).toEqual(
+        ["0x4", "0x1", "0x2", "0x5"].map((id) => ({ className: "a.b", id, imodelKey: imodelAccess.imodelKey })),
+      );
+      // hidden nodes' children are requested with the same instance filter
+      expect(defineHierarchyLevel).toHaveBeenCalledTimes(3);
+      for (const [props] of defineHierarchyLevel.mock.calls) {
+        expect(props.instanceFilter).toBe(instanceFilter);
+      }
+    });
+
+    it("returns instance keys of the given parent node's children", async () => {
+      setupQueries({ CHILDREN: [createRow("0x1")] });
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async ({ parentNode }) =>
+        parentNode ? [createQueryDefinition("CHILDREN")] : [{ node: createTestSourceGenericNode({ key: "parent" }) }],
+      );
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
+      const [parentNode] = await collect(provider.getNodes({ parentNode: undefined }));
+      defineHierarchyLevel.mockClear();
+      expect(await collect(provider.getNodeInstanceKeys({ parentNode }))).toEqual([
+        { className: "a.b", id: "0x1", imodelKey: imodelAccess.imodelKey },
+      ]);
+      // the parent node is passed to the hierarchy definition without its continuation token
+      expect(defineHierarchyLevel.mock.calls[0][0].parentNode).not.toHaveProperty("continuationToken");
+    });
+
+    it("fails when hierarchy changes while reading", async () => {
+      const definitions = new ResolvablePromise<HierarchyLevelDefinition>();
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => definitions);
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
+      const result = provider.getNodeInstanceKeys({ parentNode: undefined }).next();
+      await waitFor(() => expect(defineHierarchyLevel).toHaveBeenCalledOnce());
+      provider.setFormatter(undefined);
+      await expect(result).rejects.toThrow(HierarchyRequestInterruptedError);
+    });
+  });
+
+  describe("hierarchy search", () => {
+    const defineHierarchyLevel = async () => [
+      { node: createTestSourceGenericNode({ key: "a", label: "a", children: false }) },
+      { node: createTestSourceGenericNode({ key: "b", label: "b", children: false }) },
+    ];
+    const search = { paths: [{ identifier: { type: "generic" as const, id: "b" } }] };
+
+    it("applies search given at creation and set later", async () => {
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+        search,
+      });
+      const [node] = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(node).toMatchObject({ label: "b", search: { isSearchTarget: true } });
+
+      const listener = vi.fn();
+      provider.hierarchyChanged.addListener(listener);
+      provider.setHierarchySearch(undefined);
+      expect(listener).toHaveBeenCalledWith({ searchChange: { newSearch: undefined } });
+      expect(await collectLabels(provider.getNodes({ parentNode: undefined }))).toEqual(["a", "b"]);
+
+      provider.setHierarchySearch(search);
+      expect(listener).toHaveBeenCalledWith({ searchChange: { newSearch: search } });
+      expect(await collectLabels(provider.getNodes({ parentNode: undefined }))).toEqual(["b"]);
+    });
+
+    it("fails in-flight requests when search changes", async () => {
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
+      const iterator = provider.getNodes({ parentNode: undefined });
+      expect((await iterator.next()).value.label).toBe("a");
+      provider.setHierarchySearch(search);
+      await expect(iterator.next()).rejects.toThrow(HierarchyRequestInterruptedError);
+    });
+
+    it("accepts continuation tokens only with the search they were created with", async () => {
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+      });
+      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode: undefined }));
+
+      provider.setHierarchySearch(search);
+      expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
+        new InvalidContinuationTokenError(
+          `Continuation token "${continuationToken}" was created for a different parent node, instance filter or hierarchy search.`,
+        ),
+      );
+
+      provider.setHierarchySearch(undefined);
+      expect(await collectLabels(provider.getNodes({ parentNode: undefined, continuationToken }))).toEqual(["b"]);
     });
   });
 });

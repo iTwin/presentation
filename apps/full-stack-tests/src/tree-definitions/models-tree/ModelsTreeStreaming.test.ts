@@ -13,15 +13,15 @@ import {
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createPagingHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createStreamingIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createModelsTree } from "@itwin/presentation-tree-definitions";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { buildIModel } from "../IModelUtils.js";
 
-import type { PagedHierarchyNode, PagingHierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { StreamedHierarchyNode, StreamingIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
-describe("Models tree with paging hierarchy provider", () => {
+describe("Models tree with streaming iModel hierarchy provider", () => {
   beforeAll(async () => {
     await initialize();
   });
@@ -100,7 +100,7 @@ describe("Models tree with paging hierarchy provider", () => {
     });
     const createQueryReaderSpy = vi.spyOn(imodelAccess, "createQueryReader");
 
-    using pagingProvider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition, pageSize: 2 });
+    using pagingProvider = createStreamingIModelHierarchyProvider({ imodelAccess, hierarchyDefinition, pageSize: 2 });
     const pagedHierarchy = await loadHierarchy(pagingProvider);
     // the provider doesn't sort nodes, so compare labels in sorted order
     expect(toSortedLabels(pagedHierarchy)).toEqual([
@@ -148,7 +148,7 @@ describe("Models tree with paging hierarchy provider", () => {
     expect(createQueryReaderSpy.mock.calls.some(([query]) => query.ecsql.includes("LIMIT 2 OFFSET 2"))).toBe(true);
 
     // paging doesn't affect the result - neither the nodes, nor their order or continuation tokens
-    using nonPagingProvider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition });
+    using nonPagingProvider = createStreamingIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
     expect(await loadHierarchy(nonPagingProvider)).toEqual(pagedHierarchy);
 
     for (const { parentNode, nodes } of getLevels(pagedHierarchy)) {
@@ -163,13 +163,13 @@ describe("Models tree with paging hierarchy provider", () => {
 });
 
 interface LoadedNode {
-  node: PagedHierarchyNode;
+  node: StreamedHierarchyNode;
   children: LoadedNode[];
 }
 
 async function loadHierarchy(
-  provider: PagingHierarchyProvider,
-  parentNode?: PagedHierarchyNode,
+  provider: StreamingIModelHierarchyProvider,
+  parentNode?: StreamedHierarchyNode,
 ): Promise<LoadedNode[]> {
   const nodes = await collect(provider.getNodes({ parentNode }));
   return Promise.all(
@@ -180,7 +180,7 @@ async function loadHierarchy(
 type SortedLabels = Array<string | { label: string; children: SortedLabels }>;
 function toSortedLabels(hierarchy: LoadedNode[]): SortedLabels {
   // element labels are suffixed with element's id, e.g. `element 1.1 [0-5]` - drop the suffix to keep expectations stable
-  const getLabel = (node: PagedHierarchyNode) => node.label.replace(/ \[[^\]]+\]$/, "");
+  const getLabel = (node: StreamedHierarchyNode) => node.label.replace(/ \[[^\]]+\]$/, "");
   return [...hierarchy]
     .sort((lhs, rhs) => getLabel(lhs.node).localeCompare(getLabel(rhs.node)))
     .map(({ node, children }) =>
@@ -190,8 +190,8 @@ function toSortedLabels(hierarchy: LoadedNode[]): SortedLabels {
 
 function* getLevels(
   hierarchy: LoadedNode[],
-  parentNode?: PagedHierarchyNode,
-): Generator<{ parentNode: PagedHierarchyNode | undefined; nodes: PagedHierarchyNode[] }> {
+  parentNode?: StreamedHierarchyNode,
+): Generator<{ parentNode: StreamedHierarchyNode | undefined; nodes: StreamedHierarchyNode[] }> {
   yield { parentNode, nodes: hierarchy.map(({ node }) => node) };
   for (const { node, children } of hierarchy) {
     if (children.length) {

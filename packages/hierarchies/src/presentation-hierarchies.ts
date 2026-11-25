@@ -32,11 +32,11 @@ export {
   createMergedIModelHierarchyProvider,
 } from "./hierarchies/imodel/IModelHierarchyProvider.js";
 export type {
-  GetPagedHierarchyNodesProps,
-  PagedHierarchyNode,
-  PagingHierarchyProvider,
-} from "./hierarchies/imodel/PagingHierarchyProvider.js";
-export { createPagingHierarchyProvider } from "./hierarchies/imodel/PagingHierarchyProvider.js";
+  GetStreamedHierarchyNodesProps,
+  StreamedHierarchyNode,
+  StreamingIModelHierarchyProvider,
+} from "./hierarchies/imodel/StreamingIModelHierarchyProvider.js";
+export { createStreamingIModelHierarchyProvider } from "./hierarchies/imodel/StreamingIModelHierarchyProvider.js";
 export type { SourceHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 export { ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 

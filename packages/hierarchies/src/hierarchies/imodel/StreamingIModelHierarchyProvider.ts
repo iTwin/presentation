@@ -25,6 +25,8 @@ import {
 import { BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
 import { createDefaultValueFormatter } from "@itwin/presentation-shared";
 import { HierarchyRequestInterruptedError, InvalidContinuationTokenError } from "../HierarchyErrors.js";
+import { HierarchyNode } from "../HierarchyNode.js";
+import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, createNodeIdentifierForLogging } from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
 import { getRxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
@@ -38,6 +40,7 @@ import {
   toFinalNode,
 } from "./HierarchyProviderUtils.js";
 import { HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
+import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
 import { readNodeRows } from "./TreeNodesReader.js";
 
 import type { MonoTypeOperatorFunction, Subscription } from "rxjs";
@@ -49,10 +52,12 @@ import type {
   Event,
   EventListener,
   IInstanceLabelSelectClauseFactory,
+  InstanceKey,
   IPrimitiveValueFormatter,
 } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
-import type { HierarchyProvider } from "../HierarchyProvider.js";
+import type { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
+import type { HierarchySearchTree } from "../HierarchySearch.js";
 import type { RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
 import type { ProviderSourceNode } from "./HierarchyProviderUtils.js";
 import type {
@@ -65,14 +70,14 @@ import type { ProcessedGenericHierarchyNode, ProcessedInstanceHierarchyNode } fr
 import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
 
-const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.PagingHierarchyProvider`;
+const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.StreamingIModelHierarchyProvider`;
 const DEFAULT_PAGE_SIZE = 10_000;
 
 /**
- * Props for `createPagingHierarchyProvider`.
+ * Props for `createStreamingIModelHierarchyProvider`.
  * @beta
  */
-export interface PagingHierarchyProviderProps {
+export interface StreamingIModelHierarchyProviderProps {
   /**
    * An object that provides access to iModel's data and metadata.
    *
@@ -125,21 +130,28 @@ export interface PagingHierarchyProviderProps {
    * Defaults to the result of `createIModelInstanceLabelSelectClauseFactory` called with the provided `imodelAccess`.
    */
   instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
+
+  /**
+   * Hierarchy search that limits the hierarchy to paths leading to the search targets. May be changed by calling
+   * `setHierarchySearch` on the provider instance.
+   */
+  search?: {
+    /** A list of search trees that define paths from root to search target nodes. */
+    paths: HierarchySearchTree[];
+  };
 }
 
 /**
- * Props for `PagingHierarchyProvider.getNodes` call.
+ * Props for `StreamingIModelHierarchyProvider.getNodes` call.
+ *
+ * The provider loads nodes in pages and doesn't cache them, so `hierarchyLevelSizeLimit` and `ignoreCache` have no
+ * effect. Grouping parent nodes have no children, because the provider doesn't create grouping nodes.
  * @beta
  */
-export interface GetPagedHierarchyNodesProps {
-  /** Parent node to get children for. Pass `undefined` to get root nodes. */
-  parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
-
-  /** Optional hierarchy level filter. */
-  instanceFilter?: GenericInstanceFilter;
-
+export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps {
   /**
-   * A `PagedHierarchyNode.continuationToken` of a node, previously returned for the same parent node and instance filter.
+   * A `StreamedHierarchyNode.continuationToken` of a node, previously returned for the same parent node, instance filter
+   * and hierarchy search.
    * When specified, the provider continues streaming nodes from the one that follows the node, the token belongs to.
    * Continuing from the last node in the hierarchy level returns no nodes. Tokens created before an iModel change can't
    * be used after it.
@@ -148,12 +160,12 @@ export interface GetPagedHierarchyNodesProps {
 }
 
 /**
- * A hierarchy node returned by `PagingHierarchyProvider`.
+ * A hierarchy node returned by `StreamingIModelHierarchyProvider`.
  * @beta
  */
-export type PagedHierarchyNode = NonGroupingHierarchyNode & {
+export type StreamedHierarchyNode = NonGroupingHierarchyNode & {
   /**
-   * An opaque token that identifies node's position in its hierarchy level. Pass it to `PagingHierarchyProvider.getNodes`
+   * An opaque token that identifies node's position in its hierarchy level. Pass it to `StreamingIModelHierarchyProvider.getNodes`
    * to continue streaming nodes from the one that follows this node.
    */
   continuationToken: string;
@@ -165,7 +177,7 @@ export type PagedHierarchyNode = NonGroupingHierarchyNode & {
  *
  * @beta
  */
-export interface PagingHierarchyProvider extends Disposable {
+export interface StreamingIModelHierarchyProvider extends HierarchyProvider, Disposable {
   /**
    * An event that provider raises due to a hierarchy change that requires a reload. In-flight `getNodes` requests fail
    * with `HierarchyRequestInterruptedError` when the event is raised. Continuation tokens of nodes returned before an
@@ -178,21 +190,21 @@ export interface PagingHierarchyProvider extends Disposable {
    * instance nodes query definition, in the order of query results.
    *
    * Nodes are loaded on demand - the provider doesn't run queries until a node that needs them is requested, and
-   * stopping the iteration stops loading. Query results are loaded in pages of `PagingHierarchyProviderProps.pageSize`
+   * stopping the iteration stops loading. Query results are loaded in pages of `StreamingIModelHierarchyProviderProps.pageSize`
    * rows.
    *
    * Nodes with `hideInHierarchy` processing param are replaced by their children in place. Nodes with `hideIfNoChildren`
    * processing param are omitted if they have no children.
    *
    * @throws `InvalidContinuationTokenError` if the given `continuationToken` is malformed, was created for a different
-   * parent node or instance filter, or was created before an iModel change.
+   * parent node, instance filter or hierarchy search, or was created before an iModel change.
    * @throws `InvalidContinuationTokenError` from the iterator, if the given `continuationToken` points to a hierarchy
    * level definition that doesn't exist.
    * @throws `HierarchyRequestInterruptedError` from the iterator, if the hierarchy changes or the provider is disposed
    * after `getNodes` is called and before all nodes are streamed, or if the provider was already disposed when
    * `getNodes` was called. The iterator only finishes without an error after the last node of the hierarchy level.
    */
-  getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode>;
+  getNodes(props: GetStreamedHierarchyNodesProps): AsyncIterableIterator<StreamedHierarchyNode>;
 
   /**
    * Overrides the property value formatter used to format node labels. Setting to `undefined` resets the formatter
@@ -202,10 +214,29 @@ export interface PagingHierarchyProvider extends Disposable {
    * the `hierarchyChanged` event with `formatterChange` arg.
    */
   setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
+
+  /**
+   * Streams instance keys of nodes in the specified parent node's child hierarchy level, replacing hidden nodes with
+   * instance keys of their children. Nodes with `hideIfNoChildren` processing param are included without checking
+   * whether they have children.
+   *
+   * @throws `HierarchyRequestInterruptedError` from the iterator, under the same conditions as `getNodes`.
+   */
+  getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
+
+  /**
+   * Sets the hierarchy search, which limits the hierarchy to paths leading to the search targets. Setting to
+   * `undefined` removes the search.
+   *
+   * @note Changing the search fails in-flight requests with `HierarchyRequestInterruptedError` and triggers the
+   * `hierarchyChanged` event with `searchChange` arg. Continuation tokens are only accepted with the search they were
+   * created with.
+   */
+  setHierarchySearch(props: StreamingIModelHierarchyProviderProps["search"]): void;
 }
 
 /**
- * Creates a `PagingHierarchyProvider` that creates a hierarchy based on the given iModel and a hierarchy definition,
+ * Creates a `StreamingIModelHierarchyProvider` that creates a hierarchy based on the given iModel and a hierarchy definition,
  * which defines each hierarchy level through ECSQL queries.
  *
  * Unlike the provider created by `createIModelHierarchyProvider`, this one doesn't group, sort or merge nodes. Instead,
@@ -215,12 +246,14 @@ export interface PagingHierarchyProvider extends Disposable {
  * @throws `Error` if `pageSize` is not a positive integer.
  * @beta
  */
-export function createPagingHierarchyProvider(props: PagingHierarchyProviderProps): PagingHierarchyProvider {
-  return new PagingHierarchyProviderImpl(props);
+export function createStreamingIModelHierarchyProvider(
+  props: StreamingIModelHierarchyProviderProps,
+): StreamingIModelHierarchyProvider {
+  return new StreamingIModelHierarchyProviderImpl(props);
 }
 
-type PagingParentNode = ParentHierarchyNode<NonGroupingHierarchyNode>;
-type PagingProcessedNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode;
+type StreamingParentNode = ParentHierarchyNode<NonGroupingHierarchyNode>;
+type StreamingProcessedNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode;
 
 /**
  * Identifies a node in a hierarchy level: `definitionIndex` is the index of hierarchy level definition the node was
@@ -236,8 +269,8 @@ interface LevelPosition {
  * except the last one, points to a hidden node (one with `hideInHierarchy` processing param), and each subsequent
  * position points to a node in that hidden node's child hierarchy level.
  *
- * Exposed to consumers as an opaque `string` through `PagedHierarchyNode.continuationToken` and
- * `GetPagedHierarchyNodesProps.continuationToken` - see `encodeContinuationToken` and `decodeContinuationToken`.
+ * Exposed to consumers as an opaque `string` through `StreamedHierarchyNode.continuationToken` and
+ * `GetStreamedHierarchyNodesProps.continuationToken` - see `encodeContinuationToken` and `decodeContinuationToken`.
  *
  * Example: root hierarchy level is defined by a single query that returns `[a, b, hidden, d, e]`. The `hidden` node's
  * child hierarchy level is defined by a single query that returns `[c1, c2, cHidden, c4]`, and `cHidden` node's children
@@ -260,7 +293,7 @@ interface ResumeProps {
 }
 
 interface LevelNode {
-  node: PagingProcessedNode;
+  node: StreamingProcessedNode;
   /** Position of the node in its hierarchy level. */
   position: LevelPosition;
   /** Set if the node is hidden and reading should resume inside its child hierarchy level. */
@@ -268,7 +301,7 @@ interface LevelNode {
 }
 
 interface ReadLevelProps<TResult> {
-  parentNode: PagingParentNode | undefined;
+  parentNode: StreamingParentNode | undefined;
   instanceFilter?: GenericInstanceFilter;
   /** Continuation token to resume reading from, relative to this hierarchy level. */
   continuationToken?: ContinuationToken;
@@ -279,7 +312,7 @@ interface ReadLevelProps<TResult> {
 
 interface StreamLevelProps extends Omit<ReadLevelProps<never>, "processNode"> {
   /** Parent node of the requested hierarchy level - an ancestor of `parentNode` when that one is hidden. */
-  requestedParentNode: PagingParentNode | undefined;
+  requestedParentNode: StreamingParentNode | undefined;
   /** Continuation token of the hidden parent node, used as a prefix for continuation tokens of this level's nodes. */
   parentContinuationToken: ContinuationToken;
   /** Request-specific data, encoded into continuation tokens of this level's nodes. */
@@ -292,9 +325,13 @@ interface ReadSourceNode {
   nestedContinuationToken?: ContinuationToken;
 }
 
-class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
-  readonly #imodelAccess: PagingHierarchyProviderProps["imodelAccess"];
-  readonly #hierarchyDefinition: RxjsHierarchyDefinition;
+class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyProvider {
+  readonly #imodelAccess: StreamingIModelHierarchyProviderProps["imodelAccess"];
+  readonly #sourceHierarchyDefinition: RxjsHierarchyDefinition;
+  // the source hierarchy definition, wrapped with search, if one is set
+  #hierarchyDefinition: RxjsHierarchyDefinition;
+  // hash of the search paths, included in continuation tokens' fingerprints
+  #searchFingerprint = "";
   readonly #hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
   readonly #createNodesQueryClauseFactory: () => NodesQueryClauseFactory;
   readonly #componentId = Guid.createValue();
@@ -309,14 +346,16 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   #valuesFormatter: IPrimitiveValueFormatter;
   #unsubscribe?: () => void;
 
-  public constructor(props: PagingHierarchyProviderProps & { sourceName?: string }) {
+  public constructor(props: StreamingIModelHierarchyProviderProps & { sourceName?: string }) {
     this.#pageSize = props.pageSize ?? DEFAULT_PAGE_SIZE;
     if (!Number.isSafeInteger(this.#pageSize) || this.#pageSize < 1) {
       throw new Error(`Invalid page size: ${this.#pageSize}. Expected a positive integer.`);
     }
     this.#imodelAccess = props.imodelAccess;
-    this.#hierarchyDefinition = getRxjsHierarchyDefinition(props.hierarchyDefinition);
-    this.#sourceName = props.sourceName ?? `PagingHierarchyProvider:${this.#componentId}`;
+    this.#sourceName = props.sourceName ?? `StreamingIModelHierarchyProvider:${this.#componentId}`;
+    this.#sourceHierarchyDefinition = getRxjsHierarchyDefinition(props.hierarchyDefinition);
+    this.#hierarchyDefinition = this.#sourceHierarchyDefinition;
+    this.#applySearch(props.search);
     this.#valuesFormatter = props.formatter ?? createDefaultValueFormatter();
     this.#createNodesQueryClauseFactory = () =>
       createIModelNodesQueryClauseFactory({
@@ -365,10 +404,34 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     this.#hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this.#valuesFormatter } });
   }
 
-  public getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode> {
+  public setHierarchySearch(props: StreamingIModelHierarchyProviderProps["search"]) {
+    this.#interrupt();
+    this.#applySearch(props);
+    this.#hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
+  }
+
+  #applySearch(search: StreamingIModelHierarchyProviderProps["search"]) {
+    this.#hierarchyDefinition = search
+      ? new SearchHierarchyDefinition({
+          imodelAccess: this.#imodelAccess,
+          source: this.#sourceHierarchyDefinition,
+          sourceName: this.#sourceName,
+          targetPaths: search.paths,
+        })
+      : this.#sourceHierarchyDefinition;
+    this.#searchFingerprint = search ? hashString(stableStringify(search.paths)) : "";
+  }
+
+  /** Creates an interrupt observable that emits on any hierarchy change after this call or if the provider is disposed. */
+  #createInterrupt(): Observable<unknown> {
+    const generation = this.#interruptGeneration.value;
+    return this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
+  }
+
+  public getNodes(props: GetStreamedHierarchyNodesProps): AsyncIterableIterator<StreamedHierarchyNode> {
     const tokenContext: ContinuationTokenContext = {
       generation: this.#hierarchyGeneration,
-      fingerprint: createRequestFingerprint(props),
+      fingerprint: createRequestFingerprint({ ...props, searchFingerprint: this.#searchFingerprint }),
     };
     // decode the token eagerly to fail early on invalid input
     const continuationToken =
@@ -378,13 +441,43 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     // number of nodes that the consumer has requested, but hasn't received yet
     const pendingRequestsCount = new BehaviorSubject(0);
     // the request is interrupted by any hierarchy change after this call, even if iteration hasn't started yet
-    const generation = this.#interruptGeneration.value;
-    const interrupt = this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
+    const interrupt = this.#createInterrupt();
     return requestOnDemand({
       source: this.#getNodesObservable({ ...props, continuationToken, tokenContext, pendingRequestsCount }).pipe(
         throwOnInterrupt(interrupt),
       ),
       onRequest: () => pendingRequestsCount.next(pendingRequestsCount.value + 1),
+    });
+  }
+
+  public getNodeInstanceKeys({
+    parentNode,
+    instanceFilter,
+  }: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey> {
+    const interrupt = this.#createInterrupt();
+    const source: Observable<InstanceKey> =
+      parentNode && HierarchyNode.isGroupingNode(parentNode)
+        ? from(parentNode.groupedInstanceKeys)
+        : this.#readInstanceKeys({ parentNode: parentNode && toDefinitionParentNode(parentNode), instanceFilter });
+    return requestOnDemand({ source: source.pipe(throwOnInterrupt(interrupt)), onRequest: () => {} });
+  }
+
+  /** Reads instance keys of nodes in the given parent node's child hierarchy level, going into hidden nodes. */
+  #readInstanceKeys({
+    parentNode,
+    instanceFilter,
+  }: Pick<ReadLevelProps<never>, "parentNode" | "instanceFilter">): Observable<InstanceKey> {
+    return this.#readLevel({
+      parentNode,
+      instanceFilter,
+      // instance keys aren't requested one by one, so read them all
+      demand: of(undefined),
+      processNode: ({ node }) => {
+        if (node.processingParams?.hideInHierarchy) {
+          return node.children === false ? EMPTY : this.#readInstanceKeys({ parentNode: node, instanceFilter });
+        }
+        return HierarchyNodeKey.isInstances(node.key) ? from(node.key.instanceKeys) : EMPTY;
+      },
     });
   }
 
@@ -394,15 +487,18 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     continuationToken,
     tokenContext,
     pendingRequestsCount,
-  }: Omit<GetPagedHierarchyNodesProps, "continuationToken"> & {
+  }: Omit<GetStreamedHierarchyNodesProps, "continuationToken"> & {
     continuationToken: ContinuationToken | undefined;
     tokenContext: ContinuationTokenContext;
     pendingRequestsCount: BehaviorSubject<number>;
-  }): Observable<PagedHierarchyNode> {
+  }): Observable<StreamedHierarchyNode> {
     return defer(() => {
+      const requestedParentNode = parentNode ? toDefinitionParentNode(parentNode) : undefined;
+      if (parentNode && !requestedParentNode) {
+        return EMPTY;
+      }
       const timer = new StopWatch(undefined, true);
       let nodesCount = 0;
-      const requestedParentNode = parentNode ? toDefinitionParentNode(parentNode) : undefined;
       return this.#streamLevel({
         parentNode: requestedParentNode,
         requestedParentNode,
@@ -433,7 +529,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
    * Streams nodes of a hierarchy level the way they're returned by `getNodes`, replacing hidden nodes with their
    * children.
    */
-  #streamLevel(props: StreamLevelProps): Observable<PagedHierarchyNode> {
+  #streamLevel(props: StreamLevelProps): Observable<StreamedHierarchyNode> {
     const { parentNode, requestedParentNode, instanceFilter, parentContinuationToken, tokenContext, demand } = props;
     return this.#readLevel({
       parentNode,
@@ -444,7 +540,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
         const nodeContinuationToken = [...parentContinuationToken, position];
         if (!node.processingParams?.hideInHierarchy) {
           return this.#finalizeNode({ node, parentNode: requestedParentNode }).pipe(
-            map((finalNode): PagedHierarchyNode => ({
+            map((finalNode): StreamedHierarchyNode => ({
               ...finalNode,
               continuationToken: encodeContinuationToken(nodeContinuationToken, tokenContext),
             })),
@@ -556,7 +652,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     processSourceNode,
   }: {
     definition: InstanceNodesQueryDefinition;
-    parentNode: PagingParentNode | undefined;
+    parentNode: StreamingParentNode | undefined;
     resume: ResumeProps | undefined;
     demand: Observable<unknown>;
     processSourceNode: (sourceNode: ReadSourceNode) => Observable<TResult>;
@@ -614,8 +710,8 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     node,
     parentNode,
   }: {
-    node: PagingProcessedNode;
-    parentNode: PagingParentNode | undefined;
+    node: StreamingProcessedNode;
+    parentNode: StreamingParentNode | undefined;
   }): Observable<NonGroupingHierarchyNode> {
     const { postProcessNode } = this.#hierarchyDefinition;
     return this.#determineChildren(node).pipe(
@@ -623,7 +719,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
       concatMap((children) =>
         postProcessNode ? postProcessNode({ node: { ...node, children }, parentNode }) : of({ ...node, children }),
       ),
-      map((postProcessed) => toFinalNode(postProcessed as PagingProcessedNode)),
+      map((postProcessed) => toFinalNode(postProcessed as StreamingProcessedNode)),
     );
   }
 
@@ -644,7 +740,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     parentNode,
   }: {
     row: ECSqlQueryRow;
-    parentNode: PagingParentNode | undefined;
+    parentNode: StreamingParentNode | undefined;
   }): Observable<ProviderSourceNode> {
     return parseSourceNode({
       row,
@@ -660,8 +756,8 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     parentNode,
   }: {
     sourceNode: ProviderSourceNode;
-    parentNode: PagingParentNode | undefined;
-  }): Observable<PagingProcessedNode> {
+    parentNode: StreamingParentNode | undefined;
+  }): Observable<StreamingProcessedNode> {
     return preProcessSourceNode({
       node: sourceNode,
       parentNode,
@@ -670,11 +766,11 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     }).pipe(map((node) => omitGroupingParams(node)));
   }
 
-  #determineChildren(node: PagingProcessedNode): Observable<boolean> {
+  #determineChildren(node: StreamingProcessedNode): Observable<boolean> {
     return node.children !== undefined ? of(node.children) : this.#hasChildren(node);
   }
 
-  #hasChildren(node: PagingProcessedNode): Observable<boolean> {
+  #hasChildren(node: StreamingProcessedNode): Observable<boolean> {
     return this.#readLevel({
       parentNode: node,
       // determining children isn't limited by what the consumer has requested - it stops at the first child instead
@@ -789,15 +885,23 @@ function requestOnDemand<T>({
   };
 }
 
-function toDefinitionParentNode(parentNode: PagingParentNode): PagingParentNode {
-  if ("continuationToken" in parentNode) {
-    const { continuationToken: _, ...rest } = parentNode;
+/**
+ * Returns the given parent node the way it's passed to the hierarchy definition, or `undefined` for grouping nodes,
+ * whose children aren't defined by hierarchy definitions.
+ */
+function toDefinitionParentNode(parentNode: ParentHierarchyNode): StreamingParentNode | undefined {
+  if (HierarchyNode.isGroupingNode(parentNode)) {
+    return undefined;
+  }
+  const nonGroupingParentNode = parentNode as StreamingParentNode;
+  if ("continuationToken" in nonGroupingParentNode) {
+    const { continuationToken: _, ...rest } = nonGroupingParentNode;
     return rest;
   }
-  return parentNode;
+  return nonGroupingParentNode;
 }
 
-function omitGroupingParams<TNode extends PagingProcessedNode>(node: TNode): TNode {
+function omitGroupingParams<TNode extends StreamingProcessedNode>(node: TNode): TNode {
   if (!node.processingParams || !("grouping" in node.processingParams)) {
     return node;
   }
@@ -824,7 +928,7 @@ const CONTINUATION_TOKEN_VERSION = 1;
 interface ContinuationTokenContext {
   /** Hierarchy generation the token was created in - tokens created before an iModel change can't be used after it. */
   generation: number;
-  /** Fingerprint of the parent node and instance filter the token was created for. */
+  /** Fingerprint of the parent node, instance filter and hierarchy search the token was created for. */
   fingerprint: string;
 }
 
@@ -834,7 +938,7 @@ interface ContinuationTokenPayload {
   v: typeof CONTINUATION_TOKEN_VERSION;
   /** Hierarchy generation. */
   g: number;
-  /** Parent node and instance filter fingerprint. */
+  /** Parent node, instance filter and hierarchy search fingerprint. */
   f: string;
   /** Token path as `[definitionIndex, offset]` pairs. */
   p: Array<[number, number]>;
@@ -868,7 +972,7 @@ function decodeContinuationToken(token: string, context: ContinuationTokenContex
   }
   if (payload.f !== context.fingerprint) {
     throw new InvalidContinuationTokenError(
-      `Continuation token "${token}" was created for a different parent node or instance filter.`,
+      `Continuation token "${token}" was created for a different parent node, instance filter or hierarchy search.`,
     );
   }
   return payload.p.map(([definitionIndex, offset]) => ({ definitionIndex, offset }));
@@ -896,9 +1000,13 @@ function isContinuationTokenPayload(value: unknown): value is ContinuationTokenP
   );
 }
 
-/** Creates a short fingerprint of request's parent node key, its parent keys and instance filter. */
-function createRequestFingerprint({ parentNode, instanceFilter }: GetPagedHierarchyNodesProps): string {
-  return hashString(stableStringify([parentNode?.key, parentNode?.parentKeys, instanceFilter]));
+/** Creates a short fingerprint of request's parent node key, its parent keys, instance filter and hierarchy search. */
+function createRequestFingerprint({
+  parentNode,
+  instanceFilter,
+  searchFingerprint,
+}: GetStreamedHierarchyNodesProps & { searchFingerprint: string }): string {
+  return hashString(stableStringify([parentNode?.key, parentNode?.parentKeys, instanceFilter, searchFingerprint]));
 }
 
 /** Serializes the value to JSON with object keys sorted, so equal values produce equal strings. */
@@ -910,12 +1018,15 @@ function stableStringify(value: unknown): string {
   );
 }
 
-/** Calculates 32-bit FNV-1a hash of the string and returns it in base 36. */
+/** Calculates 32-bit FNV-1a hash of the string and returns it in base 36 (at most 7 characters). */
 function hashString(value: string): string {
+  // FNV-1a 32-bit offset basis
   let hash = 0x811c9dc5;
   for (let i = 0; i < value.length; ++i) {
     hash ^= value.charCodeAt(i);
+    // multiply by FNV-1a 32-bit prime, keeping the result within 32 bits
     hash = Math.imul(hash, 0x01000193);
   }
+  // convert to unsigned - the largest value, 2^32 - 1 (can always fit in at most 7 length string)
   return (hash >>> 0).toString(36);
 }

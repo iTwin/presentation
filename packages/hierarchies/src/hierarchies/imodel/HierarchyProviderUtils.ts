@@ -77,19 +77,15 @@ export function defineHierarchyLevel({
 
 /**
  * Returns the given parent node without the parts that don't belong to the provider with given `sourceName` and
- * iModel with given `imodelKey`, or `undefined` if no part of the node belongs to them. Children of grouping nodes
- * aren't defined by hierarchy definitions, so `undefined` is returned for them, too.
+ * iModel with given `imodelKey`, or `undefined` if no part of the node belongs to them.
  */
-export function getOwnParentNode<TNode extends ParentHierarchyNode>(
+export function getOwnParentNode<TNode extends HierarchyDefinitionParentNode>(
   parentNode: TNode,
   { sourceName, imodelKey }: { sourceName: string; imodelKey: string },
 ): TNode | undefined {
   const { key } = parentNode;
   if (HierarchyNodeKey.isGeneric(key)) {
     return !key.source || key.source === sourceName ? parentNode : undefined;
-  }
-  if (!HierarchyNodeKey.isInstances(key)) {
-    return undefined;
   }
   // The node may represent instances from multiple iModels. Instance ids are only unique within an iModel, so
   // querying children of other iModels' instances could return children of unrelated instances of this iModel.

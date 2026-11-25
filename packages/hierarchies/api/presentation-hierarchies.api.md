@@ -87,11 +87,11 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
 // @public
 export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
-// @beta
-export function createPagingHierarchyProvider(props: PagingHierarchyProviderProps): PagingHierarchyProvider;
-
 // @public
 export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition;
+
+// @beta
+export function createStreamingIModelHierarchyProvider(props: StreamingIModelHierarchyProviderProps): StreamingIModelHierarchyProvider;
 
 // @public
 export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
@@ -227,10 +227,8 @@ export interface GetHierarchyNodesProps {
 export function getLogger(): ILogger;
 
 // @beta
-export interface GetPagedHierarchyNodesProps {
+export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps {
     continuationToken?: string;
-    instanceFilter?: GenericInstanceFilter;
-    parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
 }
 
 // @public
@@ -750,30 +748,6 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
     supportsFiltering?: boolean;
 }
 
-// @beta
-export type PagedHierarchyNode = NonGroupingHierarchyNode & {
-    continuationToken: string;
-};
-
-// @beta
-export interface PagingHierarchyProvider extends Disposable {
-    getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode>;
-    readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
-    setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
-}
-
-// @beta
-interface PagingHierarchyProviderProps {
-    formatter?: IPrimitiveValueFormatter;
-    hierarchyDefinition: HierarchyDefinition;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
-        imodelKey: string;
-    };
-    imodelChanged?: Event_2<() => void>;
-    instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
-    pageSize?: number;
-}
-
 // @public
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
@@ -891,6 +865,35 @@ type SourceInstanceHierarchyNode = SourceHierarchyNode<Omit<ProcessedInstanceHie
         instanceKeys: InstanceKey[];
     };
 }>;
+
+// @beta
+export type StreamedHierarchyNode = NonGroupingHierarchyNode & {
+    continuationToken: string;
+};
+
+// @beta
+export interface StreamingIModelHierarchyProvider extends HierarchyProvider, Disposable {
+    getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
+    getNodes(props: GetStreamedHierarchyNodesProps): AsyncIterableIterator<StreamedHierarchyNode>;
+    readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
+    setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
+    setHierarchySearch(props: StreamingIModelHierarchyProviderProps["search"]): void;
+}
+
+// @beta
+interface StreamingIModelHierarchyProviderProps {
+    formatter?: IPrimitiveValueFormatter;
+    hierarchyDefinition: HierarchyDefinition;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
+    imodelChanged?: Event_2<() => void>;
+    instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
+    pageSize?: number;
+    search?: {
+        paths: HierarchySearchTree[];
+    };
+}
 
 // (No @packageDocumentation comment for this package)
 
