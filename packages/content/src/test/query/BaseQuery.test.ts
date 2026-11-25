@@ -688,6 +688,7 @@ describe("buildBaseQuery", () => {
         propertyName: "Address",
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
         },
       });
@@ -700,7 +701,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("throws for an unknown struct member", async () => {
-      const field = makePropertyField({ propertyName: "Address", type: { kind: "struct", members: [] } });
+      const field = makePropertyField({
+        propertyName: "Address",
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+      });
       const filters: ContentValueFilter[] = [{ field, member: "Nope", operator: "is-equal", value: "x" }];
 
       await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
@@ -713,6 +717,7 @@ describe("buildBaseQuery", () => {
         propertyName: "Address",
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
         },
       });
@@ -724,7 +729,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("throws for a struct field filtered without a member", async () => {
-      const field = makePropertyField({ propertyName: "Address", type: { kind: "struct", members: [] } });
+      const field = makePropertyField({
+        propertyName: "Address",
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+      });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "x" }];
 
       await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
