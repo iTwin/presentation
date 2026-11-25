@@ -73,10 +73,11 @@ function createDescriptor(fields: Field[]): ContentDescriptor {
 }
 
 describe("createHiddenSchemaMembersDescriptorTransformer", () => {
-  it("hides a field whose property itself is hidden", async () => {
+  it("hides a hidden property even when its class is hidden", async () => {
     const imodelAccess: ECSchemaProvider = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.Thing",
+        isHidden: true,
         properties: [createPrimitiveProperty({ name: "Height", declaringClass: "TestSchema.Thing", isHidden: true })],
       }),
     ]);
@@ -91,7 +92,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     expect(descriptor.fields[field.id].hidden).to.equal(true);
   });
 
-  it("hides a field whose property is declared by a hidden class", async () => {
+  it("keeps a visible property declared by a hidden class visible", async () => {
     const thingProperties: EC.Property[] = [];
     const thing = createEntityClass({ fullName: "TestSchema.Thing", isHidden: true, properties: thingProperties });
     thingProperties.push(createPrimitiveProperty({ name: "Height", declaringClass: thing }));
@@ -104,10 +105,10 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     const descriptor = createDescriptor([field]);
     const transformer = createHiddenSchemaMembersDescriptorTransformer();
     await transformer.transform({ descriptor: createTransformableDescriptor(descriptor), imodelAccess });
-    expect(descriptor.fields[field.id].hidden).to.equal(true);
+    expect(descriptor.fields[field.id].hidden).toBeUndefined();
   });
 
-  it("hides a field whose property's declaring class has a hidden base class", async () => {
+  it("keeps a visible property declared by a class with a hidden base class visible", async () => {
     const base = createEntityClass({ fullName: "TestSchema.Base", isHidden: true, properties: [] });
     const derivedProperties: EC.Property[] = [];
     const derived = createEntityClass({
@@ -125,7 +126,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     const descriptor = createDescriptor([field]);
     const transformer = createHiddenSchemaMembersDescriptorTransformer();
     await transformer.transform({ descriptor: createTransformableDescriptor(descriptor), imodelAccess });
-    expect(descriptor.fields[field.id].hidden).to.equal(true);
+    expect(descriptor.fields[field.id].hidden).toBeUndefined();
   });
 
   it("keeps a field visible when no class in its declaring hierarchy is hidden", async () => {
@@ -152,35 +153,6 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     expect(descriptor.fields[field.id].hidden).toBeUndefined();
   });
 
-  it("stops the base-class walk at the first explicit isHidden===false, leaving the field visible", async () => {
-    // Base (hidden) <- Middle (explicitly visible) <- Derived (undefined visibility, own property).
-    // The walk must stop at Middle's explicit `false` and never reach Base's `true`.
-    const base = createEntityClass({ fullName: "TestSchema.Base", isHidden: true, properties: [] });
-    const middle = createEntityClass({
-      fullName: "TestSchema.Middle",
-      isHidden: false,
-      baseClass: base,
-      properties: [],
-    });
-    const derivedProperties: EC.Property[] = [];
-    const derived = createEntityClass({
-      fullName: "TestSchema.Derived",
-      baseClass: middle,
-      properties: derivedProperties,
-    });
-    derivedProperties.push(createPrimitiveProperty({ name: "Height", declaringClass: derived }));
-    const imodelAccess: ECSchemaProvider = createSchemaAccess([base, middle, derived]);
-    const field = propertyField({
-      sourceClassName: "TestSchema.Derived",
-      propertyName: "Height",
-      valueClassNames: ["TestSchema.Derived"],
-    });
-    const descriptor = createDescriptor([field]);
-    const transformer = createHiddenSchemaMembersDescriptorTransformer();
-    await transformer.transform({ descriptor: createTransformableDescriptor(descriptor), imodelAccess });
-    expect(descriptor.fields[field.id].hidden).toBeUndefined();
-  });
-
   it("keeps a property inherited from a visible base class visible even when the field's valueClassNames contains a hidden subclass", async () => {
     const baseProperties: EC.Property[] = [];
     const base = createEntityClass({ fullName: "TestSchema.Base", isHidden: false, properties: baseProperties });
@@ -200,13 +172,10 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     expect(field.valueClassNames).to.deep.equal(["TestSchema.Sub"]);
   });
 
-  it("hides a field whose property is declared by a hidden mixin", async () => {
+  it("keeps a visible property declared by a hidden mixin visible", async () => {
     const mixinProperties: EC.Property[] = [];
     const mixin = createMixinClass({ fullName: "TestSchema.HiddenMixin", isHidden: true, properties: mixinProperties });
     mixinProperties.push(createPrimitiveProperty({ name: "MixinProp", declaringClass: mixin }));
-    // Widget implements the mixin, but is itself visible — the implementing class's own visibility
-    // and the mixins applied to it are not consulted; only the mixin (the property's declaring
-    // class) matters.
     const widget = createEntityClass({
       fullName: "TestSchema.Widget",
       isHidden: false,
@@ -222,7 +191,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     const descriptor = createDescriptor([field]);
     const transformer = createHiddenSchemaMembersDescriptorTransformer();
     await transformer.transform({ descriptor: createTransformableDescriptor(descriptor), imodelAccess });
-    expect(descriptor.fields[field.id].hidden).to.equal(true);
+    expect(descriptor.fields[field.id].hidden).toBeUndefined();
   });
 
   it("applies the identical property-origin rule to direct and related property fields", async () => {

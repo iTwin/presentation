@@ -35,7 +35,7 @@ describe("Content", () => {
       await terminate();
     });
 
-    it("hides a property declared by a hidden base class but keeps ancestor and explicitly shown descendant properties visible", async () => {
+    it("keeps visible properties of hidden classes", async () => {
       // A (visible, own property)
       //  └─ BHidden (HiddenClass, own property)
       //      ├─ C (no own property)
@@ -88,10 +88,8 @@ describe("Content", () => {
         [setup.schema.items.C.fullName, setup.schema.items.DShown.fullName].sort(),
       );
 
-      // `BHidden`'s own property is hidden for every class that inherits it, including `DShown`
-      // (an explicitly shown leaf) — visibility is decided by the property's declaring class only.
       const propB = getPropertyFieldByName(descriptor, "PropB");
-      expect(propB.hidden).toBe(true);
+      expect(propB.hidden).toBeUndefined();
       expect(propB.propertyClassName).toBe(setup.schema.items.BHidden.fullName);
       expect([...propB.valueClassNames].sort()).toEqual(
         [setup.schema.items.C.fullName, setup.schema.items.DShown.fullName].sort(),
@@ -104,7 +102,7 @@ describe("Content", () => {
       expect(propD.valueClassNames).toEqual([setup.schema.items.DShown.fullName]);
     });
 
-    it("hides properties of a schema-hidden class while an explicitly shown class in the same schema stays visible", async () => {
+    it("keeps properties of schema-hidden and explicitly shown classes visible", async () => {
       // HiddenSchema
       //  ├─ A (own property, no class-level override)
       //  └─ BShown (HiddenClass Show=true, own property)
@@ -142,7 +140,7 @@ describe("Content", () => {
         config,
       });
       const propA = getPropertyFieldByName(descriptorA, "PropA");
-      expect(propA.hidden).toBe(true);
+      expect(propA.hidden).toBeUndefined();
 
       const descriptorB = await buildDescriptor({
         imodelAccess,
@@ -153,7 +151,7 @@ describe("Content", () => {
       expect(propB.hidden).toBeUndefined();
     });
 
-    it("hides related-property fields via both HiddenClass and HiddenProperty while keeping unrelated inherited properties visible", async () => {
+    it("keeps explicitly targeted hidden-class properties visible but hides HiddenProperty fields", async () => {
       // A --RelB--> BHidden (extends RelatedBase, HiddenClass, own property P1)
       //   └─RelC--> C         (extends RelatedBase, own property P2 with HiddenProperty)
       // RelatedBase declares a domain property inherited (unaffected) by both related classes.
@@ -238,10 +236,9 @@ describe("Content", () => {
         },
       });
 
-      // `BHidden.P1` is hidden because its property source class (`BHidden`) has `HiddenClass`.
       const p1 = getPropertyFieldsByPath(descriptor, pathToBHidden).find((f) => f.propertyName === "P1");
       expect(p1).toBeDefined();
-      expect(p1!.hidden).toBe(true);
+      expect(p1!.hidden).toBeUndefined();
 
       // `C.P2` is hidden because the property itself has `HiddenProperty`.
       const p2 = getPropertyFieldsByPath(descriptor, pathToC).find((f) => f.propertyName === "P2");
@@ -347,11 +344,10 @@ describe("Content", () => {
       expect(getRelatedFieldsOf(viaBase, setup.schema.items.HiddenSub.fullName)).toEqual([]);
       expect(getRelatedFieldsOf(viaBase, setup.schema.items.VisibleSub.fullName)).toEqual(["Description", "P1"]);
 
-      // Declared explicitly: the hidden subclass is kept, its own property stays hidden and the
-      // inherited visible one remains visible.
+      // Declared explicitly: the hidden subclass and its visible properties are kept.
       const explicit = await buildRelatedDescriptor(setup.schema.items.HiddenSub.fullName);
       expect(getRelatedFieldsOf(explicit, setup.schema.items.HiddenSub.fullName)).toEqual(["Description", "P2"]);
-      expect(getPropertyFieldByName(explicit, "P2").hidden).toBe(true);
+      expect(getPropertyFieldByName(explicit, "P2").hidden).toBeUndefined();
       expect(getPropertyFieldByName(explicit, "Description").hidden).toBeUndefined();
     });
 

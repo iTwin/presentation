@@ -19,19 +19,13 @@ import type { DescriptorTransformer } from "./DescriptorTransformer.js";
 export const HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY = 500;
 
 /**
- * Creates a `DescriptorTransformer` that marks property fields `hidden` based on ECSchema
- * visibility metadata (`EC.Property.isHidden` and `EC.Class.isHidden`).
+ * Creates a `DescriptorTransformer` that marks property fields `hidden` when their ECSchema
+ * property has `EC.Property.isHidden` set. A property's declaring class being hidden does not
+ * hide the property.
  *
  * For every `field.kind === "property"` field, the transformer resolves the underlying property
  * from `field.propertyClassName` and `field.propertyName` (the same schema access used to build
- * the descriptor) and sets `field.hidden = true` when either:
- * - the property itself is hidden (`property.isHidden === true`); or
- * - the class that *declares* the property (`property.class` — for an inherited property, the
- *   defining base class; for a mixin-declared property, the mixin) or one of its `baseClass`
- *   ancestors is hidden. The walk up the `baseClass` chain stops as soon as a class reports
- *   `isHidden === true` (the field is hidden) or `isHidden === false` (the field stays visible);
- *   an `undefined` value continues to the next base class; running out of ancestors without a
- *   defined value leaves the field visible.
+ * the descriptor) and sets `field.hidden = true` if the property is hidden.
  *
  * A transformer with higher priority can show a hidden property by setting `field.hidden = false`.
  *
@@ -68,29 +62,10 @@ export function createHiddenSchemaMembersDescriptorTransformer(): DescriptorTran
         }
         const propertyClass = await resolveClass(field.propertyClassName);
         const property = propertyClass.getProperty(field.propertyName)!;
-        if (property.isHidden || isEffectivelyHiddenClass(property.class)) {
+        if (property.isHidden) {
           field.hidden = true;
         }
       }
     },
   };
-}
-
-/**
- * Walks an `EC.Class` and its `baseClass` chain, returning `true` for the first class that reports
- * `isHidden === true`, `false` for the first that reports `isHidden === false`, and `false` when no
- * class in the chain has a defined visibility (i.e. every one reports `isHidden === undefined`).
- */
-function isEffectivelyHiddenClass(propertyClass: EC.Class): boolean {
-  let current: EC.Class | undefined = propertyClass;
-  while (current) {
-    if (current.isHidden === true) {
-      return true;
-    }
-    if (current.isHidden === false) {
-      return false;
-    }
-    current = current.baseClass;
-  }
-  return false;
 }
