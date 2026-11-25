@@ -31,6 +31,7 @@ public;type;HierarchyNodeKey
 public;namespace;HierarchyNodeKey
 public;type;HierarchyNodesDefinition
 public;namespace;HierarchyNodesDefinition
+beta;interface;HierarchyNodesIterator
 public;interface;HierarchyProvider
 beta;class;HierarchyRequestInterruptedError
 public;type;HierarchySearchPath
@@ -61,5 +62,4 @@ public;interface;PropertyValueRangeGroupingNodeKey
 public;class;RowsLimitExceededError
 public;function;setLogger
 public;type;SourceHierarchyNode
-beta;type;StreamedHierarchyNode
 beta;interface;StreamingIModelHierarchyProvider

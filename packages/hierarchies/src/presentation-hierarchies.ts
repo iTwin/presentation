@@ -33,7 +33,7 @@ export {
 } from "./hierarchies/imodel/IModelHierarchyProvider.js";
 export type {
   GetStreamedHierarchyNodesProps,
-  StreamedHierarchyNode,
+  HierarchyNodesIterator,
   StreamingIModelHierarchyProvider,
 } from "./hierarchies/imodel/StreamingIModelHierarchyProvider.js";
 export { createStreamingIModelHierarchyProvider } from "./hierarchies/imodel/StreamingIModelHierarchyProvider.js";

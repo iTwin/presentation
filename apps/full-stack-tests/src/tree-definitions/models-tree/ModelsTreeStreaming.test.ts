@@ -19,7 +19,7 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { buildIModel } from "../IModelUtils.js";
 
-import type { StreamedHierarchyNode, StreamingIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { NonGroupingHierarchyNode, StreamingIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
 describe("Models tree with streaming iModel hierarchy provider", () => {
   beforeAll(async () => {
@@ -156,31 +156,40 @@ describe("Models tree with streaming iModel hierarchy provider", () => {
         const continuedNodes = await collect(
           pagingProvider.getNodes({ parentNode, continuationToken: nodes[i].continuationToken }),
         );
-        expect(continuedNodes).toEqual(nodes.slice(i + 1));
+        expect(continuedNodes).toEqual(nodes.slice(i + 1).map(({ node }) => node));
       }
     }
   });
 });
 
 interface LoadedNode {
-  node: StreamedHierarchyNode;
+  node: NonGroupingHierarchyNode;
+  /** Continuation token of the iterator after it returned the node. */
+  continuationToken: string;
   children: LoadedNode[];
 }
 
 async function loadHierarchy(
   provider: StreamingIModelHierarchyProvider,
-  parentNode?: StreamedHierarchyNode,
+  parentNode?: NonGroupingHierarchyNode,
 ): Promise<LoadedNode[]> {
-  const nodes = await collect(provider.getNodes({ parentNode }));
+  const iterator = provider.getNodes({ parentNode });
+  const nodes = new Array<Omit<LoadedNode, "children">>();
+  for await (const node of iterator) {
+    nodes.push({ node, continuationToken: iterator.getContinuationToken()! });
+  }
   return Promise.all(
-    nodes.map(async (node) => ({ node, children: node.children ? await loadHierarchy(provider, node) : [] })),
+    nodes.map(async (entry) => ({
+      ...entry,
+      children: entry.node.children ? await loadHierarchy(provider, entry.node) : [],
+    })),
   );
 }
 
 type SortedLabels = Array<string | { label: string; children: SortedLabels }>;
 function toSortedLabels(hierarchy: LoadedNode[]): SortedLabels {
   // element labels are suffixed with element's id, e.g. `element 1.1 [0-5]` - drop the suffix to keep expectations stable
-  const getLabel = (node: StreamedHierarchyNode) => node.label.replace(/ \[[^\]]+\]$/, "");
+  const getLabel = (node: NonGroupingHierarchyNode) => node.label.replace(/ \[[^\]]+\]$/, "");
   return [...hierarchy]
     .sort((lhs, rhs) => getLabel(lhs.node).localeCompare(getLabel(rhs.node)))
     .map(({ node, children }) =>
@@ -190,9 +199,9 @@ function toSortedLabels(hierarchy: LoadedNode[]): SortedLabels {
 
 function* getLevels(
   hierarchy: LoadedNode[],
-  parentNode?: StreamedHierarchyNode,
-): Generator<{ parentNode: StreamedHierarchyNode | undefined; nodes: StreamedHierarchyNode[] }> {
-  yield { parentNode, nodes: hierarchy.map(({ node }) => node) };
+  parentNode?: NonGroupingHierarchyNode,
+): Generator<{ parentNode: NonGroupingHierarchyNode | undefined; nodes: LoadedNode[] }> {
+  yield { parentNode, nodes: hierarchy };
   for (const { node, children } of hierarchy) {
     if (children.length) {
       yield* getLevels(children, node);

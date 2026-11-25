@@ -460,6 +460,11 @@ interface HierarchyNodeSearchProps {
     options?: HierarchySearchTree["options"];
 }
 
+// @beta
+export interface HierarchyNodesIterator extends AsyncIterableIterator<NonGroupingHierarchyNode> {
+    getContinuationToken(): string | undefined;
+}
+
 // @public
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
@@ -867,14 +872,9 @@ type SourceInstanceHierarchyNode = SourceHierarchyNode<Omit<ProcessedInstanceHie
 }>;
 
 // @beta
-export type StreamedHierarchyNode = NonGroupingHierarchyNode & {
-    continuationToken: string;
-};
-
-// @beta
 export interface StreamingIModelHierarchyProvider extends HierarchyProvider, Disposable {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
-    getNodes(props: GetStreamedHierarchyNodesProps): AsyncIterableIterator<StreamedHierarchyNode>;
+    getNodes(props: GetStreamedHierarchyNodesProps): HierarchyNodesIterator;
     readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: StreamingIModelHierarchyProviderProps["search"]): void;

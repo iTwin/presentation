@@ -25,6 +25,7 @@ import type {
   HierarchyDefinition,
   HierarchyLevelDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import type { HierarchyNodesIterator } from "../../hierarchies/imodel/StreamingIModelHierarchyProvider.js";
 import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("createStreamingIModelHierarchyProvider", () => {
@@ -102,6 +103,15 @@ describe("createStreamingIModelHierarchyProvider", () => {
     return (await collect(iterator)).map((n) => n.label);
   }
 
+  /** Collects nodes of the given iterator together with iterator's continuation token after each node. */
+  async function collectWithTokens(iterator: HierarchyNodesIterator) {
+    const result = new Array<{ node: NonGroupingHierarchyNode; continuationToken: string }>();
+    for await (const node of iterator) {
+      result.push({ node, continuationToken: iterator.getContinuationToken()! });
+    }
+    return result;
+  }
+
   async function readLabels(iterator: AsyncIterableIterator<NonGroupingHierarchyNode>, count: number) {
     const labels = new Array<string>();
     for (let i = 0; i < count; ++i) {
@@ -122,13 +132,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
     });
     const nodes = await collect(provider.getNodes({ parentNode: undefined }));
     expect(nodes).toEqual([
-      {
-        ...node,
-        key: createTestGenericNodeKey({ id: "root", source: sourceName }),
-        parentKeys: [],
-        children: false,
-        continuationToken: expect.any(String),
-      },
+      { ...node, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: false },
     ]);
   });
 
@@ -146,7 +150,6 @@ describe("createStreamingIModelHierarchyProvider", () => {
         parentKeys: [],
         label: "0x1",
         children: true,
-        continuationToken: expect.any(String),
       },
     ]);
     expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
@@ -410,19 +413,42 @@ describe("createStreamingIModelHierarchyProvider", () => {
           ],
         },
       });
-      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(nodes.map((n) => n.label)).toEqual(["x", "generic", "0x1", "0x2", "0x3", "0x4"]);
+      const nodes = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
+      expect(nodes.map(({ node }) => node.label)).toEqual(["x", "generic", "0x1", "0x2", "0x3", "0x4"]);
       for (let i = 0; i < nodes.length; ++i) {
         expect(
           await collect(provider.getNodes({ parentNode: undefined, continuationToken: nodes[i].continuationToken })),
-        ).toEqual(nodes.slice(i + 1));
+        ).toEqual(nodes.slice(i + 1).map(({ node }) => node));
       }
+    });
+
+    it("tracks continuation token of the last returned node", async () => {
+      setupQueries({ Q: createRows(3) });
+      using provider = createQueryProvider(2);
+      const iterator = provider.getNodes({ parentNode: undefined });
+      expect(iterator.getContinuationToken()).toBeUndefined();
+      expect((await iterator.next()).value.label).toBe("0x1");
+      const firstNodeToken = iterator.getContinuationToken();
+      expect(firstNodeToken).toEqual(expect.any(String));
+
+      // a continued iterator starts with the token it was requested with
+      const continued = provider.getNodes({ parentNode: undefined, continuationToken: firstNodeToken });
+      expect(continued.getContinuationToken()).toBe(firstNodeToken);
+      expect(await collectLabels(continued)).toEqual(["0x2", "0x3"]);
+
+      // the token doesn't change after the last node
+      expect((await iterator.next()).value.label).toBe("0x2");
+      expect((await iterator.next()).value.label).toBe("0x3");
+      const lastNodeToken = iterator.getContinuationToken();
+      expect((await iterator.next()).done).toBe(true);
+      expect(iterator.getContinuationToken()).toBe(lastNodeToken);
+      expect(continued.getContinuationToken()).toBe(lastNodeToken);
     });
 
     it("continues from a node on a later page using an offset query", async () => {
       setupQueries({ Q: createRows(10) });
       using provider = createQueryProvider(3);
-      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+      const nodes = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
       imodelAccess.createQueryReader.mockClear();
       expect(
         await collectLabels(
@@ -590,21 +616,21 @@ describe("createStreamingIModelHierarchyProvider", () => {
       "continues from any node using its continuation token (page size: %s)",
       async (pageSize) => {
         using provider = setupHierarchyWithHiddenNodes({ pageSize }).provider;
-        const allNodes = await collect(provider.getNodes({ parentNode: undefined }));
+        const allNodes = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
         for (let i = 0; i < allNodes.length; ++i) {
           const continuedNodes = await collect(
             provider.getNodes({ parentNode: undefined, continuationToken: allNodes[i].continuationToken }),
           );
-          expect(continuedNodes).toEqual(allNodes.slice(i + 1));
+          expect(continuedNodes).toEqual(allNodes.slice(i + 1).map(({ node }) => node));
         }
       },
     );
 
     it("continues with an offset query when resuming inside hidden node's children", async () => {
       using provider = setupHierarchyWithHiddenNodes().provider;
-      const allNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      const allNodes = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
       imodelAccess.createQueryReader.mockClear();
-      const c3_1 = allNodes.find((n) => n.label === "c3_1")!;
+      const c3_1 = allNodes.find(({ node }) => node.label === "c3_1")!;
       await collect(provider.getNodes({ parentNode: undefined, continuationToken: c3_1.continuationToken }));
       // `hidden` node is at row 2 of root query and `cHidden` is at row 2 of `hidden` children query
       expect(getQueryOffsets("ROOT")).toEqual([2]);
@@ -651,7 +677,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
         relatedInstances: [],
         rules: { operator: "and", rules: [] },
       };
-      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode, instanceFilter }));
+      const [{ continuationToken }] = await collectWithTokens(provider.getNodes({ parentNode, instanceFilter }));
       for (const props of [
         { parentNode: undefined, instanceFilter },
         { parentNode: { ...parentNode, key: { type: "generic" as const, id: "other" } }, instanceFilter },
@@ -680,7 +706,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
         label: "p",
         parentKeys: [{ type: "generic" as const, id: "grandparent" }],
       };
-      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode }));
+      const [{ continuationToken }] = await collectWithTokens(provider.getNodes({ parentNode }));
       expect(
         await collectLabels(
           provider.getNodes({
@@ -698,8 +724,8 @@ describe("createStreamingIModelHierarchyProvider", () => {
     it("throws when the token points to a hierarchy level definition that doesn't exist", async () => {
       const { provider, defineHierarchyLevel } = setupHierarchyWithHiddenNodes();
       using _ = provider;
-      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      const { continuationToken } = nodes.find((n) => n.label === "f")!;
+      const nodes = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
+      const { continuationToken } = nodes.find(({ node }) => node.label === "f")!;
       // definition now returns only root nodes and f node is no longer part of the hierarchy
       defineHierarchyLevel.mockImplementation(async () => [createQueryDefinition("ROOT")]);
       await expect(collect(provider.getNodes({ parentNode: undefined, continuationToken }))).rejects.toThrow(
@@ -947,26 +973,6 @@ describe("createStreamingIModelHierarchyProvider", () => {
   });
 
   describe("parent nodes", () => {
-    it("passes parent node without continuation token to hierarchy definition", async () => {
-      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => []);
-      using provider = createStreamingIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: { defineHierarchyLevel },
-      });
-      const parentNode = {
-        key: createTestGenericNodeKey({ id: "parent", source: sourceName }),
-        label: "parent",
-        parentKeys: [],
-        continuationToken: "[[0,0]]",
-      };
-      await collect(provider.getNodes({ parentNode }));
-      expect(defineHierarchyLevel).toHaveBeenCalledWith(
-        expect.objectContaining({
-          parentNode: { key: parentNode.key, label: parentNode.label, parentKeys: parentNode.parentKeys },
-        }),
-      );
-    });
-
     it("returns no nodes for grouping, other source generic and other iModel instance parent nodes", async () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         { node: createTestSourceGenericNode() },
@@ -1061,7 +1067,6 @@ describe("createStreamingIModelHierarchyProvider", () => {
           label: "custom",
           parentKeys: [],
           children: false,
-          continuationToken: expect.any(String),
         },
       ]);
     });
@@ -1098,7 +1103,6 @@ describe("createStreamingIModelHierarchyProvider", () => {
           parentKeys: [],
           children: true,
           extendedData: { postProcessed: true },
-          continuationToken: expect.any(String),
         },
       ]);
     });
@@ -1223,7 +1227,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
       };
       using provider = createStreamingIModelHierarchyProvider(props);
-      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode: undefined }));
+      const [{ continuationToken }] = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
 
       provider.setFormatter(undefined);
       expect(await collectLabels(provider.getNodes({ parentNode: undefined, continuationToken }))).toEqual(["0x2"]);
@@ -1350,13 +1354,10 @@ describe("createStreamingIModelHierarchyProvider", () => {
         imodelAccess,
         hierarchyDefinition: { defineHierarchyLevel },
       });
-      const [parentNode] = await collect(provider.getNodes({ parentNode: undefined }));
-      defineHierarchyLevel.mockClear();
-      expect(await collect(provider.getNodeInstanceKeys({ parentNode }))).toEqual([
+      const [rootNode] = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(await collect(provider.getNodeInstanceKeys({ parentNode: rootNode }))).toEqual([
         { className: "a.b", id: "0x1", imodelKey: imodelAccess.imodelKey },
       ]);
-      // the parent node is passed to the hierarchy definition without its continuation token
-      expect(defineHierarchyLevel.mock.calls[0][0].parentNode).not.toHaveProperty("continuationToken");
     });
 
     it("fails when hierarchy changes while reading", async () => {
@@ -1416,7 +1417,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
         imodelAccess,
         hierarchyDefinition: { defineHierarchyLevel },
       });
-      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode: undefined }));
+      const [{ continuationToken }] = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
 
       provider.setHierarchySearch(search);
       expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(

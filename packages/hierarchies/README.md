@@ -43,7 +43,7 @@ A `HierarchyNode` data structure in the package represents a single node in a hi
 
 - A merged provider that combines multiple providers into a single one. This is useful when you want to combine multiple hierarchies, possibly built from different data sources, into a single one. See [Merged hierarchies](./learning/MergedHierarchies.md) learning page for more information.
 
-- A streaming provider that builds iModel-based hierarchies without grouping, sorting or merging nodes. The `createStreamingIModelHierarchyProvider` function creates such a provider. It streams nodes lazily, reading query rows only as nodes are requested, in hierarchy definition order (replacing hidden nodes with their children in place) and assigns each node a `continuationToken`, which can be passed back to `getNodes` to continue streaming from that node.
+- A streaming provider that builds iModel-based hierarchies without grouping, sorting or merging nodes. The `createStreamingIModelHierarchyProvider` function creates such a provider. It streams nodes lazily, reading query rows only as nodes are requested, in hierarchy definition order (replacing hidden nodes with their children in place). The returned iterator has a `getContinuationToken` function that returns a token of the last node it returned, which can be passed back to `getNodes` to continue streaming from the next node.
 
 ## Learning
 
