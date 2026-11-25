@@ -122,8 +122,11 @@ export function parseSourceInstanceNode({
   imodelKey: string;
   parseNode: RxjsHierarchyDefinition["parseNode"];
 }): Observable<SourceInstanceHierarchyNode> {
-  const parse = parseNode ?? ((props) => of(defaultNodesParser(props)));
-  return parse({ row, parentNode, imodelKey }).pipe(map((node) => assignIModelKey(node, imodelKey)));
+  if (!parseNode) {
+    // avoid creating an observable pipeline for every row in the most common case
+    return of(assignIModelKey(defaultNodesParser({ row }), imodelKey));
+  }
+  return parseNode({ row, parentNode, imodelKey }).pipe(map((node) => assignIModelKey(node, imodelKey)));
 }
 
 function assignIModelKey(node: SourceInstanceHierarchyNode, imodelKey: string): SourceInstanceHierarchyNode {
