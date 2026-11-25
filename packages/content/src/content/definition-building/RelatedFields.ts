@@ -8,15 +8,21 @@ import { buildCategoryContext, collectInParallel } from "../InternalUtils.js";
 import { createPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider, Props, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext, ContentSource } from "../ContentTarget.js";
+import type { CardinalityHint, CategoryContext, ContentSource, RelationshipMeaning } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { PathCardinalityClassifier } from "../PathCardinality.js";
 import type { CategorizedField } from "./ClassPropertyFields.js";
 import type { GetAnchorContributionFn, GetContributionFn } from "./ContributionMemoizer.js";
 
-/** A related property field paired with its category facts and the provider that contributed it. */
-type RelatedCandidate = CategorizedField & { provider: IModelFieldsProvider };
+/**
+ * A related property field paired with its category facts, the provider that contributed it and, for a nested
+ * declaration, the category context inherited from the declarations it was applied below.
+ */
+type RelatedCandidate = CategorizedField & {
+  provider: IModelFieldsProvider;
+  inheritedCategoryContext?: CategoryContext;
+};
 
 /**
  * Enumerates the **related** property fields of a content source — the properties reached by
@@ -92,12 +98,19 @@ export async function collectRelatedPropertyFields(props: {
             properties: declaration.properties,
             primaryClassNames: targetClassNames,
             stepIndexOffset,
-            propertyCategoryScope: declaration.propertyCategoryScope,
+            relationshipMeaning: declaration.relationshipMeaning ?? "relatedInstance",
             categoryContext: group.nested ? group.nested.categoryContext : [],
           }),
         ),
       );
-      return perPath.flat().map((enumerated) => ({ ...enumerated, provider }));
+      const inheritedCategoryContext = group.nested?.categoryContext;
+      return perPath
+        .flat()
+        .map((enumerated) => ({
+          ...enumerated,
+          provider,
+          ...(inheritedCategoryContext ? { inheritedCategoryContext } : {}),
+        }));
     },
   });
 }
@@ -131,7 +144,8 @@ async function createFieldsForPath(props: {
    * `path`. `0` for a base (non-nested) declaration.
    */
   stepIndexOffset: number;
-  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  /** The declaration's relationship meaning, used for steps that don't set their own. */
+  relationshipMeaning: RelationshipMeaning;
   categoryContext: CategoryContext;
 }): Promise<CategorizedField[]> {
   const {
@@ -141,7 +155,7 @@ async function createFieldsForPath(props: {
     path,
     properties,
     primaryClassNames,
-    propertyCategoryScope,
+    relationshipMeaning,
     stepIndexOffset,
   } = props;
 
@@ -160,7 +174,7 @@ async function createFieldsForPath(props: {
       relationshipInfo: { pathFromTarget: path, pathCardinality, primaryClassNames },
       spec: { select: "all" },
       anchor: "targetClass",
-      propertyCategoryScope,
+      relationshipMeaning,
       categoryContext: props.categoryContext,
     });
   }
@@ -176,28 +190,28 @@ async function createFieldsForPath(props: {
         stepSpec,
         primaryClassNames,
         stepIndexOffset,
-        propertyCategoryScope,
+        relationshipMeaning,
         categoryContext: props.categoryContext,
       }),
     ),
   );
   const fields = perStep.flat();
   for (const { field, categorization } of fields) {
-    if (propertyCategoryScope === "parent" && categorization.category?.source === "propertyCategory") {
-      continue;
-    }
     const stepIndex = field.pathFromTarget.length - 1;
+    // A property category of a `"sameInstance"` step attaches to the category enclosing its step's classes.
+    const attachesToParent =
+      categorization.relationshipMeaning === "sameInstance" && categorization.category?.source === "propertyCategory";
     categorization.categoryContext = buildCategoryContext({
       inheritedContext: props.categoryContext,
       properties,
+      relationshipMeaning,
       stepIndexOffset,
       include: (entry) => {
         if (entry.stepIndex === stepIndex) {
           // A step's relationship class encloses that step's target-class fields.
-          return entry.kind === "relationshipClass" && categorization.anchor === "targetClass";
+          return entry.kind === "relationshipClass" && categorization.anchor === "targetClass" && !attachesToParent;
         }
-        // Earlier steps enclose later ones, unless categories attach to the parent context.
-        return entry.stepIndex < stepIndex && propertyCategoryScope !== "parent";
+        return entry.stepIndex < stepIndex;
       },
     });
   }
@@ -215,7 +229,8 @@ async function createFieldsForStep(props: {
   primaryClassNames: EC.FullClassNameDotNotation[];
   /** See {@link createFieldsForPath}. */
   stepIndexOffset: number;
-  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  /** The declaration's relationship meaning, used for steps that don't set their own. */
+  relationshipMeaning: RelationshipMeaning;
   categoryContext: CategoryContext;
 }): Promise<CategorizedField[]> {
   const {
@@ -225,7 +240,7 @@ async function createFieldsForStep(props: {
     path,
     stepSpec,
     primaryClassNames,
-    propertyCategoryScope,
+    relationshipMeaning,
     stepIndexOffset,
   } = props;
   const effectiveStepIndex = stepIndexOffset + stepSpec.stepIndex;
@@ -242,6 +257,7 @@ async function createFieldsForStep(props: {
   }
   const step = path[effectiveStepIndex];
   const pathFromTarget = path.slice(0, effectiveStepIndex + 1);
+  const stepRelationshipMeaning = stepSpec.relationshipMeaning ?? relationshipMeaning;
   const pathCardinality = await classifier.classify({
     path: pathFromTarget,
     declaredPath: path,
@@ -256,7 +272,7 @@ async function createFieldsForStep(props: {
         relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
         spec: stepSpec.target,
         anchor: "targetClass",
-        propertyCategoryScope,
+        relationshipMeaning: stepRelationshipMeaning,
         categoryContext: props.categoryContext,
       }),
     );
@@ -269,7 +285,7 @@ async function createFieldsForStep(props: {
         relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
         spec: stepSpec.relationship,
         anchor: "relationshipClass",
-        propertyCategoryScope,
+        relationshipMeaning: stepRelationshipMeaning,
         categoryContext: props.categoryContext,
       }),
     );

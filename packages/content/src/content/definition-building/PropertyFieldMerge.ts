@@ -5,12 +5,13 @@
 
 import { assert } from "@itwin/core-bentley";
 import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvider.js";
-import { getOrCreate } from "../InternalUtils.js";
+import { getCategoryContextKey, getOrCreate } from "../InternalUtils.js";
 import { PropertyField } from "../model/Field.js";
 import { toSortedUniqueClassNames } from "../model/Utils.js";
 import { resolveCardinality } from "../PathCardinality.js";
 
 import type { ValueDescriptor } from "@itwin/presentation-shared";
+import type { CategoryContext } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { Field } from "../model/Field.js";
 import type { CategorizedField, FieldCategorization } from "./ClassPropertyFields.js";
@@ -29,6 +30,13 @@ interface PropertyFieldCandidate extends CategorizedField {
    * Omitted for schema-derived direct fields, which have no contributing provider.
    */
   provider?: Pick<IModelFieldsProvider, "id" | "priority">;
+  /**
+   * For a candidate of a declaration applied on a nested anchor, the category context inherited from the
+   * declarations it was applied below. Different ancestor declarations can place the same nested property
+   * differently, which isn't a bug of the candidate's provider, so candidates with inherited contexts that place
+   * categories differently (see `getCategoryContextKey`) are resolved like candidates of different providers.
+   */
+  inheritedCategoryContext?: Readonly<CategoryContext>;
 }
 
 /**
@@ -42,17 +50,17 @@ interface PropertyFieldCandidate extends CategorizedField {
  * - Each group produces a single field whose `valueClassNames` and `primaryClassNames` are each the
  *   sorted, de-duplicated union of the group's respective value-supplier and primary classes.
  * - Field metadata (`label`, `hidden`, `readOnly`, `type`) and category facts are resolved as follows:
- *   - **Intra-provider** (candidates sharing the same `providerId`) must agree — a divergence is a
- *     provider bug and throws.
- *   - **Inter-provider** (candidates from different providers) may disagree; the candidate with the
- *     highest `priority` wins (ties resolve to input order). `valueClassNames` and `primaryClassNames`
- *     are still unioned.
+ *   - **Intra-provider** (candidates sharing the same `providerId` and inherited category context) must
+ *     agree — a divergence is a provider bug and throws.
+ *   - **Inter-provider** (candidates from different providers, or from the same provider applied below
+ *     different ancestors) may disagree; the candidate with the highest `priority` wins (ties resolve to
+ *     input order). `valueClassNames` and `primaryClassNames` are still unioned.
  * - `pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority (see
  *   {@link resolveCardinality}). This merges candidates of the same property field, not the shapes
  *   of other fields or external inputs that happen to use the same path.
  *
  * The winning candidate's {@link FieldCategorization} is carried on each merged field so the
- * categorization pass can turn it into a `categoryId`. This is the inverse of `forkField`: it merges
+ * categorization pass can turn it into the field's `category`. This is the inverse of `forkField`: it merges
  * many candidates into one field on the way in, while `forkField` splits one field into a carved
  * subset on demand.
  */
@@ -85,13 +93,20 @@ function priorityOf(candidate: PropertyFieldCandidate): number {
   return candidate.provider?.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
 }
 
-/** Throws if two candidates from the same provider produced divergent metadata for one field id. */
+/**
+ * Throws if two candidates from the same provider and inherited category context produced divergent metadata for one
+ * field id.
+ */
 function assertNoIntraProviderDivergence(baseId: Field["id"], group: PropertyFieldCandidate[]): void {
-  const representativeByProvider = new Map<IModelFieldsProvider["id"] | undefined, PropertyFieldCandidate>();
+  const representativeBySource = new Map<string, PropertyFieldCandidate>();
   for (const candidate of group) {
-    const representative = representativeByProvider.get(candidate.provider?.id);
+    const sourceKey = JSON.stringify([
+      candidate.provider?.id ?? null,
+      getCategoryContextKey(candidate.inheritedCategoryContext ?? []),
+    ]);
+    const representative = representativeBySource.get(sourceKey);
     if (!representative) {
-      representativeByProvider.set(candidate.provider?.id, candidate);
+      representativeBySource.set(sourceKey, candidate);
     } else if (!metadataAgrees(representative, candidate)) {
       throw new Error(
         `Cannot merge property field "${baseId}": ${
@@ -112,21 +127,30 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
   );
 }
 
-/** Compares category facts and their resolved ancestry. */
+/**
+ * Compares category facts and their resolved ancestry. Relationship meanings only need to agree where they affect
+ * placement: the outermost ancestry entry's meaning, and the field's own meaning when it has a property category or
+ * no ancestry.
+ */
 function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
   if (a.category?.source === "override") {
     return b.category?.source === "override" && a.category.id === b.category.id;
   }
+  const ownMeaningAffectsPlacement = a.category?.source === "propertyCategory" || a.categoryContext.length === 0;
   return (
     a.anchor === b.anchor &&
     a.category?.source === b.category?.source &&
     a.category?.id === b.category?.id &&
-    (a.propertyCategoryScope ?? "relatedClass") === (b.propertyCategoryScope ?? "relatedClass") &&
+    (!ownMeaningAffectsPlacement || a.relationshipMeaning === b.relationshipMeaning) &&
     a.categoryContext.length === b.categoryContext.length &&
-    a.categoryContext.every(
-      (context, index) =>
-        context.stepIndex === b.categoryContext[index].stepIndex && context.kind === b.categoryContext[index].kind,
-    ) &&
+    a.categoryContext.every((context, index) => {
+      const other = b.categoryContext[index];
+      return (
+        context.stepIndex === other.stepIndex &&
+        context.kind === other.kind &&
+        (index > 0 || context.relationshipMeaning === other.relationshipMeaning)
+      );
+    }) &&
     propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
 }

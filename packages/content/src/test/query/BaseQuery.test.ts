@@ -65,6 +65,7 @@ function makeSource(paths: RelationshipPath[], target: ContentTarget = { primary
 
 function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "propertyName">): PropertyField {
   return {
+    category: { type: "target" },
     kind: "property",
     id: props.id ?? `field-${props.propertyName}`,
     label: props.propertyName,
@@ -408,13 +409,20 @@ describe("buildBaseQuery", () => {
   });
 
   describe("target filter", () => {
-    it("adds an IdSet join and binding for instanceIds", async () => {
+    it("puts the IdSet before the primary class and binds instanceIds with related columns", async () => {
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([], { primaryClass, instanceIds: ["0x1", "0x2"] }),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [],
       });
 
-      expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
+      expect(result.anchor.parts.from).to.equal(
+        `FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]`,
+      );
+      expect(result.anchor.parts.joins).to.equal(
+        `CROSS JOIN ${ECSql.createClassSelector(primaryClass)} [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]`,
+      );
       expect(result.anchor.parts.bindings).to.deep.equal({
         [`${ECSQL_PREFIX}TargetInstanceIds`]: { type: "idset", value: ["0x1", "0x2"] },
       });
@@ -444,7 +452,12 @@ describe("buildBaseQuery", () => {
         source: makeSource([], { primaryClass, instanceIds: ["0x1"], instanceFilter: { expression: "this.Area > 5" } }),
       });
 
-      expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
+      expect(result.anchor.parts.from).to.equal(
+        `FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]`,
+      );
+      expect(result.anchor.parts.joins).to.equal(
+        `CROSS JOIN ${ECSql.createClassSelector(primaryClass)} [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]`,
+      );
       expect(result.anchor.parts.where).to.equal("WHERE [this].Area > 5");
     });
   });
@@ -675,6 +688,7 @@ describe("buildBaseQuery", () => {
         propertyName: "Address",
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
         },
       });
@@ -687,7 +701,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("throws for an unknown struct member", async () => {
-      const field = makePropertyField({ propertyName: "Address", type: { kind: "struct", members: [] } });
+      const field = makePropertyField({
+        propertyName: "Address",
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+      });
       const filters: ContentValueFilter[] = [{ field, member: "Nope", operator: "is-equal", value: "x" }];
 
       await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
@@ -700,6 +717,7 @@ describe("buildBaseQuery", () => {
         propertyName: "Address",
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
         },
       });
@@ -711,7 +729,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("throws for a struct field filtered without a member", async () => {
-      const field = makePropertyField({ propertyName: "Address", type: { kind: "struct", members: [] } });
+      const field = makePropertyField({
+        propertyName: "Address",
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+      });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "x" }];
 
       await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
@@ -850,6 +871,7 @@ describe("buildBaseQuery", () => {
 
     it("substitutes a calculated field's default target alias", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -869,6 +891,7 @@ describe("buildBaseQuery", () => {
 
     it("substitutes a calculated field's custom target alias", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -887,6 +910,7 @@ describe("buildBaseQuery", () => {
 
     it("parenthesizes a compound calculated expression before applying the operator", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -904,6 +928,7 @@ describe("buildBaseQuery", () => {
 
     it("carries a calculated field's own bindings into the base query", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -927,6 +952,7 @@ describe("buildBaseQuery", () => {
     describe("class-scoped calculated fields", () => {
       const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
       const pumpField: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -2021,6 +2047,7 @@ describe("buildBaseQuery", () => {
 describe("buildTargetScopedQuery", () => {
   it("evaluates the given and filtered calculated fields on the primary alias", async () => {
     const createField = (id: string): CalculatedField => ({
+      category: { type: "target" },
       kind: "calculated",
       id,
       label: id,
@@ -2052,6 +2079,7 @@ describe("buildTargetScopedQuery", () => {
     const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
     const wall: EC.FullClassNameDotNotation = "TestSchema.Wall";
     const pumpField: CalculatedField = {
+      category: { type: "target" },
       kind: "calculated",
       id: "flow",
       label: "Flow",

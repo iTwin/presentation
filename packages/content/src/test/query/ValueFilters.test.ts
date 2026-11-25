@@ -13,6 +13,7 @@ import type { CalculatedField, PropertyField } from "../../content/model/Field.j
 
 describe("buildValueFilterClauses", () => {
   const propertyField: PropertyField = {
+    category: { type: "target" },
     kind: "property",
     id: "field-id",
     label: "Field",
@@ -26,6 +27,7 @@ describe("buildValueFilterClauses", () => {
   };
 
   const calculatedField: CalculatedField = {
+    category: { type: "target" },
     kind: "calculated",
     sourceClassName: "TestSchema.TestClass",
     id: "calculated-id",
@@ -310,7 +312,10 @@ describe("buildValueFilterClauses", () => {
   });
 
   it("builds inferred bindings for composite members", () => {
-    const structField: PropertyField = { ...propertyField, type: { kind: "struct", members: [] } };
+    const structField: PropertyField = {
+      ...propertyField,
+      type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+    };
 
     const result = build([{ field: structField, member: "Street", operator: "is-equal", value: "Main" }]);
 

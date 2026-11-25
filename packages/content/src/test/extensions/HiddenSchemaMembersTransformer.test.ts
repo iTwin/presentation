@@ -27,6 +27,7 @@ function propertyField(props: {
     pathFromTarget: props.pathFromTarget,
   });
   return {
+    category: { type: "target" },
     kind: "property",
     id,
     label: "Label",
@@ -45,6 +46,7 @@ function propertyField(props: {
 
 function calculatedField(id: string): CalculatedField {
   return {
+    category: { type: "target" },
     kind: "calculated",
     sourceClassName: "TestSchema.Thing",
     id,
@@ -57,6 +59,7 @@ function calculatedField(id: string): CalculatedField {
 
 function externalField(id: string): ExternalField {
   return {
+    category: { type: "target" },
     kind: "external",
     id,
     label: "External",
