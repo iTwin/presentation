@@ -240,7 +240,7 @@ describe("getDistinctFieldValues", () => {
     );
 
     const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
-    expect(query.ecsql).to.include("JOIN IdSet(");
+    expect(query.ecsql).to.include("FROM IdSet(");
     expect(query.ecsql).to.include("WHERE [this].Area > 5");
   });
 
@@ -943,8 +943,8 @@ describe("buildDistinctValuesQuery", () => {
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
         SELECT DISTINCT [this].[Name]
-        FROM ONLY [TestSchema].[Primary] [this]
-        JOIN IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds] ON [${ECSQL_PREFIX}TargetInstanceIds].[id] = [this].[ECInstanceId]
+        FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]
+        CROSS JOIN ONLY [TestSchema].[Primary] [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]
         WHERE [this].Area > 5
       `),
     );
