@@ -1,5 +1,23 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.1.0
+
+### Minor Changes
+
+- [#1750](https://github.com/iTwin/presentation/pull/1750): `StrataKitTreeRenderer`: Added `scrollToNode` method to the renderer ref (`StrataKitTreeRendererAttributes`). It accepts a `nodePredicate` to identify an already loaded target node and scrolls the node into view. If the node is under a collapsed parent or deep in the hierarchy, all its collapsed ancestors are expanded first. An optional `onComplete` callback is called with the target node once it's scrolled into view. Returns `"node-not-found"` if no node matches the predicate, `"success"` otherwise.
+  
+  ```tsx
+  const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+  // ...
+  treeRef.current?.scrollToNode({ nodePredicate: (node) => node.id === newNodeId });
+  ```
+
+### Patch Changes
+
+- [#1741](https://github.com/iTwin/presentation/pull/1741): Preserve keyboard focus when a loading placeholder is replaced by its loaded child.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.2.0
+
 ## 2.0.3
 
 ### Patch Changes
