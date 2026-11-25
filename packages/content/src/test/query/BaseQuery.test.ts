@@ -409,13 +409,20 @@ describe("buildBaseQuery", () => {
   });
 
   describe("target filter", () => {
-    it("adds an IdSet join and binding for instanceIds", async () => {
+    it("puts the IdSet before the primary class and binds instanceIds with related columns", async () => {
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([], { primaryClass, instanceIds: ["0x1", "0x2"] }),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [],
       });
 
-      expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
+      expect(result.anchor.parts.from).to.equal(
+        `FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]`,
+      );
+      expect(result.anchor.parts.joins).to.equal(
+        `CROSS JOIN ${ECSql.createClassSelector(primaryClass)} [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]`,
+      );
       expect(result.anchor.parts.bindings).to.deep.equal({
         [`${ECSQL_PREFIX}TargetInstanceIds`]: { type: "idset", value: ["0x1", "0x2"] },
       });
@@ -445,7 +452,12 @@ describe("buildBaseQuery", () => {
         source: makeSource([], { primaryClass, instanceIds: ["0x1"], instanceFilter: { expression: "this.Area > 5" } }),
       });
 
-      expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
+      expect(result.anchor.parts.from).to.equal(
+        `FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]`,
+      );
+      expect(result.anchor.parts.joins).to.equal(
+        `CROSS JOIN ${ECSql.createClassSelector(primaryClass)} [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]`,
+      );
       expect(result.anchor.parts.where).to.equal("WHERE [this].Area > 5");
     });
   });

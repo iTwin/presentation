@@ -17,7 +17,7 @@ import {
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
 import { namespaceBindings } from "./query/NamespaceBindings.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
-import { buildTargetFilter } from "./query/TargetFilter.js";
+import { buildTargetQueryParts } from "./query/TargetQuery.js";
 import { validateExternalInputs } from "./ValidateExternalInputs.js";
 
 import type { Observable } from "rxjs";
@@ -112,16 +112,16 @@ async function resolveJoin(
 // have instances in scope (honoring the target's instance IDs / filter). A plain class
 // selector is polymorphic, so this naturally spans the selected base and all its subclasses.
 function buildPrimaryEnumerationQuery(target: ContentTarget): ECSqlQueryDef {
-  const targetFilter = buildTargetFilter(target);
-  const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+  const targetQuery = buildTargetQueryParts(target);
+  const whereClause = targetQuery.where ? `WHERE ${targetQuery.where}` : "";
   const ecsql = `
     SELECT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')
-    FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-    ${targetFilter.joins?.join("\n") ?? ""}
+    ${targetQuery.from}
+    ${targetQuery.joins.join("\n")}
     ${whereClause}
     GROUP BY [${PRIMARY_CLASS_ALIAS}].[ECClassId]
   `;
-  return { ecsql, ...(targetFilter.bindings ? { bindings: targetFilter.bindings } : {}) };
+  return { ecsql, ...(targetQuery.bindings ? { bindings: targetQuery.bindings } : {}) };
 }
 
 // --- Strategies ---
@@ -138,13 +138,14 @@ const originalStrategy: ResolutionQueryStrategy = {
     const { target, primaryClassName, joinPath, schemaProvider, joinTargetInstanceFilter } = ctx;
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
-    const targetFilter = buildTargetFilter(target);
-    const whereClause = buildWhereClause(targetFilter.where ?? "", joinTargetInstanceFilter);
-    const allBindings = { ...joinBindings, ...targetFilter.bindings };
+    const targetQuery = buildTargetQueryParts(target, { primaryClassName });
+    const whereClause = buildWhereClause(targetQuery.where ?? "", joinTargetInstanceFilter);
+    const allBindings = { ...joinBindings, ...targetQuery.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
-      ${joins} ${targetFilter.joins?.join("\n") ?? ""}
+      ${targetQuery.from}
+      ${targetQuery.joins.join("\n")}
+      ${joins}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
     `;
@@ -163,7 +164,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
   },
   async buildQuery(ctx) {
     const { target, primaryClassName, joinPath, schemaProvider, joinTargetInstanceFilter } = ctx;
-    const targetFilter = buildTargetFilter(target);
+    const targetQuery = buildTargetQueryParts(target, { primaryClassName });
 
     const [
       { joins: firstStepJoins, bindings: firstStepBindings, selectors: firstStepSelectors },
@@ -186,7 +187,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       ...firstStepSelectors.map((s) => s.targetClassId),
       ...remainingSelectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]),
     ];
-    const instanceFilterClauses = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+    const instanceFilterClauses = targetQuery.where ? `WHERE ${targetQuery.where}` : "";
 
     // The inner scan is anchored at the (large) source, but only ever yields a small set of
     // DISTINCT (first-hop class, near-end class) id pairs. Joining that derived table keeps the
@@ -197,8 +198,9 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       ${remainingJoins}
       INNER JOIN (
         SELECT [${firstHopAlias}].[ECInstanceId] [FirstHopInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
-        FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
-        ${firstStepJoins} ${targetFilter.joins?.join("\n") ?? ""}
+        ${targetQuery.from}
+        ${targetQuery.joins.join("\n")}
+        ${firstStepJoins}
         ${instanceFilterClauses}
         GROUP BY [${firstHopAlias}].[ECInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
       ) [reachable] ON [reachable].[FirstHopInstanceId] = [${firstHopAlias}].[ECInstanceId]
@@ -206,7 +208,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       GROUP BY  [reachable].[FirstStepRelClassId], ${buildClassIdColumns(classSelectors)}
     `;
 
-    const allBindings = { ...firstStepBindings, ...remainingBindings, ...targetFilter.bindings };
+    const allBindings = { ...firstStepBindings, ...remainingBindings, ...targetQuery.bindings };
     return { ecsql, ...(Object.keys(allBindings).length > 0 ? { bindings: allBindings } : {}) };
   },
 };
@@ -224,13 +226,14 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
     const crossJoins = joins.replaceAll(/\bINNER\s+JOIN\b/gi, "CROSS JOIN");
-    const targetFilter = buildTargetFilter(target);
-    const whereClause = buildWhereClause(targetFilter.where ?? "", joinTargetInstanceFilter);
-    const allBindings = { ...joinBindings, ...targetFilter.bindings };
+    const targetQuery = buildTargetQueryParts(target, { primaryClassName });
+    const whereClause = buildWhereClause(targetQuery.where ?? "", joinTargetInstanceFilter);
+    const allBindings = { ...joinBindings, ...targetQuery.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
-      ${crossJoins} ${targetFilter.joins?.join("\n") ?? ""}
+      ${targetQuery.from}
+      ${targetQuery.joins.join("\n")}
+      ${crossJoins}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
     `;
@@ -1030,41 +1033,39 @@ function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
   /** The distinct alias used for the "other" target's scope in an overlap-check query's inner subquery. */
   const OVERLAP_OTHER_ALIAS = `${ECSQL_PREFIX}other`;
 
-  const outerFilter = buildTargetFilter(a);
-  const innerFilter = buildTargetFilter(b, OVERLAP_OTHER_ALIAS);
-  const outerJoins = namespaceBindings({
-    sql: outerFilter.joins?.join("\n") ?? "",
-    bindings: outerFilter.bindings ?? {},
+  const outerQuery = buildTargetQueryParts(a);
+  const innerQuery = buildTargetQueryParts(b, { primaryAlias: OVERLAP_OTHER_ALIAS });
+  const outerSource = namespaceBindings({
+    sql: [outerQuery.from, ...outerQuery.joins].join("\n"),
+    bindings: outerQuery.bindings ?? {},
     prefix: "outer_",
   });
   const outerWhere = namespaceBindings({
-    sql: outerFilter.where ?? "",
-    bindings: outerFilter.bindings ?? {},
+    sql: outerQuery.where ?? "",
+    bindings: outerQuery.bindings ?? {},
     prefix: "outer_",
   });
-  const innerJoins = namespaceBindings({
-    sql: innerFilter.joins?.join("\n") ?? "",
-    bindings: innerFilter.bindings ?? {},
+  const innerSource = namespaceBindings({
+    sql: [innerQuery.from, ...innerQuery.joins].join("\n"),
+    bindings: innerQuery.bindings ?? {},
     prefix: "inner_",
   });
   const innerWhere = namespaceBindings({
-    sql: innerFilter.where ?? "",
-    bindings: innerFilter.bindings ?? {},
+    sql: innerQuery.where ?? "",
+    bindings: innerQuery.bindings ?? {},
     prefix: "inner_",
   });
   const ecsql = `
     SELECT [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]
-    FROM ${ECSql.createClassSelector(a.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-    ${outerJoins.sql}
+    ${outerSource.sql}
     WHERE ${outerWhere.sql ? `(${outerWhere.sql}) AND ` : ""}[${PRIMARY_CLASS_ALIAS}].[ECInstanceId] IN (
       SELECT [${OVERLAP_OTHER_ALIAS}].[ECInstanceId]
-      FROM ${ECSql.createClassSelector(b.primaryClass)} [${OVERLAP_OTHER_ALIAS}]
-      ${innerJoins.sql}
+      ${innerSource.sql}
       ${innerWhere.sql ? `WHERE ${innerWhere.sql}` : ""}
     )
     LIMIT 1
   `;
-  const bindings = { ...outerJoins.bindings, ...innerJoins.bindings };
+  const bindings = { ...outerSource.bindings, ...innerSource.bindings };
   Object.assign(bindings, outerWhere.bindings, innerWhere.bindings);
   return { ecsql, ...(Object.keys(bindings).length > 0 ? { bindings } : {}) };
 }
