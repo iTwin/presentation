@@ -12,6 +12,7 @@ import type { PropertyCategory, PropertyData } from "@itwin/components-react";
 import type {
   CategoryDefinition,
   ContentItem,
+  Field,
   PropertyGridEntry,
   ReadonlyContentDescriptor,
 } from "@itwin/presentation-content";
