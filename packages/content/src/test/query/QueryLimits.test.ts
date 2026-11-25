@@ -29,7 +29,7 @@ describe("QueryLimits", () => {
       );
       const classTableCounts = await resolveClassTableCounts({
         schemaProvider: { classDerivesFrom },
-        classNames: ["TestSchema.ElementDerived", "TestSchema.Model", "TestSchema.Model"],
+        classNames: new Set(["TestSchema.ElementDerived", "TestSchema.Model", "TestSchema.Model"]),
       });
 
       expect(classTableCounts).to.deep.equal(

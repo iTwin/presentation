@@ -274,7 +274,7 @@ export async function buildBaseQuery(
     ...filterPaths.flatMap((path) => path.map((step) => step.targetClassName)),
     ...sortPaths.flatMap((path) => path.map((step) => step.targetClassName)),
   ]);
-  const classTableCounts = await resolveClassTableCounts({ schemaProvider, classNames: [...classNames] });
+  const classTableCounts = await resolveClassTableCounts({ schemaProvider, classNames });
 
   // Assembles one group's parts: every group shares FROM + target filter and renders its own subset of
   // related paths (merged so a shared prefix is joined once); only the group that owns the primaries (the

@@ -56,11 +56,10 @@ export const MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP = 2;
  */
 export async function resolveClassTableCounts(props: {
   schemaProvider: Pick<ECSchemaProvider, "classDerivesFrom">;
-  classNames: readonly EC.FullClassNameDotNotation[];
+  classNames: ReadonlySet<EC.FullClassNameDotNotation>;
 }): Promise<ReadonlyMap<string, number>> {
-  const classNames = [...new Set(props.classNames)];
   const entries = await Promise.all(
-    classNames.map(
+    [...props.classNames].map(
       async (className) =>
         [
           className,
