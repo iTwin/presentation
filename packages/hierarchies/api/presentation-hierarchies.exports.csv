@@ -1,6 +1,7 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;ClassGroupingNodeKey
+beta;interface;ContinuableIterator
 public;function;createHierarchyProvider
 public;function;createHierarchySearchHelper
 beta;function;createIModelHierarchyNodePaths
@@ -31,7 +32,6 @@ public;type;HierarchyNodeKey
 public;namespace;HierarchyNodeKey
 public;type;HierarchyNodesDefinition
 public;namespace;HierarchyNodesDefinition
-beta;interface;HierarchyNodesIterator
 public;interface;HierarchyProvider
 beta;class;HierarchyRequestInterruptedError
 public;type;HierarchySearchPath

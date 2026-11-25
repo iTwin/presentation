@@ -25,7 +25,6 @@ import {
 import { BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
 import { createDefaultValueFormatter } from "@itwin/presentation-shared";
 import { HierarchyRequestInterruptedError, InvalidContinuationTokenError } from "../HierarchyErrors.js";
-import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, createNodeIdentifierForLogging } from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
@@ -142,12 +141,14 @@ export interface StreamingIModelHierarchyProviderProps {
  * Props for `StreamingIModelHierarchyProvider.getNodes` call.
  *
  * The provider loads nodes in pages and doesn't cache them, so `hierarchyLevelSizeLimit` and `ignoreCache` have no
- * effect. Grouping parent nodes have no children, because the provider doesn't create grouping nodes.
+ * effect.
  * @beta
  */
-export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps {
+export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps<
+  ParentHierarchyNode<NonGroupingHierarchyNode>
+> {
   /**
-   * A token, previously returned by `HierarchyNodesIterator.getContinuationToken` for the same parent node, instance
+   * A token, previously returned by `ContinuableIterator.getContinuationToken` for the same parent node, instance
    * filter and hierarchy search. When specified, the provider continues streaming nodes from the one that follows the
    * node, the token belongs to.
    * Continuing from the last node in the hierarchy level returns no nodes. Tokens created before an iModel change can't
@@ -157,17 +158,16 @@ export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps {
 }
 
 /**
- * An iterator of hierarchy nodes returned by `StreamingIModelHierarchyProvider.getNodes`, which tracks its position in
- * the hierarchy level.
+ * An iterator returned by `StreamingIModelHierarchyProvider.getNodes` and
+ * `StreamingIModelHierarchyProvider.getNodeInstanceKeys`, which tracks its position in the hierarchy level.
  * @beta
  */
-export interface HierarchyNodesIterator extends AsyncIterableIterator<NonGroupingHierarchyNode> {
+export interface ContinuableIterator<T> extends AsyncIterableIterator<T> {
   /**
-   * Returns an opaque token that identifies position of the last node returned by `next()`. Pass it to
-   * `StreamingIModelHierarchyProvider.getNodes` to continue streaming nodes from the one that follows that node.
+   * Returns an opaque token that identifies position of the last value returned.
    *
-   * Before the first node is returned, returns `GetStreamedHierarchyNodesProps.continuationToken` the iterator was
-   * requested with, which is `undefined` when streaming from the start of the hierarchy level.
+   * Before the first value is returned, returns `GetStreamedHierarchyNodesProps.continuationToken` the
+   * iterator was requested with, which is `undefined` when streaming from the start of the hierarchy level.
    */
   getContinuationToken(): string | undefined;
 }
@@ -178,7 +178,8 @@ export interface HierarchyNodesIterator extends AsyncIterableIterator<NonGroupin
  *
  * @beta
  */
-export interface StreamingIModelHierarchyProvider extends HierarchyProvider, Disposable {
+export interface StreamingIModelHierarchyProvider
+  extends HierarchyProvider<ParentHierarchyNode<NonGroupingHierarchyNode>>, Disposable {
   /**
    * An event that provider raises due to a hierarchy change that requires a reload. In-flight `getNodes` requests fail
    * with `HierarchyRequestInterruptedError` when the event is raised. Continuation tokens of nodes returned before an
@@ -205,7 +206,7 @@ export interface StreamingIModelHierarchyProvider extends HierarchyProvider, Dis
    * after `getNodes` is called and before all nodes are streamed, or if the provider was already disposed when
    * `getNodes` was called. The iterator only finishes without an error after the last node of the hierarchy level.
    */
-  getNodes(props: GetStreamedHierarchyNodesProps): HierarchyNodesIterator;
+  getNodes(props: GetStreamedHierarchyNodesProps): ContinuableIterator<NonGroupingHierarchyNode>;
 
   /**
    * Overrides the property value formatter used to format node labels. Setting to `undefined` resets the formatter
@@ -221,9 +222,10 @@ export interface StreamingIModelHierarchyProvider extends HierarchyProvider, Dis
    * instance keys of their children. Nodes with `hideIfNoChildren` processing param are included without checking
    * whether they have children.
    *
-   * @throws `HierarchyRequestInterruptedError` from the iterator, under the same conditions as `getNodes`.
+   * @throws `InvalidContinuationTokenError` and `HierarchyRequestInterruptedError` under the same conditions as
+   * `getNodes`.
    */
-  getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
+  getNodeInstanceKeys(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">): ContinuableIterator<InstanceKey>;
 
   /**
    * Sets the hierarchy search, which limits the hierarchy to paths leading to the search targets. Setting to
@@ -254,10 +256,13 @@ export function createStreamingIModelHierarchyProvider(
 }
 
 type StreamingParentNode = ParentHierarchyNode<NonGroupingHierarchyNode>;
-/** A node streamed by `getNodes`, together with its continuation token. */
-interface StreamedNode {
-  node: NonGroupingHierarchyNode;
-  continuationToken: string;
+/**
+ * A value streamed by a request, together with continuation token of the node, whose values end with this one.
+ * The token is not set if the node has more values after this one, or the value doesn't come from a hierarchy level node.
+ */
+interface StreamedValue<T> {
+  value: T;
+  continuationToken?: string;
 }
 type StreamingProcessedNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode;
 
@@ -275,7 +280,7 @@ interface LevelPosition {
  * except the last one, points to a hidden node (one with `hideInHierarchy` processing param), and each subsequent
  * position points to a node in that hidden node's child hierarchy level.
  *
- * Exposed to consumers as an opaque `string` through `HierarchyNodesIterator.getContinuationToken` and
+ * Exposed to consumers as an opaque `string` through `ContinuableIterator.getContinuationToken` and
  * `GetStreamedHierarchyNodesProps.continuationToken` - see `encodeContinuationToken` and `decodeContinuationToken`.
  *
  * Example: root hierarchy level is defined by a single query that returns `[a, b, hidden, d, e]`. The `hidden` node's
@@ -434,7 +439,8 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     return this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
   }
 
-  public getNodes(props: GetStreamedHierarchyNodesProps): HierarchyNodesIterator {
+  /** Validates and decodes the continuation token of the request, and creates context for encoding new tokens. */
+  #resolveContinuationToken(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">) {
     const tokenContext: ContinuationTokenContext = {
       generation: this.#hierarchyGeneration,
       fingerprint: createRequestFingerprint({ ...props, searchFingerprint: this.#searchFingerprint }),
@@ -444,11 +450,16 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
       props.continuationToken !== undefined
         ? decodeContinuationToken(props.continuationToken, tokenContext)
         : undefined;
+    return { tokenContext, continuationToken };
+  }
+
+  public getNodes(props: GetStreamedHierarchyNodesProps): ContinuableIterator<NonGroupingHierarchyNode> {
+    const { tokenContext, continuationToken } = this.#resolveContinuationToken(props);
     // number of nodes that the consumer has requested, but hasn't received yet
     const pendingRequestsCount = new BehaviorSubject(0);
     // the request is interrupted by any hierarchy change after this call, even if iteration hasn't started yet
     const interrupt = this.#createInterrupt();
-    return createHierarchyNodesIterator({
+    return createContinuableIterator({
       iterator: requestOnDemand({
         source: this.#getNodesObservable({ ...props, continuationToken, tokenContext, pendingRequestsCount }).pipe(
           throwOnInterrupt(interrupt),
@@ -459,33 +470,67 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     });
   }
 
-  public getNodeInstanceKeys({
-    parentNode,
-    instanceFilter,
-  }: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey> {
+  public getNodeInstanceKeys(
+    props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">,
+  ): ContinuableIterator<InstanceKey> {
+    const { parentNode, instanceFilter } = props;
+    const { tokenContext, continuationToken } = this.#resolveContinuationToken(props);
     const interrupt = this.#createInterrupt();
-    const source: Observable<InstanceKey> =
-      parentNode && HierarchyNode.isGroupingNode(parentNode)
-        ? from(parentNode.groupedInstanceKeys)
-        : this.#readInstanceKeys({ parentNode: parentNode && toDefinitionParentNode(parentNode), instanceFilter });
-    return requestOnDemand({ source: source.pipe(throwOnInterrupt(interrupt)), onRequest: () => {} });
+    const source = this.#readInstanceKeys({
+      parentNode,
+      instanceFilter,
+      continuationToken,
+      parentContinuationToken: [],
+      tokenContext,
+    });
+    return createContinuableIterator({
+      iterator: requestOnDemand({ source: source.pipe(throwOnInterrupt(interrupt)), onRequest: () => {} }),
+      initialContinuationToken: props.continuationToken,
+    });
   }
 
   /** Reads instance keys of nodes in the given parent node's child hierarchy level, going into hidden nodes. */
   #readInstanceKeys({
     parentNode,
     instanceFilter,
-  }: Pick<ReadLevelProps<never>, "parentNode" | "instanceFilter">): Observable<InstanceKey> {
+    continuationToken,
+    parentContinuationToken,
+    tokenContext,
+  }: Pick<
+    StreamLevelProps,
+    "parentNode" | "instanceFilter" | "continuationToken" | "parentContinuationToken" | "tokenContext"
+  >): Observable<StreamedValue<InstanceKey>> {
     return this.#readLevel({
       parentNode,
       instanceFilter,
+      continuationToken,
       // instance keys aren't requested one by one, so read them all
       demand: of(undefined),
-      processNode: ({ node }) => {
+      processNode: ({ node, position, nestedContinuationToken }) => {
+        const nodeContinuationToken = [...parentContinuationToken, position];
         if (node.processingParams?.hideInHierarchy) {
-          return node.children === false ? EMPTY : this.#readInstanceKeys({ parentNode: node, instanceFilter });
+          return node.children === false
+            ? EMPTY
+            : this.#readInstanceKeys({
+                parentNode: node,
+                instanceFilter,
+                continuationToken: nestedContinuationToken,
+                parentContinuationToken: nodeContinuationToken,
+                tokenContext,
+              });
         }
-        return HierarchyNodeKey.isInstances(node.key) ? from(node.key.instanceKeys) : EMPTY;
+        if (!HierarchyNodeKey.isInstances(node.key)) {
+          return EMPTY;
+        }
+        const { instanceKeys } = node.key;
+        const nodeToken = encodeContinuationToken(nodeContinuationToken, tokenContext);
+        // only the node's last key gets the token, so that resuming from it doesn't skip any of the node's keys
+        return from(
+          instanceKeys.map((key, index) => ({
+            value: key,
+            ...(index === instanceKeys.length - 1 ? { continuationToken: nodeToken } : undefined),
+          })),
+        );
       },
     });
   }
@@ -500,17 +545,13 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     continuationToken: ContinuationToken | undefined;
     tokenContext: ContinuationTokenContext;
     pendingRequestsCount: BehaviorSubject<number>;
-  }): Observable<StreamedNode> {
+  }): Observable<StreamedValue<NonGroupingHierarchyNode>> {
     return defer(() => {
-      const requestedParentNode = parentNode ? toDefinitionParentNode(parentNode) : undefined;
-      if (parentNode && !requestedParentNode) {
-        return EMPTY;
-      }
       const timer = new StopWatch(undefined, true);
       let nodesCount = 0;
       return this.#streamLevel({
-        parentNode: requestedParentNode,
-        requestedParentNode,
+        parentNode,
+        requestedParentNode: parentNode,
         instanceFilter,
         continuationToken,
         parentContinuationToken: [],
@@ -538,7 +579,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
    * Streams nodes of a hierarchy level the way they're returned by `getNodes`, replacing hidden nodes with their
    * children.
    */
-  #streamLevel(props: StreamLevelProps): Observable<StreamedNode> {
+  #streamLevel(props: StreamLevelProps): Observable<StreamedValue<NonGroupingHierarchyNode>> {
     const { parentNode, requestedParentNode, instanceFilter, parentContinuationToken, tokenContext, demand } = props;
     return this.#readLevel({
       parentNode,
@@ -549,8 +590,8 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
         const nodeContinuationToken = [...parentContinuationToken, position];
         if (!node.processingParams?.hideInHierarchy) {
           return this.#finalizeNode({ node, parentNode: requestedParentNode }).pipe(
-            map((finalNode): StreamedNode => ({
-              node: finalNode,
+            map((finalNode) => ({
+              value: finalNode,
               continuationToken: encodeContinuationToken(nodeContinuationToken, tokenContext),
             })),
           );
@@ -822,13 +863,7 @@ function onDemand<T>(demand: Observable<unknown>, work: () => Observable<T>): Ob
  * consumer requests the next value. Unlike async generators, `return()` takes effect immediately, even while a `next()`
  * call is pending: it unsubscribes from `source` and settles pending `next()` calls as done.
  */
-function requestOnDemand<T>({
-  source,
-  onRequest,
-}: {
-  source: Observable<T>;
-  onRequest: () => void;
-}): AsyncIterableIterator<T> {
+function requestOnDemand<T>({ source, onRequest }: { source: Observable<T>; onRequest: () => void }): AsyncIterator<T> {
   // values received from `source`, but not yet taken by `next()` calls
   const values: T[] = [];
   // `next()` calls waiting for a value
@@ -854,9 +889,6 @@ function requestOnDemand<T>({
     }
   };
   return {
-    [Symbol.asyncIterator]() {
-      return this;
-    },
     async next() {
       // register the request before subscribing, because `source` may emit synchronously
       const result = new Promise<IteratorResult<T>>((resolve, reject) => pending.push({ resolve, reject }));
@@ -895,24 +927,16 @@ function requestOnDemand<T>({
 }
 
 /**
- * Returns the given parent node the way it's passed to the hierarchy definition, or `undefined` for grouping nodes,
- * whose children aren't defined by hierarchy definitions.
+ * Creates an iterator that returns values of the given iterator and tracks continuation token of the last node, whose
+ * values were all returned.
  */
-function toDefinitionParentNode(parentNode: ParentHierarchyNode): StreamingParentNode | undefined {
-  return HierarchyNode.isGroupingNode(parentNode) ? undefined : (parentNode as StreamingParentNode);
-}
-
-/**
- * Creates a `HierarchyNodesIterator` that returns nodes of the given iterator and tracks continuation token of the
- * last returned node.
- */
-function createHierarchyNodesIterator({
+function createContinuableIterator<T>({
   iterator,
   initialContinuationToken,
 }: {
-  iterator: AsyncIterableIterator<StreamedNode>;
+  iterator: AsyncIterator<StreamedValue<T>>;
   initialContinuationToken: string | undefined;
-}): HierarchyNodesIterator {
+}): ContinuableIterator<T> {
   let continuationToken = initialContinuationToken;
   return {
     getContinuationToken() {
@@ -926,8 +950,10 @@ function createHierarchyNodesIterator({
       if (result.done) {
         return result;
       }
-      continuationToken = result.value.continuationToken;
-      return { done: false, value: result.value.node };
+      if (result.value.continuationToken !== undefined) {
+        continuationToken = result.value.continuationToken;
+      }
+      return { done: false, value: result.value.value };
     },
     async return() {
       await iterator.return!();

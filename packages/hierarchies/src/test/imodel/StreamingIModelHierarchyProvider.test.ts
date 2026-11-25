@@ -14,7 +14,6 @@ import {
   createIModelAccessStub,
   createInstanceLabelSelectClauseFactoryStub,
   createTestGenericNodeKey,
-  createTestGroupingNode,
   createTestSourceGenericNode,
 } from "../Utils.js";
 
@@ -25,7 +24,7 @@ import type {
   HierarchyDefinition,
   HierarchyLevelDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import type { HierarchyNodesIterator } from "../../hierarchies/imodel/StreamingIModelHierarchyProvider.js";
+import type { ContinuableIterator } from "../../hierarchies/imodel/StreamingIModelHierarchyProvider.js";
 import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("createStreamingIModelHierarchyProvider", () => {
@@ -104,8 +103,8 @@ describe("createStreamingIModelHierarchyProvider", () => {
   }
 
   /** Collects nodes of the given iterator together with iterator's continuation token after each node. */
-  async function collectWithTokens(iterator: HierarchyNodesIterator) {
-    const result = new Array<{ node: NonGroupingHierarchyNode; continuationToken: string }>();
+  async function collectWithTokens<T = NonGroupingHierarchyNode>(iterator: ContinuableIterator<T>) {
+    const result = new Array<{ node: T; continuationToken: string }>();
     for await (const node of iterator) {
       result.push({ node, continuationToken: iterator.getContinuationToken()! });
     }
@@ -973,7 +972,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
   });
 
   describe("parent nodes", () => {
-    it("returns no nodes for grouping, other source generic and other iModel instance parent nodes", async () => {
+    it("returns no nodes for other source generic and other iModel instance parent nodes", async () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         { node: createTestSourceGenericNode() },
       ]);
@@ -981,11 +980,6 @@ describe("createStreamingIModelHierarchyProvider", () => {
         imodelAccess,
         hierarchyDefinition: { defineHierarchyLevel },
       });
-      expect(
-        await collect(
-          provider.getNodes({ parentNode: createTestGroupingNode() as unknown as NonGroupingHierarchyNode }),
-        ),
-      ).toEqual([]);
       expect(
         await collect(
           provider.getNodes({
@@ -1265,37 +1259,6 @@ describe("createStreamingIModelHierarchyProvider", () => {
     });
   });
 
-  describe("grouping parent nodes", () => {
-    const groupingNode = {
-      key: { type: "class-grouping" as const, className: "a.b" as const },
-      groupedInstanceKeys: [{ className: "a.b" as const, id: "0x1" }],
-      label: "group",
-      parentKeys: [],
-    };
-
-    it("returns no child nodes", async () => {
-      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => []);
-      using provider = createStreamingIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: { defineHierarchyLevel },
-      });
-      expect(await collect(provider.getNodes({ parentNode: groupingNode }))).toEqual([]);
-      expect(defineHierarchyLevel).not.toHaveBeenCalled();
-    });
-
-    it("returns grouped instance keys", async () => {
-      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => []);
-      using provider = createStreamingIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: { defineHierarchyLevel },
-      });
-      expect(await collect(provider.getNodeInstanceKeys({ parentNode: groupingNode }))).toEqual(
-        groupingNode.groupedInstanceKeys,
-      );
-      expect(defineHierarchyLevel).not.toHaveBeenCalled();
-    });
-  });
-
   describe("node instance keys", () => {
     it("returns instance keys of child nodes, replacing hidden nodes with their children's keys", async () => {
       setupQueries({
@@ -1357,6 +1320,57 @@ describe("createStreamingIModelHierarchyProvider", () => {
       const [rootNode] = await collect(provider.getNodes({ parentNode: undefined }));
       expect(await collect(provider.getNodeInstanceKeys({ parentNode: rootNode }))).toEqual([
         { className: "a.b", id: "0x1", imodelKey: imodelAccess.imodelKey },
+      ]);
+    });
+
+    it("continues from a continuation token", async () => {
+      setupQueries({ Q: createRows(3) });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
+      });
+      const keys = await collectWithTokens(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys.map(({ node }) => node.id)).toEqual(["0x1", "0x2", "0x3"]);
+      expect(
+        await collect(
+          provider.getNodeInstanceKeys({ parentNode: undefined, continuationToken: keys[0].continuationToken }),
+        ),
+      ).toEqual(keys.slice(1).map(({ node }) => node));
+    });
+
+    it("points continuation token to a node only after all its instance keys are returned", async () => {
+      setupQueries({ Q: createRows(2) });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          defineHierarchyLevel: async () => [createQueryDefinition("Q")],
+          // each row results in a node with 2 instance keys
+          parseNode: ({ row }) => ({
+            key: {
+              type: "instances",
+              instanceKeys: [
+                { className: "a.b", id: row.ECInstanceId },
+                { className: "a.c", id: row.ECInstanceId },
+              ],
+            },
+            label: row.ECInstanceId,
+            children: false,
+          }),
+        },
+      });
+      const iterator = provider.getNodeInstanceKeys({ parentNode: undefined });
+      expect((await iterator.next()).value).toMatchObject({ className: "a.b", id: "0x1" });
+      expect(iterator.getContinuationToken()).toBeUndefined();
+      expect((await iterator.next()).value).toMatchObject({ className: "a.c", id: "0x1" });
+      const firstNodeToken = iterator.getContinuationToken();
+      expect(firstNodeToken).toEqual(expect.any(String));
+      await iterator.return!();
+
+      expect(
+        await collect(provider.getNodeInstanceKeys({ parentNode: undefined, continuationToken: firstNodeToken })),
+      ).toEqual([
+        { className: "a.b", id: "0x2", imodelKey: imodelAccess.imodelKey },
+        { className: "a.c", id: "0x2", imodelKey: imodelAccess.imodelKey },
       ]);
     });
 
