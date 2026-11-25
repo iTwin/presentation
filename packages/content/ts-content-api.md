@@ -18,7 +18,7 @@
 
 **Decision:** Flatten. The descriptor holds `fields: Record<Field["id"], Field>` keyed by field ID; `RelatedFieldGroup` is removed.
 
-Category nesting for related fields is handled by the existing `CategoryDefinition` mechanism (`categories` registry + `categoryId` on fields + `parentId` for nesting). Providers that resolve related fields know the path split points and create categories accordingly.
+Category nesting for related fields is handled by the existing `CategoryDefinition` mechanism (`categories` registry + `category` on fields + `parent` for nesting). Both `category` and `parent` are references: a defined category (`{ type: "category", id }`) or the content target's own category (`{ type: "target" }`, which has no definition). A category without a `parent` is at the top level, next to the content target's category. Providers that resolve related fields know the path split points and create categories accordingly.
 
 `CategoryDefinition.computeId({ path })` produces a deterministic ID from a relationship path, ensuring multiple providers reaching the same path converge on the same category without coordination. `CategoryDefinition.create(...)` is a convenience that builds the full definition.
 

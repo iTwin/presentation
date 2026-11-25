@@ -67,6 +67,7 @@ describe("convertDateTimeValues", () => {
         { when: date, name: "A", unknown: date },
         {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [
             { name: "when", label: "When", type: dateType },
             { name: "name", label: "Name", type: stringType },
@@ -80,7 +81,11 @@ describe("convertDateTimeValues", () => {
     expect(
       convertDateTimeValues([{ when: date }], {
         kind: "array",
-        elementType: { kind: "struct", members: [{ name: "when", label: "When", type: dateType }] },
+        elementType: {
+          kind: "struct",
+          className: "TestSchema.TestStruct",
+          members: [{ name: "when", label: "When", type: dateType }],
+        },
       }),
     ).toEqual([{ when: expected }]);
   });

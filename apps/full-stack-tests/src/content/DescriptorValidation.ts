@@ -16,15 +16,24 @@ import type { Descriptor } from "./Utils.js";
  */
 export function getCategoryLabelChain(descriptor: Descriptor, field: Field): string[] {
   const labelsLeafToRoot: string[] = [];
-  let id: string | undefined = field.categoryId;
+  let id: string | undefined = field.category.type === "category" ? field.category.id : undefined;
   const seen = new Set<string>();
   while (id !== undefined && !seen.has(id) && id in descriptor.categories) {
     seen.add(id);
     const category: Descriptor["categories"][string] = descriptor.categories[id];
     labelsLeafToRoot.push(category.label);
-    id = category.parentId;
+    id = category.parent?.type === "category" ? category.parent.id : undefined;
   }
   return labelsLeafToRoot.reverse();
+}
+
+/** Returns where the outermost category of a field's chain is placed: in the content target's category or at the top level. */
+export function getCategoryChainBase(descriptor: Descriptor, field: Field): "target" | "topLevel" {
+  let reference: Descriptor["categories"][string]["parent"] = field.category;
+  while (reference?.type === "category") {
+    reference = descriptor.categories[reference.id].parent;
+  }
+  return reference ? "target" : "topLevel";
 }
 
 /** Validates a field's root-to-leaf category label chain. */

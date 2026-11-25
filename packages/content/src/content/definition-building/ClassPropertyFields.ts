@@ -7,8 +7,7 @@ import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext } from "../ContentTarget.js";
-import type { RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
+import type { CardinalityHint, CategoryContext, RelationshipMeaning } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
 
@@ -18,7 +17,7 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
 /**
  * The raw category facts of an enumerated property field. Field enumeration only reports these
  * facts; the single categorization pass (`collectCategories`) turns them into concrete category ids,
- * creates the category tree, and assigns each field's `categoryId`.
+ * creates the category tree, and places each field in its category (`field.category`).
  */
 export interface FieldCategorization {
   /**
@@ -37,9 +36,12 @@ export interface FieldCategorization {
   category?:
     | { source: "override"; id: CategoryDefinition["id"] }
     | { source: "propertyCategory"; id: EC.FullClassNameDotNotation; label: string };
-  /** The declaration's `propertyCategoryScope`; omitted means `"relatedClass"`. */
-  propertyCategoryScope?: RelatedPropertiesDeclaration["propertyCategoryScope"];
-  /** Ordered enclosing class categories; an empty context places the field's category at the root. */
+  /** The `relationshipMeaning` in effect for the field's step; `"relatedInstance"` for direct fields. */
+  relationshipMeaning: RelationshipMeaning;
+  /**
+   * Ordered enclosing class categories; an empty context places the field's category at the root. For a
+   * property category of a `"sameInstance"` step, excludes the field's own step.
+   */
   categoryContext: Readonly<CategoryContext>;
 }
 
@@ -77,8 +79,8 @@ interface CreatePropertyFieldsProps {
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
   anchor: FieldCategorization["anchor"];
-  /** See {@link FieldCategorization.propertyCategoryScope}. */
-  propertyCategoryScope?: FieldCategorization["propertyCategoryScope"];
+  /** See {@link FieldCategorization.relationshipMeaning}. */
+  relationshipMeaning: RelationshipMeaning;
   /** See {@link FieldCategorization.categoryContext}. */
   categoryContext: CategoryContext;
 }
@@ -99,15 +101,16 @@ interface CreatePropertyFieldsProps {
  * - `id` is derived from `(propertyClassName, propertyName, pathFromTarget)`.
  *
  * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
- * property category and/or spec override, plus the given `anchor`) — but no `categoryId` is assigned
- * and no category is created here: that is the categorization pass's job.
+ * property category and/or spec override, plus the given `anchor`). Fields start in the content target's
+ * category (`{ type: "target" }`) and no category is created here: placing fields in their categories is
+ * the categorization pass's job.
  *
  * Properties with unsupported value types (e.g. `Binary`/`IGeometry`) are skipped. The returned
  * fields are candidates whose identity is finalized (and same-property variants merged) by
  * `mergePropertyFieldsByIdentity`.
  */
 export function createPropertyFields(props: CreatePropertyFieldsProps): CategorizedField[] {
-  const { properties, relationshipInfo, valueClassNames, spec, anchor, propertyCategoryScope, categoryContext } = props;
+  const { properties, relationshipInfo, valueClassNames, spec, anchor, relationshipMeaning, categoryContext } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
   const pathCardinality = relationshipInfo?.pathCardinality ?? "one";
   const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
@@ -139,6 +142,8 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       pathCardinality,
       valueClassNames,
       primaryClassNames,
+      // The categorization pass places the field in its category.
+      category: { type: "target" },
     };
     if (overrides.readOnly !== undefined) {
       field.readOnly = overrides.readOnly;
@@ -149,10 +154,7 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       field.hidden = overrides.hidden;
     }
     // Report the raw category facts: an explicit spec override, else the EC schema property category.
-    const categorization: FieldCategorization = { anchor, categoryContext };
-    if (propertyCategoryScope !== undefined) {
-      categorization.propertyCategoryScope = propertyCategoryScope;
-    }
+    const categorization: FieldCategorization = { anchor, relationshipMeaning, categoryContext };
     if (overrides.categoryId !== undefined) {
       categorization.category = { source: "override", id: overrides.categoryId };
     } else {

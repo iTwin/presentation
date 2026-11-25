@@ -229,6 +229,7 @@ function mapPropertiesForStep(
 interface NormalizedRelatedPropertiesSpec {
   propertiesSource: PresentationRules.RelationshipPathSpecification;
   instanceFilter?: string;
+  relationshipMeaning?: PresentationRules.RelatedPropertiesSpecification["relationshipMeaning"];
   nestedRelatedProperties?: PresentationRules.RelatedPropertiesSpecification[];
   properties?: PresentationRules.RelatedPropertiesSpecification["properties"];
   relationshipProperties?: PresentationRules.RelatedPropertiesSpecification["relationshipProperties"];
@@ -304,13 +305,27 @@ async function mapRelatedPropertiesSpec(props: {
       ? { select: "none" }
       : undefined;
 
-  return { path, properties: [{ stepIndex: steps.length - 1, target: targetSpec, relationship: relSpec }] };
+  return {
+    path,
+    properties: [
+      {
+        stepIndex: steps.length - 1,
+        target: targetSpec,
+        relationship: relSpec,
+        ...(spec.relationshipMeaning === "SameInstance" ? { relationshipMeaning: "sameInstance" as const } : undefined),
+      },
+    ],
+  };
 }
 
 /**
  * Recursively flattens a `RelatedPropertiesSpecification` and all its `nestedRelatedProperties`
  * into a flat list of `RelatedPropertiesDeclaration`s. Nested specs produce declarations whose
- * paths are the concatenation of the parent's path + the nested spec's own path.
+ * paths are the concatenation of the parent's path + the nested spec's own path, and whose step specs
+ * keep the parent's classes (without their properties) so they enclose the nested spec's categories.
+ *
+ * Each spec's `relationshipMeaning` is set on its own step (`StepPropertySpec.relationshipMeaning`), so nested specs
+ * with mixed meanings keep them in the flattened declaration.
  */
 async function flattenRelatedPropertiesSpecs(props: {
   imodelAccess: ECSchemaProvider;
@@ -347,6 +362,7 @@ async function flattenRelatedPropertiesSpecs(props: {
                 stepIndex: step.stepIndex,
                 target: { select: "none" },
                 ...(step.relationship ? { relationship: { select: "none" } } : undefined),
+                ...(step.relationshipMeaning ? { relationshipMeaning: step.relationshipMeaning } : undefined),
               })),
               ...nestedDecl.properties.map((step) => ({ ...step, stepIndex: offset + step.stepIndex })),
             ],
@@ -379,6 +395,7 @@ function normalizeRelatedPropertiesSpec(
 
   const common: Omit<NormalizedRelatedPropertiesSpec, "propertiesSource"> = {
     instanceFilter: spec.instanceFilter,
+    relationshipMeaning: spec.relationshipMeaning,
     nestedRelatedProperties: spec.nestedRelatedProperties,
     properties: spec.properties,
     relationshipProperties: spec.relationshipProperties,

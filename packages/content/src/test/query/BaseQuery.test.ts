@@ -77,6 +77,7 @@ function makeSource(paths: RelationshipPath[], target: ContentTarget = { primary
 
 function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "propertyName">): PropertyField {
   return {
+    category: { type: "target" },
     kind: "property",
     id: props.id ?? `field-${props.propertyName}`,
     label: props.propertyName,
@@ -420,13 +421,20 @@ describe("buildBaseQuery", () => {
   });
 
   describe("target filter", () => {
-    it("adds an IdSet join and binding for instanceIds", async () => {
+    it("puts the IdSet before the primary class and binds instanceIds with related columns", async () => {
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([], { primaryClass, instanceIds: ["0x1", "0x2"] }),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [],
       });
 
-      expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
+      expect(result.anchor.parts.from).to.equal(
+        `FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]`,
+      );
+      expect(result.anchor.parts.joins).to.equal(
+        `CROSS JOIN ${ECSql.createClassSelector(primaryClass)} [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]`,
+      );
       expect(result.anchor.parts.bindings).to.deep.equal({
         [`${ECSQL_PREFIX}TargetInstanceIds`]: { type: "idset", value: ["0x1", "0x2"] },
       });
@@ -456,7 +464,12 @@ describe("buildBaseQuery", () => {
         source: makeSource([], { primaryClass, instanceIds: ["0x1"], instanceFilter: { expression: "this.Area > 5" } }),
       });
 
-      expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
+      expect(result.anchor.parts.from).to.equal(
+        `FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]`,
+      );
+      expect(result.anchor.parts.joins).to.equal(
+        `CROSS JOIN ${ECSql.createClassSelector(primaryClass)} [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]`,
+      );
       expect(result.anchor.parts.where).to.equal("WHERE [this].Area > 5");
     });
   });
@@ -694,6 +707,7 @@ describe("buildBaseQuery", () => {
         propertyName: "Address",
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
         },
       });
@@ -706,7 +720,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("throws for an unknown struct member", async () => {
-      const field = makePropertyField({ propertyName: "Address", type: { kind: "struct", members: [] } });
+      const field = makePropertyField({
+        propertyName: "Address",
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+      });
       const filters: ContentValueFilter[] = [{ field, member: "Nope", operator: "is-equal", value: "x" }];
 
       await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
@@ -719,6 +736,7 @@ describe("buildBaseQuery", () => {
         propertyName: "Address",
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
         },
       });
@@ -730,7 +748,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("throws for a struct field filtered without a member", async () => {
-      const field = makePropertyField({ propertyName: "Address", type: { kind: "struct", members: [] } });
+      const field = makePropertyField({
+        propertyName: "Address",
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+      });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "x" }];
 
       await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
@@ -869,6 +890,7 @@ describe("buildBaseQuery", () => {
 
     it("substitutes a calculated field's default target alias", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -888,6 +910,7 @@ describe("buildBaseQuery", () => {
 
     it("substitutes a calculated field's custom target alias", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -906,6 +929,7 @@ describe("buildBaseQuery", () => {
 
     it("parenthesizes a compound calculated expression before applying the operator", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -923,6 +947,7 @@ describe("buildBaseQuery", () => {
 
     it("carries a calculated field's own bindings into the base query", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -946,6 +971,7 @@ describe("buildBaseQuery", () => {
     describe("class-scoped calculated fields", () => {
       const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
       const pumpField: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -1227,23 +1253,25 @@ describe("buildBaseQuery", () => {
       expect(trimWhitespace(result.anchor.parts.joins).split("LEFT OUTER JOIN").length - 1).to.equal(4);
     });
 
-    it("reserves a table for the paging IdSet join, so a would-be-full anchor still leaves it room", async () => {
-      // 20 single-step navigation-property paths cost exactly 60 tables (20 target classes × 3), filling
-      // the budget after 3 primary-class tables and the reserved paging IdSet join. The 21st path spills.
-      const paths = Array.from({ length: 21 }, (_, index) => [
+    it.each([
+      { mode: "without explicit IDs", target: { primaryClass }, groupSizes: [20, 19] },
+      { mode: "with explicit IDs", target: { primaryClass, instanceIds: ["0x1"] }, groupSizes: [19, 19, 1] },
+    ])("reserves room for the IdSet tables $mode", async ({ target, groupSizes }) => {
+      // Each navigation-property path costs 3 tables. The primary class and paging IdSet leave room
+      // for 20 paths per group, but the explicit-ID IdSet lowers that to 19. With 39 paths, that
+      // extra table forces a third group and checks the budget in both the anchor and overflow groups.
+      const paths = Array.from({ length: 39 }, (_, index) => [
         makeStep(primaryClass, `TestSchema.RelNav${index}`, `TestSchema.NavTarget${index}`),
       ]);
 
       const result = await buildBaseQuery({
         schemaProvider,
-        source: makeSource(paths),
+        source: makeSource(paths, target),
         includeRelatedJoins: true,
         propertySelectorPaths: paths,
       });
 
-      expect(result.anchor.paths).to.have.length(20);
-      expect(result.additional).to.have.length(1);
-      expect(result.additional![0].paths).to.have.length(1);
+      expect([result.anchor, ...result.additional!].map((group) => group.paths.length)).to.deep.equal(groupSizes);
     });
 
     it("splits 1:1 paths across groups when they exceed the join budget", async () => {
@@ -2056,6 +2084,7 @@ describe("buildBaseQuery", () => {
 describe("buildTargetScopedQuery", () => {
   it("evaluates the given and filtered calculated fields on the primary alias", async () => {
     const createField = (id: string): CalculatedField => ({
+      category: { type: "target" },
       kind: "calculated",
       id,
       label: id,
@@ -2087,6 +2116,7 @@ describe("buildTargetScopedQuery", () => {
     const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
     const wall: EC.FullClassNameDotNotation = "TestSchema.Wall";
     const pumpField: CalculatedField = {
+      category: { type: "target" },
       kind: "calculated",
       id: "flow",
       label: "Flow",

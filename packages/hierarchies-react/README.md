@@ -355,6 +355,33 @@ const renameMyModel = () => treeRef.current?.renameNode((node) => node.label ===
 
 <!-- END EXTRACTION -->
 
+### Scrolling to a node
+
+The renderer ref's `scrollToNode` method scrolls the first loaded node matching a predicate into view, expanding its collapsed ancestors if needed. An optional `onComplete` callback receives the target node once it's scrolled to:
+
+<!-- [[include: [Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.RenamingImports, Presentation.HierarchiesReact.Features.ScrollToNode, Presentation.HierarchiesReact.Features.ScrollToNodeRenderer], tsx]] -->
+<!-- BEGIN EXTRACTION -->
+
+```tsx
+import { useRef } from "react";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+
+import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
+
+// Hold a ref to the renderer and call `scrollToNode` to scroll the first node matching the predicate into
+// view. The node must already be loaded; if it's under a collapsed parent or deep in the hierarchy, its
+// collapsed ancestors are expanded first.
+const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+const revealMyModel = () => treeRef.current?.scrollToNode({ nodePredicate: (node) => node.label === "My Model A" });
+
+<>
+  <button onClick={revealMyModel}>Show model</button>
+  <StrataKitTreeRenderer {...treeProps.treeRendererProps} ref={treeRef} treeLabel="My Tree" />
+</>;
+```
+
+<!-- END EXTRACTION -->
+
 ### Custom errors
 
 Custom errors are attached to nodes through the `getTreeNodeErrors` callback on the tree state hook, using the `"Generic"` type (the `ResultSetTooLarge`, `NoFilterMatches`, and `ChildrenLoad` types are produced internally). A generic error only needs a `message` (and optionally `isNodeExpandable`), and the delivered renderer displays it with a link to the node - the same way it renders the internally produced types. Attach an `additionalData` payload to carry structured context, then customize rendering through the `errorRenderer` prop: delegate to `TreeErrorRenderer` and provide a `renderError` callback that renders your own `unstable_ErrorRegion.Item` for your errors and falls back to the delivered `ErrorItemRenderer` for everything else (keeping the default message and node link):

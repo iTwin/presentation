@@ -541,6 +541,8 @@ interface EnumeratorInfo<TValue extends string | number = string | number> {
  */
 export interface StructValueDescriptor {
   kind: "struct";
+  /** Full name of the struct class that defines this value's shape. */
+  className: EC.FullClassNameDotNotation;
   /** The list of named, typed members that make up this struct. */
   members: StructMember[];
 }
