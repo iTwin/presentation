@@ -176,7 +176,7 @@ function applyPropertySpecification(
   }
   const categoryId = resolveCategoryId(spec.categoryId);
   if (categoryId !== undefined) {
-    field.categoryId = categoryId;
+    field.category = { type: "category", id: categoryId };
   }
   if (spec.isDisplayed === false) {
     field.hidden = true;

@@ -25,10 +25,9 @@ export function collectExternalFields(
         label: declaration.label,
         type: declaration.type,
         providerId: provider.id,
+        category:
+          declaration.categoryId !== undefined ? { type: "category", id: declaration.categoryId } : { type: "target" },
       };
-      if (declaration.categoryId !== undefined) {
-        field.categoryId = declaration.categoryId;
-      }
       fields[id] = field;
     }
   }

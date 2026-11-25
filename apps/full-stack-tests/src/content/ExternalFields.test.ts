@@ -100,7 +100,7 @@ describe("Content", () => {
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       const provider = defineExternalFieldsProvider({
         id: "ext_v1",
-        categories: { extCat: { id: "extCat", label: "External Category" } },
+        categories: { extCat: { id: "extCat", label: "External Category", parent: { type: "target" } } },
         fields: [
           { id: "ext1", label: "External Field", type: { kind: "primitive", type: "String" }, categoryId: "extCat" },
         ],
@@ -116,7 +116,7 @@ describe("Content", () => {
 
       const external = getExternalFields(descriptor);
       expect(external).toHaveLength(1);
-      expect(external[0].categoryId).toBe("extCat");
+      expect(external[0].category).toEqual({ type: "category", id: "extCat" });
       expect(getFieldCategory(descriptor, external[0])?.label).toBe("External Category");
     });
   });

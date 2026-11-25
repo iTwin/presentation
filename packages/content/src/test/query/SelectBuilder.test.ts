@@ -67,6 +67,7 @@ describe("buildSelectProjection", () => {
     "omits non-applicable calculated values and preserves NULL sort columns (key-only: %s)",
     async (keyOnly) => {
       const missingField: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc:missing",
         label: "Missing",
@@ -77,6 +78,7 @@ describe("buildSelectProjection", () => {
         primaryClassNames: [primaryClass],
       };
       const sharedField: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc:shared",
         label: "Shared",
@@ -360,6 +362,7 @@ describe("buildSelectProjection", () => {
 
   it("projects property and calculated sort keys with stable tie-breakers", async () => {
     const codeField: PropertyField = {
+      category: { type: "target" },
       kind: "property",
       id: "TestSchema.Primary.Code",
       label: "Code",
@@ -372,6 +375,7 @@ describe("buildSelectProjection", () => {
       pathCardinality: "one",
     };
     const scoreField: CalculatedField = {
+      category: { type: "target" },
       kind: "calculated",
       id: "calculations_v1:score",
       label: "Score",
@@ -413,6 +417,7 @@ describe("buildSelectProjection", () => {
 
   it("rejects sorting by a related field outside the query group", async () => {
     const field: PropertyField = {
+      category: { type: "target" },
       kind: "property",
       id: "TestSchema.Target.Name",
       label: "Name",
@@ -453,6 +458,7 @@ describe("buildSelectProjection", () => {
   it("evaluates a narrower-class calculated field against the joined source class's alias", async () => {
     const sourceAlias = `${SOURCE_CLASS_ALIAS_PREFIX}0`;
     const pumpField: CalculatedField = {
+      category: { type: "target" },
       kind: "calculated",
       id: "provider:flow",
       label: "Flow",

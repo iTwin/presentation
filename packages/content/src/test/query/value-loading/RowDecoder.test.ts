@@ -567,7 +567,7 @@ describe("RowDecoder", () => {
         kind: "property",
         id: PropertyField.computeId(props),
         label: "Code",
-        categoryId: "test",
+        category: { type: "category", id: "test" },
         readOnly: false,
         type: stringType,
         pathCardinality: "one",

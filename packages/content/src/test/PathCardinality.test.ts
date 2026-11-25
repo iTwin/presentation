@@ -198,6 +198,7 @@ describe("collectPathCardinalities", () => {
     pathCardinality: CardinalityHint;
   }): PropertyField {
     return {
+      category: { type: "target" },
       kind: "property",
       id: props.id,
       label: props.id,
@@ -218,6 +219,7 @@ describe("collectPathCardinalities", () => {
   it("ignores a direct field and a non-property field", () => {
     const directField = makeField({ id: "direct", pathFromTarget: [], pathCardinality: "one" });
     const externalField: ExternalField = {
+      category: { type: "target" },
       kind: "external",
       id: "ext",
       label: "Ext",
