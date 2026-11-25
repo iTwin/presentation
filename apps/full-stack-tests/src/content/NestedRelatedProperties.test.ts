@@ -8,7 +8,7 @@ import { defineIModelFieldsProvider, resolveContentSources } from "@itwin/presen
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
-import { validateCategoryChain } from "./DescriptorValidation.js";
+import { getCategoryChainBase, validateCategoryChain } from "./DescriptorValidation.js";
 import {
   buildDescriptor,
   createContentIModelAccess,
@@ -311,7 +311,7 @@ describe("Content", () => {
       expect(nestedGroup!.nested).toEqual({
         anchorClassName: setup.schema.items.Node.fullName,
         prefixStepCount: 1,
-        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
       });
       expect(nestedGroup!.paths).toHaveLength(1);
       expect(nestedGroup!.paths[0].path).toHaveLength(2);
@@ -557,7 +557,7 @@ describe("Content", () => {
     });
 
     describe("category placement", () => {
-      type Scope = "relatedClass" | "parent" | undefined;
+      type Meaning = "relatedInstance" | "sameInstance" | undefined;
       let setup: ChainSetup;
 
       beforeAll(async () => {
@@ -641,7 +641,7 @@ describe("Content", () => {
        */
       function createChainConfig(
         chainSetup: ChainSetup,
-        scopes: { type?: Scope; aspect?: Scope; detail?: Scope; typeProperties?: "none-displayed" },
+        meanings: { type?: Meaning; aspect?: Meaning; detail?: Meaning; typeProperties?: "none-displayed" },
       ) {
         const { items } = chainSetup.schema;
         const step = (
@@ -649,7 +649,7 @@ describe("Content", () => {
           targetClassName: RelationshipPath[number]["targetClassName"],
           relationshipName: RelationshipPath[number]["relationshipName"],
         ): RelationshipPath[number] => ({ sourceClassName, targetClassName, relationshipName });
-        const withScope = (scope: Scope) => (scope ? { propertyCategoryScope: scope } : undefined);
+        const withMeaning = (meaning: Meaning) => (meaning ? { relationshipMeaning: meaning } : undefined);
         return {
           imodelFieldsProviders: [
             defineIModelFieldsProvider({
@@ -663,9 +663,9 @@ describe("Content", () => {
                     {
                       path: [step(items.Wall.fullName, items.WallType.fullName, items.HasPhysicalType.fullName)],
                       cardinalityHint: "one" as const,
-                      ...withScope(scopes.type),
+                      ...withMeaning(meanings.type),
                       // Excluding every property keeps the type an anchor while displaying none of its properties.
-                      ...(scopes.typeProperties
+                      ...(meanings.typeProperties
                         ? {
                             properties: [
                               { stepIndex: 0, target: { select: { exclude: ["TypeName", "TypeCategorized"] } } },
@@ -689,7 +689,7 @@ describe("Content", () => {
                           step(items.WallType.fullName, items.WallTypeAspect.fullName, items.HasUniqueAspect.fullName),
                         ],
                         cardinalityHint: "one" as const,
-                        ...withScope(scopes.aspect),
+                        ...withMeaning(meanings.aspect),
                       },
                     ],
                   };
@@ -702,7 +702,7 @@ describe("Content", () => {
                           step(items.WallTypeAspect.fullName, items.WallTypeDetail.fullName, items.HasDetail.fullName),
                         ],
                         cardinalityHint: "one" as const,
-                        ...withScope(scopes.detail),
+                        ...withMeaning(meanings.detail),
                       },
                     ],
                   };
@@ -714,70 +714,125 @@ describe("Content", () => {
         };
       }
 
-      async function describeChain(chainSetup: ChainSetup, scopes: Parameters<typeof createChainConfig>[1]) {
+      async function describeChain(chainSetup: ChainSetup, meanings: Parameters<typeof createChainConfig>[1]) {
         const descriptor = await buildDescriptor({
           imodelAccess: createContentIModelAccess(chainSetup.ecdb),
           targets: [{ primaryClass: chainSetup.schema.items.Wall.fullName }],
-          config: createChainConfig(chainSetup, scopes),
+          config: createChainConfig(chainSetup, meanings),
         });
         const field = (name: string) => getRelatedPropertyFields(descriptor).find((f) => f.propertyName === name)!;
         return { descriptor, field };
       }
 
-      it("nests every level under its class when all declarations use the default scope", async () => {
+      it("nests every level under its class when all declarations use the default meaning", async () => {
         const { descriptor, field } = await describeChain(setup, {});
         validateCategoryChain(descriptor, field("TypeCategorized"), ["WallType", "Geometry"]);
         validateCategoryChain(descriptor, field("AspectCategorized"), ["WallType", "WallTypeAspect", "Geometry"]);
         validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
       });
 
-      it("attaches a parent-scoped nested declaration to the enclosing class category", async () => {
-        const { descriptor, field } = await describeChain(setup, { type: "relatedClass", aspect: "parent" });
+      it("attaches a same-instance nested declaration to the enclosing class category", async () => {
+        const { descriptor, field } = await describeChain(setup, { type: "relatedInstance", aspect: "sameInstance" });
         validateCategoryChain(descriptor, field("AspectCategorized"), ["WallType", "Geometry"]);
         validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
       });
 
-      it("shares the outer and nested property category when both declarations use parent scope", async () => {
-        const { descriptor, field } = await describeChain(setup, { type: "parent", aspect: "parent" });
+      it("attaches a same-instance nested declaration to a same-instance enclosing class category", async () => {
+        const { descriptor, field } = await describeChain(setup, { type: "sameInstance", aspect: "sameInstance" });
 
         validateCategoryChain(descriptor, field("TypeCategorized"), ["Geometry"]);
         validateCategoryChain(descriptor, field("TypeName"), ["WallType"]);
-        validateCategoryChain(descriptor, field("AspectCategorized"), ["Geometry"]);
-        validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallTypeAspect"]);
-        expect(field("TypeCategorized").categoryId).toBe(field("AspectCategorized").categoryId);
+        validateCategoryChain(descriptor, field("AspectCategorized"), ["WallType", "Geometry"]);
+        validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
+        for (const name of ["TypeCategorized", "TypeName", "AspectCategorized", "AspectUncategorized"]) {
+          expect(getCategoryChainBase(descriptor, field(name))).toBe("target");
+        }
       });
 
       it.each([
-        { type: "parent", aspect: "parent", context: [] },
-        { type: "relatedClass", aspect: "parent", context: ["WallType"] },
-        { type: "parent", aspect: "relatedClass", context: ["WallTypeAspect"] },
-        { type: "relatedClass", aspect: "relatedClass", context: ["WallType", "WallTypeAspect"] },
+        { type: "sameInstance", aspect: "sameInstance", base: "target" },
+        { type: "relatedInstance", aspect: "sameInstance", base: "topLevel" },
+        { type: "sameInstance", aspect: "relatedInstance", base: "target" },
+        { type: "relatedInstance", aspect: "relatedInstance", base: "topLevel" },
       ] as const)(
-        "inherits type=$type and aspect=$aspect scope at the detail level",
-        async ({ type, aspect, context }) => {
-          const { descriptor, field } = await describeChain(setup, { type, aspect, detail: "parent" });
+        "nests a same-instance detail under every ancestor class with type=$type and aspect=$aspect",
+        async ({ type, aspect, base }) => {
+          const { descriptor, field } = await describeChain(setup, { type, aspect, detail: "sameInstance" });
 
-          validateCategoryChain(descriptor, field("DetailCategorized"), [...context, "Geometry"]);
-          validateCategoryChain(descriptor, field("DetailUncategorized"), [...context, "WallTypeDetail"]);
-          validateCategoryChain(descriptor, field("AspectCategorized"), [...context, "Geometry"]);
-          expect(field("DetailCategorized").categoryId).toBe(field("AspectCategorized").categoryId);
+          validateCategoryChain(descriptor, field("DetailCategorized"), ["WallType", "WallTypeAspect", "Geometry"]);
+          validateCategoryChain(descriptor, field("DetailUncategorized"), [
+            "WallType",
+            "WallTypeAspect",
+            "WallTypeDetail",
+          ]);
+          expect(getCategoryChainBase(descriptor, field("DetailCategorized"))).toBe(base);
         },
       );
 
       it.each([
-        { type: "parent", context: [] },
-        { type: "relatedClass", context: ["WallType"] },
-      ] as const)("inherits $type scope from an ancestor that displays no properties", async ({ type, context }) => {
+        { type: "sameInstance", base: "target" },
+        { type: "relatedInstance", base: "topLevel" },
+      ] as const)("keeps a $type ancestor that displays no properties in the chain", async ({ type, base }) => {
         const { descriptor, field } = await describeChain(setup, {
           type,
-          aspect: "parent",
+          aspect: "sameInstance",
           typeProperties: "none-displayed",
         });
 
         expect(getRelatedPropertyFields(descriptor).some((f) => f.propertyName === "TypeName")).toBe(false);
-        validateCategoryChain(descriptor, field("AspectCategorized"), [...context, "Geometry"]);
-        validateCategoryChain(descriptor, field("AspectUncategorized"), [...context, "WallTypeAspect"]);
+        validateCategoryChain(descriptor, field("AspectCategorized"), ["WallType", "Geometry"]);
+        validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
+        expect(getCategoryChainBase(descriptor, field("AspectCategorized"))).toBe(base);
       });
+
+      it.each([
+        { first: "relatedInstance", second: "sameInstance", base: "topLevel" },
+        { first: "sameInstance", second: "relatedInstance", base: "target" },
+      ] as const)(
+        "places nested fields under the first of ancestors declared with $first and $second meanings",
+        async ({ first, second, base }) => {
+          const { items } = setup.schema;
+          const config = createChainConfig(setup, { type: first });
+          config.imodelFieldsProviders.splice(
+            1,
+            0,
+            defineIModelFieldsProvider({
+              id: "wallToTypeOther_v1",
+              async getContribution({ target }) {
+                if (target.primaryClass !== items.Wall.fullName) {
+                  return undefined;
+                }
+                return {
+                  relatedProperties: [
+                    {
+                      path: [
+                        {
+                          sourceClassName: items.Wall.fullName,
+                          targetClassName: items.WallType.fullName,
+                          relationshipName: items.HasPhysicalType.fullName,
+                        },
+                      ],
+                      cardinalityHint: "one" as const,
+                      relationshipMeaning: second,
+                    },
+                  ],
+                };
+              },
+            }),
+          );
+          const descriptor = await buildDescriptor({
+            imodelAccess: createContentIModelAccess(setup.ecdb),
+            targets: [{ primaryClass: items.Wall.fullName }],
+            config,
+          });
+          const field = (name: string) => getRelatedPropertyFields(descriptor).find((f) => f.propertyName === name)!;
+
+          validateCategoryChain(descriptor, field("TypeName"), ["WallType"]);
+          validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
+          expect(getCategoryChainBase(descriptor, field("TypeName"))).toBe(base);
+          expect(getCategoryChainBase(descriptor, field("AspectUncategorized"))).toBe(base);
+        },
+      );
 
       it.each([false, true])(
         "keeps a direct multi-step declaration's categories independent of a separate prefix declaration: %s",
@@ -823,7 +878,7 @@ describe("Content", () => {
                             },
                           ],
                           cardinalityHint: "one" as const,
-                          propertyCategoryScope: "parent" as const,
+                          relationshipMeaning: "sameInstance" as const,
                           properties: [{ stepIndex: 1, target: { select: "all" as const } }],
                         },
                       ],
@@ -843,7 +898,7 @@ describe("Content", () => {
 
       it("keeps top-level and nested class fallbacks distinct on the same path", async () => {
         const { items } = setup.schema;
-        const config = createChainConfig(setup, { aspect: "parent" });
+        const config = createChainConfig(setup, { aspect: "sameInstance" });
         config.imodelFieldsProviders.push(
           defineIModelFieldsProvider({
             id: "directAspect_v1",
@@ -854,7 +909,7 @@ describe("Content", () => {
               return {
                 relatedProperties: [
                   {
-                    propertyCategoryScope: "parent",
+                    relationshipMeaning: "sameInstance",
                     path: [
                       {
                         sourceClassName: items.Wall.fullName,
@@ -882,7 +937,7 @@ describe("Content", () => {
         const fields = getRelatedPropertyFields(descriptor);
         const top = fields.find((field) => field.propertyName === "AspectUncategorized")!;
         const nested = fields.find((field) => field.propertyName === "AspectSecondUncategorized")!;
-        expect(top.categoryId).not.toBe(nested.categoryId);
+        expect(top.category).not.toEqual(nested.category);
         validateCategoryChain(descriptor, top, ["WallTypeAspect"]);
         validateCategoryChain(descriptor, nested, ["WallType", "WallTypeAspect"]);
       });

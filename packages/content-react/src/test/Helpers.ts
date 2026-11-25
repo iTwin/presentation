@@ -53,6 +53,7 @@ export function createPropertyField(props: {
     pathCardinality: "one",
     valueClassNames: props.valueClassNames,
     primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
+    category: { type: "target" },
     ...(props.hidden ? { hidden: true } : undefined),
   };
 }

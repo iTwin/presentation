@@ -167,7 +167,7 @@ describe("Content", () => {
       });
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
-      expect(propB!.categoryId).toBe("custom");
+      expect(propB!.category).toEqual({ type: "category", id: "custom" });
       validateCategoryChain(descriptor, propB!, ["Custom Category"]);
     });
 
@@ -205,7 +205,7 @@ describe("Content", () => {
           return {
             categories: {
               parent: { id: "parent", label: "Parent Category" },
-              child: { id: "child", label: "Child Category", parentId: "parent" },
+              child: { id: "child", label: "Child Category", parent: { type: "category", id: "parent" } },
             },
             relatedProperties: [
               {
@@ -229,7 +229,7 @@ describe("Content", () => {
       });
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
-      expect(propB!.categoryId).toBe("child");
+      expect(propB!.category).toEqual({ type: "category", id: "child" });
       validateCategoryChain(descriptor, propB!, ["Parent Category", "Child Category"]);
     });
 
@@ -351,7 +351,7 @@ describe("Content", () => {
 
       const categorized = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "Categorized");
       // The override wins over the field's EC schema property category.
-      expect(categorized!.categoryId).toBe("custom");
+      expect(categorized!.category).toEqual({ type: "category", id: "custom" });
       validateCategoryChain(descriptor, categorized!, ["Custom Category"]);
     });
 
@@ -407,7 +407,7 @@ describe("Content", () => {
       validateCategoryChain(descriptor, categorized!, ["Class B", "B Category"]);
     });
 
-    it("leaves a direct field without a category when it has none", async () => {
+    it("places a direct field without a category in the content target's category", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(
           testName,
@@ -429,9 +429,9 @@ describe("Content", () => {
         targets: [{ primaryClass: setup.schema.items.A.fullName }],
       });
 
-      // There is no default category: an uncategorized direct field simply has no category.
+      // An uncategorized direct field is placed in the content target's category, which has no definition.
       const uncategorized = getPropertyFieldByName(descriptor, "Uncategorized");
-      expect(uncategorized.categoryId).toBeUndefined();
+      expect(uncategorized.category).toEqual({ type: "target" });
       expect(getFieldCategory(descriptor, uncategorized)).toBeUndefined();
 
       // The categorized field still gets its EC schema category.
@@ -496,7 +496,7 @@ describe("Content", () => {
       });
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
-      expect(propB!.categoryId).toBe("does-not-exist");
+      expect(propB!.category).toEqual({ type: "category", id: "does-not-exist" });
       // The undeclared category is not fabricated, so the field resolves to no category chain.
       validateCategoryChain(descriptor, propB!, []);
     });
@@ -669,11 +669,11 @@ describe("Content", () => {
       );
     });
 
-    describe("property category scope", () => {
-      type Scope = "relatedClass" | "parent" | undefined;
+    describe("relationship meaning", () => {
+      type Meaning = "relatedInstance" | "sameInstance" | undefined;
 
       /** `A -[AtoB]-> B` and `A -[AtoB2]-> B` over one `B` carrying categorized and uncategorized properties. */
-      async function buildScopeSetup() {
+      async function buildMeaningSetup() {
         return buildTestECDb(async (builder, testName) => {
           const s = await importSchema(
             testName,
@@ -713,24 +713,24 @@ describe("Content", () => {
         });
       }
 
-      type ScopeSetup = Awaited<ReturnType<typeof buildScopeSetup>>;
+      type MeaningSetup = Awaited<ReturnType<typeof buildMeaningSetup>>;
 
-      function createScopeProvider(
-        setup: ScopeSetup,
+      function createMeaningProvider(
+        setup: MeaningSetup,
         declarations: Array<{
           relationship: "AtoB" | "AtoB2";
-          scope: Scope;
+          meaning: Meaning;
           defaultOverrides?: { categoryId: string };
           overrides?: Record<string, { categoryId: string }>;
         }>,
-        categories?: Record<string, { id: string; label: string; parentId?: string }>,
+        categories?: Record<string, CategoryDefinition>,
       ) {
         return defineIModelFieldsProvider({
           id: "provider_v1",
           async getContribution() {
             return {
               ...(categories ? { categories } : undefined),
-              relatedProperties: declarations.map(({ relationship, scope, defaultOverrides, overrides }) => ({
+              relatedProperties: declarations.map(({ relationship, meaning, defaultOverrides, overrides }) => ({
                 path: [
                   {
                     sourceClassName: setup.schema.items.A.fullName,
@@ -739,7 +739,7 @@ describe("Content", () => {
                   },
                 ],
                 cardinalityHint: "one" as const,
-                ...(scope ? { propertyCategoryScope: scope } : undefined),
+                ...(meaning ? { relationshipMeaning: meaning } : undefined),
                 ...(defaultOverrides || overrides
                   ? { properties: [{ stepIndex: 0, target: { select: "all" as const, defaultOverrides, overrides } }] }
                   : undefined),
@@ -749,7 +749,7 @@ describe("Content", () => {
         });
       }
 
-      async function buildScopeDescriptor(setup: ScopeSetup, provider: ReturnType<typeof createScopeProvider>) {
+      async function buildMeaningDescriptor(setup: MeaningSetup, provider: ReturnType<typeof createMeaningProvider>) {
         return buildDescriptor({
           imodelAccess: createContentIModelAccess(setup.ecdb),
           targets: [{ primaryClass: setup.schema.items.A.fullName }],
@@ -757,7 +757,10 @@ describe("Content", () => {
         });
       }
 
-      function fieldsOf(descriptor: Awaited<ReturnType<typeof buildScopeDescriptor>>, relationship: "AtoB" | "AtoB2") {
+      function fieldsOf(
+        descriptor: Awaited<ReturnType<typeof buildMeaningDescriptor>>,
+        relationship: "AtoB" | "AtoB2",
+      ) {
         const fields = getRelatedPropertyFields(descriptor).filter((f) =>
           f.pathFromTarget[0].relationshipName.endsWith(relationship),
         );
@@ -767,13 +770,13 @@ describe("Content", () => {
         };
       }
 
-      it.each([undefined, "relatedClass" as const])(
-        `nests property categories under the related class category when scope is %s`,
-        async (scope) => {
-          using setup = await buildScopeSetup();
-          const descriptor = await buildScopeDescriptor(
+      it.each([undefined, "relatedInstance" as const])(
+        `nests property categories under the related class category when meaning is %s`,
+        async (meaning) => {
+          using setup = await buildMeaningSetup();
+          const descriptor = await buildMeaningDescriptor(
             setup,
-            createScopeProvider(setup, [{ relationship: "AtoB", scope }]),
+            createMeaningProvider(setup, [{ relationship: "AtoB", meaning }]),
           );
 
           const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
@@ -782,46 +785,48 @@ describe("Content", () => {
         },
       );
 
-      it("attaches property categories to the enclosing context when scope is parent", async () => {
-        using setup = await buildScopeSetup();
-        const descriptor = await buildScopeDescriptor(
+      it("attaches property categories to the enclosing context when meaning is sameInstance", async () => {
+        using setup = await buildMeaningSetup();
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(setup, [{ relationship: "AtoB", scope: "parent" }]),
+          createMeaningProvider(setup, [{ relationship: "AtoB", meaning: "sameInstance" }]),
         );
 
         const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
         validateCategoryChain(descriptor, categorized, ["Geometry"]);
-        expect(descriptor.categories[categorized.categoryId!].parentId).toBeUndefined();
+        expect(getFieldCategory(descriptor, categorized)!.parent).toEqual({ type: "target" });
         // Uncategorized properties keep the related class fallback.
         validateCategoryChain(descriptor, uncategorized, ["Class B"]);
-        expect(descriptor.categories[uncategorized.categoryId!].parentId).toBeUndefined();
+        expect(getFieldCategory(descriptor, uncategorized)!.parent).toEqual({ type: "target" });
       });
 
-      it.each(["relatedClass", "parent"] as const)(
-        "prefers an explicit category override over scope %s",
-        async (scope) => {
-          using setup = await buildScopeSetup();
-          const descriptor = await buildScopeDescriptor(
+      it.each(["relatedInstance", "sameInstance"] as const)(
+        "prefers an explicit category override over meaning %s",
+        async (meaning) => {
+          using setup = await buildMeaningSetup();
+          const descriptor = await buildMeaningDescriptor(
             setup,
-            createScopeProvider(setup, [{ relationship: "AtoB", scope, defaultOverrides: { categoryId: "custom" } }], {
-              custom: { id: "custom", label: "Custom" },
-            }),
+            createMeaningProvider(
+              setup,
+              [{ relationship: "AtoB", meaning, defaultOverrides: { categoryId: "custom" } }],
+              { custom: { id: "custom", label: "Custom" } },
+            ),
           );
 
           const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
-          expect(categorized.categoryId).toBe("custom");
+          expect(categorized.category).toEqual({ type: "category", id: "custom" });
           validateCategoryChain(descriptor, categorized, ["Custom"]);
           validateCategoryChain(descriptor, uncategorized, ["Custom"]);
         },
       );
 
       it("shares a class category reached over different relationships under the same parent", async () => {
-        using setup = await buildScopeSetup();
-        const descriptor = await buildScopeDescriptor(
+        using setup = await buildMeaningSetup();
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(setup, [
-            { relationship: "AtoB", scope: "parent" },
-            { relationship: "AtoB2", scope: "parent" },
+          createMeaningProvider(setup, [
+            { relationship: "AtoB", meaning: "sameInstance" },
+            { relationship: "AtoB2", meaning: "sameInstance" },
           ]),
         );
 
@@ -829,8 +834,8 @@ describe("Content", () => {
         const viaSecond = fieldsOf(descriptor, "AtoB2");
         // Two distinct fields, one category each for the class fallback and for the property category.
         expect(viaFirst.uncategorized.id).not.toBe(viaSecond.uncategorized.id);
-        expect(viaFirst.uncategorized.categoryId).toBe(viaSecond.uncategorized.categoryId);
-        expect(viaFirst.categorized.categoryId).toBe(viaSecond.categorized.categoryId);
+        expect(viaFirst.uncategorized.category).toEqual(viaSecond.uncategorized.category);
+        expect(viaFirst.categorized.category).toEqual(viaSecond.categorized.category);
         validateCategoryChain(descriptor, viaFirst.uncategorized, ["Class B"]);
         validateCategoryChain(descriptor, viaSecond.uncategorized, ["Class B"]);
         validateCategoryChain(descriptor, viaFirst.categorized, ["Geometry"]);
@@ -838,7 +843,7 @@ describe("Content", () => {
       });
 
       it("updates provider category parents and overrides when class categories are merged", async () => {
-        using setup = await buildScopeSetup();
+        using setup = await buildMeaningSetup();
         const originalClassCategoryId = CategoryDefinition.computeId({
           path: [
             {
@@ -848,17 +853,21 @@ describe("Content", () => {
             },
           ],
         });
-        const child = { id: "child", label: "Child", parentId: originalClassCategoryId };
+        const child: CategoryDefinition = {
+          id: "child",
+          label: "Child",
+          parent: { type: "category", id: originalClassCategoryId },
+        };
         const propertyName = "Categorized";
-        const descriptor = await buildScopeDescriptor(
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(
+          createMeaningProvider(
             setup,
             [
-              { relationship: "AtoB", scope: "parent", overrides: { [propertyName]: { categoryId: "child" } } },
+              { relationship: "AtoB", meaning: "sameInstance", overrides: { [propertyName]: { categoryId: "child" } } },
               {
                 relationship: "AtoB2",
-                scope: "parent",
+                meaning: "sameInstance",
                 overrides: { [propertyName]: { categoryId: originalClassCategoryId } },
               },
             ],
@@ -872,7 +881,7 @@ describe("Content", () => {
         validateCategoryChain(descriptor, viaFirst.uncategorized, ["Class B"]);
         validateCategoryChain(descriptor, viaSecond.uncategorized, ["Class B"]);
         expect(Object.keys(descriptor.categories)).not.toContain(originalClassCategoryId);
-        expect(child.parentId).toBe(originalClassCategoryId);
+        expect(child.parent).toEqual({ type: "category", id: originalClassCategoryId });
       });
 
       it("keeps class and property categories with matching unqualified names separate across schemas", async () => {
@@ -917,7 +926,7 @@ describe("Content", () => {
                   return {
                     relatedProperties: [
                       {
-                        propertyCategoryScope: "parent",
+                        relationshipMeaning: "sameInstance",
                         path: [
                           {
                             sourceClassName: schema.items.A.fullName,
@@ -938,7 +947,7 @@ describe("Content", () => {
           const selected = fields.filter((field) => field.propertyName === propertyName);
           expect(selected).toHaveLength(2);
           expect(selected[0].id).not.toBe(selected[1].id);
-          expect(selected[0].categoryId).not.toBe(selected[1].categoryId);
+          expect(selected[0].category).not.toEqual(selected[1].category);
         }
         expect(
           Object.values(descriptor.categories)
@@ -948,26 +957,26 @@ describe("Content", () => {
       });
 
       it("keeps a property category with the same name distinct under different parents", async () => {
-        using setup = await buildScopeSetup();
-        const descriptor = await buildScopeDescriptor(
+        using setup = await buildMeaningSetup();
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(setup, [
-            { relationship: "AtoB", scope: "parent" },
-            { relationship: "AtoB2", scope: "relatedClass" },
+          createMeaningProvider(setup, [
+            { relationship: "AtoB", meaning: "sameInstance" },
+            { relationship: "AtoB2", meaning: "relatedInstance" },
           ]),
         );
 
         const topLevel = fieldsOf(descriptor, "AtoB").categorized;
         const nested = fieldsOf(descriptor, "AtoB2").categorized;
-        expect(topLevel.categoryId).not.toBe(nested.categoryId);
+        expect(topLevel.category).not.toEqual(nested.category);
         validateCategoryChain(descriptor, topLevel, ["Geometry"]);
         validateCategoryChain(descriptor, nested, ["Class B", "Geometry"]);
       });
 
       it.each([
-        { scope: "relatedClass" as const, categorizedChain: ["A To B", "Geometry"] },
-        { scope: "parent" as const, categorizedChain: ["Geometry"] },
-      ])("applies $scope scope to relationship class properties", async ({ scope, categorizedChain }) => {
+        { meaning: "relatedInstance" as const, categorizedChain: ["A To B", "Geometry"] },
+        { meaning: "sameInstance" as const, categorizedChain: ["Geometry"] },
+      ])("applies $meaning meaning to relationship class properties", async ({ meaning, categorizedChain }) => {
         using setup = await buildTestECDb(async (builder, testName) => {
           const s = await importSchema(
             testName,
@@ -1016,7 +1025,7 @@ describe("Content", () => {
                     relatedProperties: [
                       {
                         path,
-                        propertyCategoryScope: scope,
+                        relationshipMeaning: meaning,
                         properties: [{ stepIndex: 0, target: { select: "all" }, relationship: { select: "all" } }],
                       },
                     ],

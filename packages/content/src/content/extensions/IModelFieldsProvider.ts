@@ -11,7 +11,7 @@ import type {
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentTarget, ResolvedPath } from "../ContentTarget.js";
+import type { CardinalityHint, ContentTarget, RelationshipMeaning, ResolvedPath } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
@@ -116,25 +116,29 @@ export interface RelatedPropertiesDeclaration {
   cardinalityHint?: CardinalityHint;
 
   /**
-   * Where the categories of this declaration's properties are placed.
+   * Whether the related instances' properties are shown as properties of a separate related instance
+   * (`"relatedInstance"`, default) or as part of the instance they're related to (`"sameInstance"`), such as
+   * element aspects. Applies to every step that doesn't set its own `StepPropertySpec.relationshipMeaning`.
    *
-   * - `"relatedClass"` (default): each property appears under its own class's category, nested under
-   *   the categories of the classes named at earlier steps of this declaration. A property with
-   *   property category `Geometry` of class `C`, on a path `A > B > C` whose step specs name `B`,
-   *   appears under `B > C > Geometry`.
-   * - `"parent"`: categories attach to the category context enclosing this declaration — the top level
-   *   for a declaration applied to the content target, or the inherited context for a declaration
-   *   applied recursively (see `IModelFieldsProvider.applyRecursively`). A property with a property
-   *   category appears directly under that context (`Geometry` in the example above). A property
-   *   without one still appears under its own class's category, but classes at earlier steps no longer
-   *   enclose it (`C`). A target-class property remains under its own step's relationship class
-   *   category when that relationship class is named. Declarations applied recursively on this
-   *   declaration's classes inherit the enclosing context, without this declaration's classes.
+   * Every class named by the step specs gets a category nested under the categories of the classes
+   * named at earlier steps (and under the context inherited by a declaration applied recursively, see
+   * `IModelFieldsProvider.applyRecursively`). Properties without a property category always appear under
+   * their own class's category. The meaning decides where properties with a property category go:
    *
-   * A property's explicit category override takes precedence over both modes. The setting affects only
+   * - `"relatedInstance"`: under their own class's category. A property with property category `Geometry`
+   *   of class `C`, on a path `A > B > C` whose step specs name `B` and `C`, appears under `B > C > Geometry`.
+   * - `"sameInstance"`: under the category enclosing their own class's category, as if the properties
+   *   belonged to the class of that category (`B > Geometry` in the example above). Without an enclosing
+   *   category, they appear in the content target's category.
+   *
+   * The meaning of the declaration's first step that names a class also decides where its category chain is
+   * placed: in the content target's category for `"sameInstance"`, at the top level otherwise. Declarations
+   * applied recursively on the declaration's classes are placed the same way.
+   *
+   * A property's explicit category override takes precedence over both meanings. The setting affects only
    * category placement — not property selection, values or cardinality.
    */
-  propertyCategoryScope?: "relatedClass" | "parent";
+  relationshipMeaning?: RelationshipMeaning;
 
   /**
    * Optional custom resolution callback. When provided, the system delegates

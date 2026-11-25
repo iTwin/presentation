@@ -27,6 +27,7 @@ function createField(
   props: Pick<CalculatedField, "sourceClassName" | "primaryClassNames"> & Partial<CalculatedField>,
 ): CalculatedField {
   return {
+    category: { type: "target" },
     kind: "calculated",
     id: "p_v1:calc",
     label: "Calc",

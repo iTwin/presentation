@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import type { RelationshipMeaning } from "../ContentTarget.js";
+
 /**
  * Per-step specification controlling which properties to load from a particular
  * step in a relationship path.
@@ -30,6 +32,11 @@ export interface StepPropertySpec {
    * fields, which nest under the target category (`CategoryDefinition.computeId({ path })`).
    */
   relationship?: ClassPropertySpec;
+  /**
+   * Whether this step's classes are shown as part of the enclosing instance, overriding the declaration's
+   * `RelatedPropertiesDeclaration.relationshipMeaning` for this step.
+   */
+  relationshipMeaning?: RelationshipMeaning;
 }
 
 /**

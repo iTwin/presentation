@@ -107,7 +107,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     },
   });
   // Merge keeps each field's category facts; `collectCategories` (below) is the single place that
-  // turns those facts into category ids and assigns `categoryId` (mutating the merged field objects).
+  // turns those facts into categories and places fields in them (mutating the merged field objects).
   const mergedPropertyFields = mergePropertyFieldsByIdentity(candidates);
 
   const [categories, calculatedFields] = await Promise.all([

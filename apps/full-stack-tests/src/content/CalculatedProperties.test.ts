@@ -89,7 +89,7 @@ describe("Content", () => {
         id: "calc-provider_v1",
         async getContribution() {
           return {
-            categories: { myCat: { id: "myCat", label: "Calc Category" } },
+            categories: { myCat: { id: "myCat", label: "Calc Category", parent: { type: "target" } } },
             calculatedFields: [
               {
                 id: "calc1",
@@ -110,7 +110,7 @@ describe("Content", () => {
       });
 
       const field = getCalculatedFieldByLabel(descriptor, "My Calculated");
-      expect(field.categoryId).toBe("myCat");
+      expect(field.category).toEqual({ type: "category", id: "myCat" });
       expect(getFieldCategory(descriptor, field)?.label).toBe("Calc Category");
     });
 

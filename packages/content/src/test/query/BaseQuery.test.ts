@@ -65,6 +65,7 @@ function makeSource(paths: RelationshipPath[], target: ContentTarget = { primary
 
 function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "propertyName">): PropertyField {
   return {
+    category: { type: "target" },
     kind: "property",
     id: props.id ?? `field-${props.propertyName}`,
     label: props.propertyName,
@@ -862,6 +863,7 @@ describe("buildBaseQuery", () => {
 
     it("substitutes a calculated field's default target alias", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -881,6 +883,7 @@ describe("buildBaseQuery", () => {
 
     it("substitutes a calculated field's custom target alias", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -899,6 +902,7 @@ describe("buildBaseQuery", () => {
 
     it("parenthesizes a compound calculated expression before applying the operator", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -916,6 +920,7 @@ describe("buildBaseQuery", () => {
 
     it("carries a calculated field's own bindings into the base query", async () => {
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -939,6 +944,7 @@ describe("buildBaseQuery", () => {
     describe("class-scoped calculated fields", () => {
       const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
       const pumpField: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -2033,6 +2039,7 @@ describe("buildBaseQuery", () => {
 describe("buildTargetScopedQuery", () => {
   it("evaluates the given and filtered calculated fields on the primary alias", async () => {
     const createField = (id: string): CalculatedField => ({
+      category: { type: "target" },
       kind: "calculated",
       id,
       label: id,
@@ -2064,6 +2071,7 @@ describe("buildTargetScopedQuery", () => {
     const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
     const wall: EC.FullClassNameDotNotation = "TestSchema.Wall";
     const pumpField: CalculatedField = {
+      category: { type: "target" },
       kind: "calculated",
       id: "flow",
       label: "Flow",

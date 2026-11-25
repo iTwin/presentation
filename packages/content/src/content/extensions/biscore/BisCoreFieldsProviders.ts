@@ -29,29 +29,37 @@ export const SECONDARY_SOURCES_CATEGORY_ID = "secondary_sources";
 export const DOCUMENT_LINK_CATEGORY_ID = "document_link";
 
 function createSourceInformationCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
-  return { id: SOURCE_INFORMATION_CATEGORY_ID, label: strings.sourceInformation };
+  return { id: SOURCE_INFORMATION_CATEGORY_ID, label: strings.sourceInformation, parent: { type: "target" } };
 }
 function createModelSourceCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
-  return { id: MODEL_SOURCE_CATEGORY_ID, label: strings.modelSource, parentId: SOURCE_INFORMATION_CATEGORY_ID };
+  return {
+    id: MODEL_SOURCE_CATEGORY_ID,
+    label: strings.modelSource,
+    parent: { type: "category", id: SOURCE_INFORMATION_CATEGORY_ID },
+  };
 }
 function createSecondarySourcesCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
   return {
     id: SECONDARY_SOURCES_CATEGORY_ID,
     label: strings.secondarySources,
-    parentId: SOURCE_INFORMATION_CATEGORY_ID,
+    parent: { type: "category", id: SOURCE_INFORMATION_CATEGORY_ID },
   };
 }
 function createDocumentLinkCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
-  return { id: DOCUMENT_LINK_CATEGORY_ID, label: strings.documentLink, parentId: SOURCE_INFORMATION_CATEGORY_ID };
+  return {
+    id: DOCUMENT_LINK_CATEGORY_ID,
+    label: strings.documentLink,
+    parent: { type: "category", id: SOURCE_INFORMATION_CATEGORY_ID },
+  };
 }
 
 /**
  * Builds `BisCore:Element`'s owned aspects (`ElementOwnsUniqueAspect` and `ElementOwnsMultiAspects`)
  * related properties declarations.
  *
- * Both declarations use `"parent"` category scope: an aspect property's property category is shown
- * directly under the owning context rather than nested in an aspect-class category, and properties
- * without a property category fall back to the aspect class's category.
+ * Both declarations use the `"sameInstance"` relationship meaning: aspect properties are shown as part of the owning
+ * element, so an aspect property's property category is shown directly under the owning context rather than nested
+ * in an aspect-class category, and properties without a property category fall back to the aspect class's category.
  *
  * The generic `ElementOwnsMultiAspects` → `ElementMultiAspect` declaration excludes
  * `BisCore.ExternalSourceAspect` instances (`BisCore` ≥ 1.0.2) — that aspect's `Identifier` property
@@ -87,7 +95,7 @@ async function createAspectRelatedProperties(
         },
       ],
       cardinalityHint: "one",
-      propertyCategoryScope: "parent",
+      relationshipMeaning: "sameInstance",
       properties: [{ stepIndex: 0, target: { select: "all" } }],
     },
     {
@@ -102,7 +110,7 @@ async function createAspectRelatedProperties(
         },
       ],
       cardinalityHint: "many",
-      propertyCategoryScope: "parent",
+      relationshipMeaning: "sameInstance",
       properties: [{ stepIndex: 0, target: { select: "all" } }],
     },
   ];
