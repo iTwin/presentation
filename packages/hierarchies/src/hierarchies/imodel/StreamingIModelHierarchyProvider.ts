@@ -178,8 +178,7 @@ export interface ContinuableIterator<T> extends AsyncIterableIterator<T> {
  *
  * @beta
  */
-export interface StreamingIModelHierarchyProvider
-  extends HierarchyProvider<ParentHierarchyNode<NonGroupingHierarchyNode>>, Disposable {
+export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonGroupingHierarchyNode>, Disposable {
   /**
    * An event that provider raises due to a hierarchy change that requires a reload. In-flight `getNodes` requests fail
    * with `HierarchyRequestInterruptedError` when the event is raised. Continuation tokens of nodes returned before an

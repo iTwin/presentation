@@ -466,9 +466,9 @@ interface HierarchyNodeSearchProps {
 }
 
 // @public
-export interface HierarchyProvider<TParentNode extends ParentHierarchyNode = ParentHierarchyNode> {
-    getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps<TParentNode>, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
-    getNodes(props: GetHierarchyNodesProps<TParentNode>): AsyncIterableIterator<HierarchyNode>;
+export interface HierarchyProvider<TNode extends HierarchyNode = HierarchyNode> {
+    getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps<ParentHierarchyNode<TNode>>, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
+    getNodes(props: GetHierarchyNodesProps<ParentHierarchyNode<TNode>>): AsyncIterableIterator<TNode>;
     readonly hierarchyChanged: Event_2<(args: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: {
@@ -872,7 +872,7 @@ type SourceInstanceHierarchyNode = SourceHierarchyNode<Omit<ProcessedInstanceHie
 }>;
 
 // @beta
-export interface StreamingIModelHierarchyProvider extends HierarchyProvider<ParentHierarchyNode<NonGroupingHierarchyNode>>, Disposable {
+export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonGroupingHierarchyNode>, Disposable {
     getNodeInstanceKeys(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">): ContinuableIterator<InstanceKey>;
     getNodes(props: GetStreamedHierarchyNodesProps): ContinuableIterator<NonGroupingHierarchyNode>;
     readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];

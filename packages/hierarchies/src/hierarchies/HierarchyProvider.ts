@@ -59,11 +59,12 @@ interface HierarchyChangedEventArgs {
 /**
  * An interface for a hierarchy provider that knows how to create child nodes for a given parent node.
  *
- * @typeParam TParentNode - Type of parent nodes the provider accepts in `getNodes` and `getNodeInstanceKeys`
- * calls. Defaults to `ParentHierarchyNode`.
+ * @typeParam TNode - Type of nodes the provider returns from `getNodes`. The provider accepts parent nodes
+ * of the same type in `getNodes` and `getNodeInstanceKeys` calls. Defaults to `HierarchyNode`, but providers may
+ * narrow it, e.g. to `NonGroupingHierarchyNode` if they don't create grouping nodes.
  * @public
  */
-export interface HierarchyProvider<TParentNode extends ParentHierarchyNode = ParentHierarchyNode> {
+export interface HierarchyProvider<TNode extends HierarchyNode = HierarchyNode> {
   /**
    * An event that provider raises due to a hierarchy change that requires a reload.
    *
@@ -77,7 +78,7 @@ export interface HierarchyProvider<TParentNode extends ParentHierarchyNode = Par
    * Gets nodes for the specified parent node. This is **the method to implement**, otherwise
    * the provider doesn't return any nodes.
    */
-  getNodes(props: GetHierarchyNodesProps<TParentNode>): AsyncIterableIterator<HierarchyNode>;
+  getNodes(props: GetHierarchyNodesProps<ParentHierarchyNode<TNode>>): AsyncIterableIterator<TNode>;
 
   /**
    * Gets instance keys for the specified parent node.
@@ -87,7 +88,7 @@ export interface HierarchyProvider<TParentNode extends ParentHierarchyNode = Par
    * to calling `getNodes`.
    */
   getNodeInstanceKeys(
-    props: Omit<GetHierarchyNodesProps<TParentNode>, "ignoreCache">,
+    props: Omit<GetHierarchyNodesProps<ParentHierarchyNode<TNode>>, "ignoreCache">,
   ): AsyncIterableIterator<InstanceKey>;
 
   /**
