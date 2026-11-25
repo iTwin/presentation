@@ -34,7 +34,7 @@ import {
   createIModelNodesQueryClauseFactory,
   defineHierarchyLevel,
   getOwnParentNode,
-  parseSourceNode,
+  parseSourceInstanceNode,
   preProcessSourceNode,
   toFinalNode,
 } from "./HierarchyProviderUtils.js";
@@ -621,7 +621,8 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     const ownParentNode = parentNode
       ? getOwnParentNode(parentNode, { sourceName: this.#sourceName, imodelKey: this.#imodelAccess.imodelKey })
       : undefined;
-    if (parentNode && !ownParentNode) {
+    const isParentNodeFromOtherSource = !!parentNode && !ownParentNode;
+    if (isParentNodeFromOtherSource) {
       return EMPTY;
     }
     const resumePosition: LevelPosition | undefined = props.continuationToken?.[0];
@@ -792,7 +793,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     row: ECSqlQueryRow;
     parentNode: StreamingParentNode | undefined;
   }): Observable<ProviderSourceNode> {
-    return parseSourceNode({
+    return parseSourceInstanceNode({
       row,
       parentNode,
       imodelKey: this.#imodelAccess.imodelKey,

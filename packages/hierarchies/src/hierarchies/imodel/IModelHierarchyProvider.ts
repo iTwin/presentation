@@ -60,7 +60,7 @@ import {
   createIModelNodesQueryClauseFactory,
   defineHierarchyLevel,
   getOwnParentNode,
-  parseSourceNode,
+  parseSourceInstanceNode,
   preProcessSourceNode,
   toFinalNode,
 } from "./HierarchyProviderUtils.js";
@@ -486,7 +486,8 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
         const parentNode = props.parentNode
           ? getOwnParentNode(props.parentNode, { sourceName: this.#sourceName, imodelKey: imodelAccess.imodelKey })
           : undefined;
-        if (props.parentNode && !parentNode) {
+        const isParentNodeFromOtherSource = !!props.parentNode && !parentNode;
+        if (isParentNodeFromOtherSource) {
           return EMPTY;
         }
         return defineHierarchyLevel({
@@ -535,7 +536,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
       }
       const query = createInstanceKeysFilteredQuery(def.query, props.targetInstanceKeys);
       const parser: Props<typeof parseNodes>["parser"] = ({ row }) =>
-        parseSourceNode({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey, parseNode });
+        parseSourceInstanceNode({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey, parseNode });
       return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
         readNodes({ queryExecutor: imodelAccess, query, limit: props.hierarchyLevelSizeLimit, parser }).pipe(
           catchError((e) => {

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, from, map, mergeMap, of } from "rxjs";
+import { defer, from, identity, map, mergeMap, of } from "rxjs";
 import { createIModelInstanceLabelSelectClauseFactory, formatConcatenatedValue } from "@itwin/presentation-shared";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { hasChildren } from "../internal/Common.js";
@@ -12,7 +12,6 @@ import { defaultNodesParser } from "./TreeNodesReader.js";
 
 import type { Observable } from "rxjs";
 import type {
-  ConcatenatedValue,
   ECSchemaProvider,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
@@ -112,7 +111,7 @@ export function createGenericSourceNode(
  * Parses a nodes query row into a source node, using the hierarchy definition's `parseNode` or, if it's not provided,
  * `defaultNodesParser`. Assigns the given `imodelKey` to the node's instance keys.
  */
-export function parseSourceNode({
+export function parseSourceInstanceNode({
   row,
   parentNode,
   imodelKey,
@@ -146,26 +145,9 @@ export function preProcessSourceNode({
   valueFormatter: IPrimitiveValueFormatter;
   preProcessNode: RxjsNodePreProcessor | undefined;
 }): Observable<ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode> {
-  return applyLabelsFormatting({ ...node, parentKeys: createParentNodeKeysList(parentNode) }, valueFormatter).pipe(
-    mergeMap((processedNode) =>
-      preProcessNode ? preProcessNode({ node: processedNode, parentNode }) : of(processedNode),
-    ),
-  );
-}
-
-function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
-  if (!parentNode) {
-    return [];
-  }
-  return [...parentNode.parentKeys, parentNode.key];
-}
-
-function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
-  node: TNode,
-  valueFormatter: IPrimitiveValueFormatter,
-): Observable<TNode & { label: string }> {
   return from(formatConcatenatedValue({ value: node.label, valueFormatter })).pipe(
-    map((label) => ({ ...node, label })),
+    map((label) => ({ ...node, label, parentKeys: parentNode ? [...parentNode.parentKeys, parentNode.key] : [] })),
+    preProcessNode ? mergeMap((processedNode) => preProcessNode({ node: processedNode, parentNode })) : identity,
   );
 }
 
