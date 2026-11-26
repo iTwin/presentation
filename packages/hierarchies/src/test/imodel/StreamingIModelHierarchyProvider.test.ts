@@ -687,10 +687,27 @@ describe("createStreamingIModelHierarchyProvider", () => {
       ]) {
         expect(() => provider.getNodes({ ...props, continuationToken })).toThrow(
           new InvalidContinuationTokenError(
-            `Continuation token "${continuationToken}" was created for a different parent node, instance filter or hierarchy search.`,
+            `Continuation token "${continuationToken}" was created for a different iModel, parent node, instance filter or hierarchy search.`,
           ),
         );
       }
+    });
+
+    it("throws when the token was created for a different iModel", async () => {
+      setupQueries({ Q: createRows(1) });
+      const hierarchyDefinition = { defineHierarchyLevel: async () => [createQueryDefinition("Q")] };
+      using provider = createStreamingIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
+      const [{ continuationToken }] = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
+
+      using otherProvider = createStreamingIModelHierarchyProvider({
+        imodelAccess: { ...imodelAccess, imodelKey: "other-imodel" },
+        hierarchyDefinition,
+      });
+      expect(() => otherProvider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
+        new InvalidContinuationTokenError(
+          `Continuation token "${continuationToken}" was created for a different iModel, parent node, instance filter or hierarchy search.`,
+        ),
+      );
     });
 
     it("accepts the token for an equal parent node key, parent keys and instance filter", async () => {
@@ -1452,7 +1469,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
       provider.setHierarchySearch(search);
       expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
         new InvalidContinuationTokenError(
-          `Continuation token "${continuationToken}" was created for a different parent node, instance filter or hierarchy search.`,
+          `Continuation token "${continuationToken}" was created for a different iModel, parent node, instance filter or hierarchy search.`,
         ),
       );
 

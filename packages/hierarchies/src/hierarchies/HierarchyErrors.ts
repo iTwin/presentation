@@ -84,10 +84,11 @@ export class HierarchyRequestInterruptedError extends Error {
 }
 
 /**
- * Error that is thrown by `StreamingIModelHierarchyProvider.getNodes` when the given continuation token can't be used: it's
- * malformed, was created for a different parent node, instance filter or hierarchy search, was created before an iModel
- * change, or points to a hierarchy level definition that doesn't exist, e.g. because the hierarchy definition now
- * returns fewer hierarchy level definitions. In the latter cases, the hierarchy level should be loaded from the start.
+ * Error that is thrown by `StreamingIModelHierarchyProvider.getNodes` when the given continuation token can't be used:
+ * it's malformed, was created for a different iModel, parent node, instance filter or hierarchy search, was created
+ * before an iModel change, or points to a hierarchy level definition that doesn't exist, e.g. because the hierarchy
+ * definition now returns fewer hierarchy level definitions. In the latter cases, the hierarchy level should be loaded
+ * from the start.
  *
  * @beta
  */

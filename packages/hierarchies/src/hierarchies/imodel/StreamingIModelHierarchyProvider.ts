@@ -147,9 +147,9 @@ export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps<
   ParentHierarchyNode<NonGroupingHierarchyNode>
 > {
   /**
-   * A token, previously returned by `ContinuableAsyncIterableIterator.getContinuationToken` for the same parent node, instance
-   * filter and hierarchy search. When specified, the provider continues streaming nodes from the one that follows the
-   * node, the token belongs to.
+   * A token, previously returned by `ContinuableAsyncIterableIterator.getContinuationToken` for the same iModel,
+   * parent node, instance filter and hierarchy search. When specified, the provider continues streaming nodes from the
+   * one that follows the node, the token belongs to.
    * Continuing from the last node in the hierarchy level returns no nodes. Tokens created before an iModel change can't
    * be used after it.
    */
@@ -182,7 +182,7 @@ export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonG
    * processing param are omitted if they have no children.
    *
    * @throws `InvalidContinuationTokenError` if the given `continuationToken` can't be used: it's malformed, was created
-   * for a different parent node, instance filter or hierarchy search, or was created before an iModel change
+   * for a different iModel, parent node, instance filter or hierarchy search, or was created before an iModel change
    * or it points to a hierarchy level definition that doesn't exist.
    * @throws `HierarchyRequestInterruptedError` from the iterator, if the hierarchy changes or the provider is disposed
    * after `getNodes` is called and before all nodes are streamed, or if the provider was already disposed when
@@ -385,6 +385,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     return new ContinuationTokenContext({
       continuationToken: props.continuationToken,
       generation: this.#hierarchyGeneration,
+      imodelKey: this.#imodelAccess.imodelKey,
       parentNode: props.parentNode,
       instanceFilter: props.instanceFilter,
       searchFingerprint: this.#searchFingerprint,
@@ -907,12 +908,14 @@ class ContinuationTokenContext {
   public constructor(props: {
     continuationToken: string | undefined;
     generation: number;
+    imodelKey: string;
     parentNode: ParentHierarchyNode | undefined;
     instanceFilter: GenericInstanceFilter | undefined;
     searchFingerprint: string;
   }) {
     this.#generation = props.generation;
     this.#fingerprint = ContinuationTokenContext.#hash([
+      props.imodelKey,
       props.parentNode?.key,
       props.parentNode?.parentKeys,
       props.instanceFilter,
@@ -967,7 +970,7 @@ class ContinuationTokenContext {
     }
     if (payload.f !== this.#fingerprint) {
       throw new InvalidContinuationTokenError(
-        `Continuation token "${token}" was created for a different parent node, instance filter or hierarchy search.`,
+        `Continuation token "${token}" was created for a different iModel, parent node, instance filter or hierarchy search.`,
       );
     }
     return payload.p.map(([definitionIndex, offset]) => ({ definitionIndex, offset }));

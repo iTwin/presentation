@@ -25,4 +25,4 @@ for await (const node of provider.getNodes({ parentNode: undefined, continuation
 }
 ```
 
-`getNodes` fails with the new `InvalidContinuationTokenError` when the given `continuationToken` can't be used - it's malformed, was created for a different parent node, instance filter or hierarchy search, or was created before an iModel change. It fails with the new `HierarchyRequestInterruptedError` when the hierarchy changes or the provider is disposed before all nodes are loaded.
+`getNodes` fails with the new `InvalidContinuationTokenError` when the given `continuationToken` can't be used - it's malformed, was created for a different iModel, parent node, instance filter or hierarchy search, or was created before an iModel change. It fails with the new `HierarchyRequestInterruptedError` when the hierarchy changes or the provider is disposed before all nodes are loaded.
