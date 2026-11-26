@@ -558,32 +558,30 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
       const parser: Props<typeof parseNodes>["parser"] = parseNode
         ? ({ row }) => parseNode({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
         : undefined;
-      return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
-        raceQueryAlternatives(def.query, (query) =>
-          readNodes({
-            queryExecutor: imodelAccess,
-            query: createInstanceKeysFilteredQuery(query, props.targetInstanceKeys),
-            limit: props.hierarchyLevelSizeLimit,
-            parser,
-          }),
-        ).pipe(
-          catchError((e) => {
-            if (!(e instanceof RowsLimitExceededError)) {
-              throw e;
-            }
-            // don't fail other definitions of the hierarchy level - emit nodes created from rows that were read before
-            // the limit was exceeded, and fail the hierarchy level after all its nodes are emitted
-            limitExceededErrors.push(e);
-            return parseNodes({ rows: e.rows, parser });
-          }),
-          map((node): SourceInstanceHierarchyNode => ({
-            ...node,
-            key: {
-              ...node.key,
-              instanceKeys: node.key.instanceKeys.map((key) => ({ ...key, imodelKey: imodelAccess.imodelKey })),
-            },
-          })),
-        ),
+      return raceQueryAlternatives(this.getQueryScheduler(imodelAccess.imodelKey), def.query, (query) =>
+        readNodes({
+          queryExecutor: imodelAccess,
+          query: createInstanceKeysFilteredQuery(query, props.targetInstanceKeys),
+          limit: props.hierarchyLevelSizeLimit,
+          parser,
+        }),
+      ).pipe(
+        catchError((e) => {
+          if (!(e instanceof RowsLimitExceededError)) {
+            throw e;
+          }
+          // don't fail other definitions of the hierarchy level - emit nodes created from rows that were read before
+          // the limit was exceeded, and fail the hierarchy level after all its nodes are emitted
+          limitExceededErrors.push(e);
+          return parseNodes({ rows: e.rows, parser });
+        }),
+        map((node): SourceInstanceHierarchyNode => ({
+          ...node,
+          key: {
+            ...node.key,
+            instanceKeys: node.key.instanceKeys.map((key) => ({ ...key, imodelKey: imodelAccess.imodelKey })),
+          },
+        })),
       );
     };
 
@@ -904,39 +902,35 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
     // query instance keys and a flag whether they should be hidden
     const instanceKeys = instanceDefs.pipe(
       mergeMap(({ imodelAccess, hierarchyNodesDefinition: def }) =>
-        this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
-          raceQueryAlternatives(def.query, (query) =>
-            defer(() => {
-              const ecsql = `
-                SELECT
-                  ${NodeSelectClauseColumnNames.FullClassName},
-                  ${NodeSelectClauseColumnNames.ECInstanceId},
-                  ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
-                FROM (
-                  ${query.ecsql}
-                )
-              `;
-              const reader = imodelAccess.createQueryReader(
-                { ...query, ecsql },
-                {
-                  rowFormat: "Indexes",
-                  limit: hierarchyLevelSizeLimit,
-                  restartToken: `${this.#componentName}/${this.#componentId}/node-instance-keys/${Guid.createValue()}`,
-                },
-              );
-              return fromQueryReader(reader).pipe(
-                map((row) => ({
-                  key: {
-                    className: normalizeFullClassName(row[0]),
-                    id: row[1],
-                    imodelKey: imodelAccess.imodelKey,
-                  } satisfies IModelInstanceKey,
-                  hide: !!row[2],
-                })),
-              );
-            }),
-          ),
-        ),
+        raceQueryAlternatives(this.getQueryScheduler(imodelAccess.imodelKey), def.query, (query) => {
+          const ecsql = `
+            SELECT
+              ${NodeSelectClauseColumnNames.FullClassName},
+              ${NodeSelectClauseColumnNames.ECInstanceId},
+              ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+            FROM (
+              ${query.ecsql}
+            )
+          `;
+          const reader = imodelAccess.createQueryReader(
+            { ...query, ecsql },
+            {
+              rowFormat: "Indexes",
+              limit: hierarchyLevelSizeLimit,
+              restartToken: `${this.#componentName}/${this.#componentId}/node-instance-keys/${Guid.createValue()}`,
+            },
+          );
+          return fromQueryReader(reader).pipe(
+            map((row) => ({
+              key: {
+                className: normalizeFullClassName(row[0]),
+                id: row[1],
+                imodelKey: imodelAccess.imodelKey,
+              } satisfies IModelInstanceKey,
+              hide: !!row[2],
+            })),
+          );
+        }),
       ),
     );
     // split the instance keys observable based on whether they should be hidden or not
@@ -1057,13 +1051,16 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   return [...parentNode.parentKeys, parentNode.key];
 }
 
-/** Runs all query alternatives in parallel and mirrors the first one to emit, unsubscribing from the rest. */
+/** Schedules each query alternative and mirrors the first one to emit, cancelling running and queued ones of the rest. */
 function raceQueryAlternatives<T>(
+  scheduler: SubscriptionScheduler,
   query: InstanceNodesQueryDefinition["query"],
   factory: (query: ECSqlQueryDef) => Observable<T>,
 ): Observable<T> {
   const queries = "race" in query ? query.race : [query];
-  return queries.length > 0 ? race(queries.map(factory)) : EMPTY;
+  return queries.length > 0
+    ? race(queries.map((alternative) => scheduler.scheduleSubscription(defer(() => factory(alternative)))))
+    : EMPTY;
 }
 
 function createInstanceKeysFilteredQuery(

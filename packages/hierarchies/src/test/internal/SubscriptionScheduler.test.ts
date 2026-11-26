@@ -4,11 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResolvablePromise } from "presentation-test-utilities";
-import { asapScheduler, asyncScheduler, defer, from, queueScheduler, scheduled, throwError } from "rxjs";
+import {
+  asapScheduler,
+  asyncScheduler,
+  defer,
+  from,
+  NEVER,
+  Observable,
+  queueScheduler,
+  scheduled,
+  throwError,
+} from "rxjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SubscriptionScheduler } from "../../hierarchies/internal/SubscriptionScheduler.js";
 
-import type { Observable, ObservableInput, SchedulerLike, Subscription } from "rxjs";
+import type { ObservableInput, SchedulerLike, Subscription } from "rxjs";
 
 describe("SubscriptionScheduler", () => {
   const concurrentSubscriptions = 3;
@@ -154,6 +164,23 @@ describe("SubscriptionScheduler", () => {
         });
       });
     }
+
+    it("unsubscribes from running source observable and schedules the next one after schedule cancellation", async () => {
+      const teardown = vi.fn();
+      const runningSource = vi.fn(() => teardown);
+      const subscription = subscriptionScheduler.scheduleSubscription(new Observable(runningSource)).subscribe();
+      for (let i = 1; i < concurrentSubscriptions; ++i) {
+        subscriptionScheduler.scheduleSubscription(NEVER).subscribe();
+      }
+      const queuedSource = vi.fn();
+      subscriptionScheduler.scheduleSubscription(new Observable(queuedSource)).subscribe();
+      await vi.waitFor(() => expect(runningSource).toHaveBeenCalledOnce());
+      expect(queuedSource).not.toHaveBeenCalled();
+
+      subscription.unsubscribe();
+      expect(teardown).toHaveBeenCalledOnce();
+      await vi.waitFor(() => expect(queuedSource).toHaveBeenCalledOnce());
+    });
   });
 });
 
