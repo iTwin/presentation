@@ -5,6 +5,7 @@
 ```ts
 
 import type { ConcatenatedValue } from '@itwin/presentation-shared';
+import type { ContinuableAsyncIterableIterator } from '@itwin/presentation-shared';
 import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
@@ -40,11 +41,6 @@ interface BaseHierarchyNode {
 export interface ClassGroupingNodeKey {
     className: EC.FullClassNameDotNotation;
     type: "class-grouping";
-}
-
-// @beta
-export interface ContinuableIterator<T> extends AsyncIterableIterator<T> {
-    getContinuationToken(): string | undefined;
 }
 
 // @public
@@ -873,8 +869,8 @@ type SourceInstanceHierarchyNode = SourceHierarchyNode<Omit<ProcessedInstanceHie
 
 // @beta
 export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonGroupingHierarchyNode>, Disposable {
-    getNodeInstanceKeys(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">): ContinuableIterator<InstanceKey>;
-    getNodes(props: GetStreamedHierarchyNodesProps): ContinuableIterator<NonGroupingHierarchyNode>;
+    getNodeInstanceKeys(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">): ContinuableAsyncIterableIterator<InstanceKey>;
+    getNodes(props: GetStreamedHierarchyNodesProps): ContinuableAsyncIterableIterator<NonGroupingHierarchyNode>;
     readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: StreamingIModelHierarchyProviderProps["search"]): void;

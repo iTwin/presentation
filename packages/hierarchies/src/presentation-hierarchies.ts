@@ -32,7 +32,6 @@ export {
   createMergedIModelHierarchyProvider,
 } from "./hierarchies/imodel/IModelHierarchyProvider.js";
 export type {
-  ContinuableIterator,
   GetStreamedHierarchyNodesProps,
   StreamingIModelHierarchyProvider,
 } from "./hierarchies/imodel/StreamingIModelHierarchyProvider.js";

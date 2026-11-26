@@ -18,13 +18,12 @@ import {
 } from "../Utils.js";
 
 import type { GenericInstanceFilter } from "@itwin/core-common";
-import type { ECSqlQueryDef, Props } from "@itwin/presentation-shared";
+import type { ContinuableAsyncIterableIterator, ECSqlQueryDef, Props } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import type {
   HierarchyDefinition,
   HierarchyLevelDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import type { ContinuableIterator } from "../../hierarchies/imodel/StreamingIModelHierarchyProvider.js";
 import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("createStreamingIModelHierarchyProvider", () => {
@@ -103,7 +102,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
   }
 
   /** Collects nodes of the given iterator together with iterator's continuation token after each node. */
-  async function collectWithTokens<T = NonGroupingHierarchyNode>(iterator: ContinuableIterator<T>) {
+  async function collectWithTokens<T = NonGroupingHierarchyNode>(iterator: ContinuableAsyncIterableIterator<T>) {
     const result = new Array<{ node: T; continuationToken: string }>();
     for await (const node of iterator) {
       result.push({ node, continuationToken: iterator.getContinuationToken()! });

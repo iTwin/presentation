@@ -65,6 +65,11 @@ export namespace ConcatenatedValuePart {
     export function isString(part: ConcatenatedValuePart): part is string;
 }
 
+// @beta
+export interface ContinuableAsyncIterableIterator<T> extends AsyncIterableIterator<T> {
+    getContinuationToken(): string | undefined;
+}
+
 // @public
 export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 

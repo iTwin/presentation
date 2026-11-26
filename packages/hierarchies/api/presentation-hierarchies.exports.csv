@@ -1,7 +1,6 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;ClassGroupingNodeKey
-beta;interface;ContinuableIterator
 public;function;createHierarchyProvider
 public;function;createHierarchySearchHelper
 beta;function;createIModelHierarchyNodePaths
