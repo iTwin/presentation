@@ -240,77 +240,36 @@ export function createStreamingIModelHierarchyProvider(
 }
 
 type StreamingParentNode = ParentHierarchyNode<NonGroupingHierarchyNode>;
-/**
- * A value streamed by a request, together with continuation token of the node, whose values end with this one.
- * The token is not set if the node has more values after this one, or the value doesn't come from a hierarchy level node.
- */
-interface StreamedValue<T> {
-  value: T;
-  continuationToken?: string;
-}
 type StreamingProcessedNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode;
 
-/**
- * Identifies a node in a hierarchy level: `definitionIndex` is the index of hierarchy level definition the node was
- * created from and `offset` is the index of query row the node was created from (always `0` for generic nodes).
- */
-interface LevelPosition {
-  definitionIndex: number;
-  offset: number;
-}
-
-/**
- * Identifies position of a node in a hierarchy level. Consists of a list of `LevelPosition`s, where each position,
- * except the last one, points to a hidden node (one with `hideInHierarchy` processing param), and each subsequent
- * position points to a node in that hidden node's child hierarchy level.
- *
- * Exposed to consumers as an opaque `string` through `ContinuableAsyncIterableIterator.getContinuationToken` and
- * `GetStreamedHierarchyNodesProps.continuationToken` - see `encodeContinuationToken` and `decodeContinuationToken`.
- *
- * Example: root hierarchy level is defined by a single query that returns `[a, b, hidden, d, e]`. The `hidden` node's
- * child hierarchy level is defined by a single query that returns `[c1, c2, cHidden, c4]`, and `cHidden` node's children
- * query returns `[c3_1, c3_2]`. The provider streams `[a, b, c1, c2, c3_1, c3_2, c4, d, e]` with these token paths
- * (as `definitionIndex:offset`):
- * - `d`: `[0:3]` - row `3` of definition `0`,
- * - `c1`: `[0:2, 0:0]` - row `0` of definition `0` under the hidden node at row `2` of definition `0`,
- * - `c3_1`: `[0:2, 0:2, 0:0]` - row `0` under `cHidden` (row `2`), which is under `hidden` (row `2`).
- */
-type ContinuationToken = LevelPosition[];
-
 interface ResumeProps {
-  /** Offset of the row, at which to resume. */
   offset: number;
-  /**
-   * Continuation token in child hierarchy level of the (hidden) node at `offset`. If not set, the node at `offset` has
-   * already been returned and should be skipped.
-   */
+  /** Set when resuming inside the hidden node at `offset`; otherwise that node is skipped. */
   nestedContinuationToken?: ContinuationToken;
 }
 
 interface LevelNode {
   node: StreamingProcessedNode;
-  /** Position of the node in its hierarchy level. */
   position: LevelPosition;
-  /** Set if the node is hidden and reading should resume inside its child hierarchy level. */
+  /** Set if reading should resume inside this (hidden) node's child hierarchy level. */
   nestedContinuationToken?: ContinuationToken;
 }
 
 interface ReadLevelProps<TResult> {
   parentNode: StreamingParentNode | undefined;
   instanceFilter?: GenericInstanceFilter;
-  /** Continuation token to resume reading from, relative to this hierarchy level. */
+  /** Relative to this hierarchy level. */
   continuationToken?: ContinuationToken;
-  /** Emits when the next node should be read. Awaited before requesting each query page and processing each node. */
+  /** Awaited before requesting each query page and processing each node. */
   demand: Observable<unknown>;
   processNode: (node: LevelNode) => Observable<TResult>;
 }
 
 interface StreamLevelProps extends Omit<ReadLevelProps<never>, "processNode"> {
-  /** Parent node of the requested hierarchy level - an ancestor of `parentNode` when that one is hidden. */
+  /** Differs from `parentNode` when that one is hidden. */
   requestedParentNode: StreamingParentNode | undefined;
-  /** Continuation token of the hidden parent node, used as a prefix for continuation tokens of this level's nodes. */
+  /** Token of the hidden parent node - prefix for tokens of this level's nodes. */
   parentContinuationToken: ContinuationToken;
-  /** Request-specific data, encoded into continuation tokens of this level's nodes. */
   tokenContext: ContinuationTokenContext;
 }
 
@@ -323,18 +282,17 @@ interface ReadSourceNode {
 class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyProvider {
   readonly #imodelAccess: StreamingIModelHierarchyProviderProps["imodelAccess"];
   readonly #sourceHierarchyDefinition: RxjsHierarchyDefinition;
-  // the source hierarchy definition, wrapped with search, if one is set
+  // wrapped with search, if one is set
   #hierarchyDefinition: RxjsHierarchyDefinition;
-  // hash of the search paths, included in continuation tokens' fingerprints
   #searchFingerprint = "";
   readonly #hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
   readonly #createNodesQueryClauseFactory: () => NodesQueryClauseFactory;
   readonly #componentId = Guid.createValue();
   readonly #sourceName: string;
   readonly #pageSize: number;
-  // incremented whenever the hierarchy changes or the provider is disposed - requests started before that fail
+  // incremented on any hierarchy change or disposal - requests started before that fail
   readonly #interruptGeneration = new BehaviorSubject(0);
-  // incremented whenever the iModel changes - continuation tokens created before that can't be used anymore
+  // incremented on iModel change - older continuation tokens become invalid
   #hierarchyGeneration = 0;
   #disposed = false;
   #nodesQueryClauseFactory: NodesQueryClauseFactory;
@@ -414,84 +372,96 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
           targetPaths: search.paths,
         })
       : this.#sourceHierarchyDefinition;
-    this.#searchFingerprint = search ? hashString(stableStringify(search.paths)) : "";
+    this.#searchFingerprint = ContinuationTokenContext.createSearchFingerprint(search);
   }
 
-  /** Creates an interrupt observable that emits on any hierarchy change after this call or if the provider is disposed. */
+  /** Emits on any hierarchy change after this call or if the provider is disposed. */
   #createInterrupt(): Observable<unknown> {
     const generation = this.#interruptGeneration.value;
     return this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
   }
 
-  /** Validates and decodes the continuation token of the request, and creates context for encoding new tokens. */
-  #resolveContinuationToken(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">) {
-    const tokenContext: ContinuationTokenContext = {
+  #createContinuationTokenContext(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">) {
+    return new ContinuationTokenContext({
+      continuationToken: props.continuationToken,
       generation: this.#hierarchyGeneration,
-      fingerprint: createRequestFingerprint({ ...props, searchFingerprint: this.#searchFingerprint }),
-    };
-    // decode the token eagerly to fail early on invalid input
-    const continuationToken =
-      props.continuationToken !== undefined
-        ? decodeContinuationToken(props.continuationToken, tokenContext)
-        : undefined;
-    return { tokenContext, continuationToken };
+      parentNode: props.parentNode,
+      instanceFilter: props.instanceFilter,
+      searchFingerprint: this.#searchFingerprint,
+    });
   }
 
   public getNodes(props: GetStreamedHierarchyNodesProps): ContinuableAsyncIterableIterator<NonGroupingHierarchyNode> {
-    const { tokenContext, continuationToken } = this.#resolveContinuationToken(props);
-    // number of nodes that the consumer has requested, but hasn't received yet
-    const pendingRequestsCount = new BehaviorSubject(0);
-    // the request is interrupted by any hierarchy change after this call, even if iteration hasn't started yet
-    const interrupt = this.#createInterrupt();
-    return createContinuableAsyncIterableIterator({
-      iterator: requestOnDemand({
-        source: this.#getNodesObservable({ ...props, continuationToken, tokenContext, pendingRequestsCount }).pipe(
-          throwOnInterrupt(interrupt),
-        ),
-        onRequest: () => pendingRequestsCount.next(pendingRequestsCount.value + 1),
-      }),
-      initialContinuationToken: props.continuationToken,
+    const tokenContext = this.#createContinuationTokenContext(props);
+    return this.#createIterator({
+      tokenContext,
+      createSource: (demand) => this.#getNodesObservable({ ...props, tokenContext, demand }),
     });
   }
 
   public getNodeInstanceKeys(
     props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">,
   ): ContinuableAsyncIterableIterator<InstanceKey> {
-    const { parentNode, instanceFilter } = props;
-    const { tokenContext, continuationToken } = this.#resolveContinuationToken(props);
-    const interrupt = this.#createInterrupt();
-    const source = this.#readInstanceKeys({
-      parentNode,
-      instanceFilter,
-      continuationToken,
-      parentContinuationToken: [],
+    const tokenContext = this.#createContinuationTokenContext(props);
+    return this.#createIterator({
       tokenContext,
-    });
-    return createContinuableAsyncIterableIterator({
-      iterator: requestOnDemand({ source: source.pipe(throwOnInterrupt(interrupt)), onRequest: () => {} }),
-      initialContinuationToken: props.continuationToken,
+      createSource: (demand) =>
+        this.#readInstanceKeys({
+          parentNode: props.parentNode,
+          instanceFilter: props.instanceFilter,
+          continuationToken: tokenContext.resumeFrom,
+          parentContinuationToken: [],
+          tokenContext,
+          demand,
+        }),
     });
   }
 
-  /** Reads instance keys of nodes in the given parent node's child hierarchy level, going into hidden nodes. */
+  /**
+   * The source must emit only when `demand` emits, so that each value is returned to the consumer right away and the
+   * continuation token, advanced by the source, matches the last returned value.
+   */
+  #createIterator<T>({
+    tokenContext,
+    createSource,
+  }: {
+    tokenContext: ContinuationTokenContext;
+    createSource: (demand: Observable<unknown>) => Observable<T>;
+  }): ContinuableAsyncIterableIterator<T> {
+    // values requested by the consumer, but not yet received
+    const pendingRequestsCount = new BehaviorSubject(0);
+    // created here, so that changes before iteration starts interrupt the request too
+    const interrupt = this.#createInterrupt();
+    return createContinuableAsyncIterableIterator({
+      iterator: requestOnDemand({
+        source: createSource(pendingRequestsCount.pipe(filter((count) => count > 0))).pipe(
+          tap(() => pendingRequestsCount.next(pendingRequestsCount.value - 1)),
+          throwOnInterrupt(interrupt),
+        ),
+        onRequest: () => pendingRequestsCount.next(pendingRequestsCount.value + 1),
+      }),
+      getContinuationToken: () => tokenContext.getCurrentToken(),
+    });
+  }
+
+  /** Reads instance keys of the hierarchy level, replacing hidden nodes with their children's keys. */
   #readInstanceKeys({
     parentNode,
     instanceFilter,
     continuationToken,
     parentContinuationToken,
     tokenContext,
+    demand,
   }: Pick<
     StreamLevelProps,
-    "parentNode" | "instanceFilter" | "continuationToken" | "parentContinuationToken" | "tokenContext"
-  >): Observable<StreamedValue<InstanceKey>> {
+    "parentNode" | "instanceFilter" | "continuationToken" | "parentContinuationToken" | "tokenContext" | "demand"
+  >): Observable<InstanceKey> {
     return this.#readLevel({
       parentNode,
       instanceFilter,
       continuationToken,
-      // instance keys aren't requested one by one, so read them all
-      demand: of(undefined),
+      demand,
       processNode: ({ node, position, nestedContinuationToken }) => {
-        const nodeContinuationToken = [...parentContinuationToken, position];
         if (node.processingParams?.hideInHierarchy) {
           return node.children === false
             ? EMPTY
@@ -499,21 +469,25 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
                 parentNode: node,
                 instanceFilter,
                 continuationToken: nestedContinuationToken,
-                parentContinuationToken: nodeContinuationToken,
+                parentContinuationToken: [...parentContinuationToken, position],
                 tokenContext,
+                demand,
               });
         }
         if (!HierarchyNodeKey.isInstances(node.key)) {
           return EMPTY;
         }
         const { instanceKeys } = node.key;
-        const nodeToken = encodeContinuationToken(nodeContinuationToken, tokenContext);
-        // only the node's last key gets the token, so that resuming from it doesn't skip any of the node's keys
-        return from(
-          instanceKeys.map((key, index) => ({
-            value: key,
-            ...(index === instanceKeys.length - 1 ? { continuationToken: nodeToken } : undefined),
-          })),
+        return from(instanceKeys).pipe(
+          concatMap((key, index) =>
+            onDemand(demand, () => {
+              // advance only on the last key, so that resuming doesn't skip the node's remaining keys
+              if (index === instanceKeys.length - 1) {
+                tokenContext.advance(parentContinuationToken, position);
+              }
+              return of(key);
+            }),
+          ),
         );
       },
     });
@@ -522,14 +496,12 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   #getNodesObservable({
     parentNode,
     instanceFilter,
-    continuationToken,
     tokenContext,
-    pendingRequestsCount,
+    demand,
   }: Omit<GetStreamedHierarchyNodesProps, "continuationToken"> & {
-    continuationToken: ContinuationToken | undefined;
     tokenContext: ContinuationTokenContext;
-    pendingRequestsCount: BehaviorSubject<number>;
-  }): Observable<StreamedValue<NonGroupingHierarchyNode>> {
+    demand: Observable<unknown>;
+  }): Observable<NonGroupingHierarchyNode> {
     return defer(() => {
       const timer = new StopWatch(undefined, true);
       let nodesCount = 0;
@@ -537,16 +509,12 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
         parentNode,
         requestedParentNode: parentNode,
         instanceFilter,
-        continuationToken,
+        continuationToken: tokenContext.resumeFrom,
         parentContinuationToken: [],
         tokenContext,
-        // only read nodes that the consumer is waiting for
-        demand: pendingRequestsCount.pipe(filter((count) => count > 0)),
+        demand,
       }).pipe(
-        tap(() => {
-          ++nodesCount;
-          pendingRequestsCount.next(pendingRequestsCount.value - 1);
-        }),
+        tap(() => ++nodesCount),
         finalize(() => {
           /* v8 ignore next -- @preserve */
           doLog({
@@ -559,11 +527,8 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     });
   }
 
-  /**
-   * Streams nodes of a hierarchy level the way they're returned by `getNodes`, replacing hidden nodes with their
-   * children.
-   */
-  #streamLevel(props: StreamLevelProps): Observable<StreamedValue<NonGroupingHierarchyNode>> {
+  /** Streams final nodes of the hierarchy level, replacing hidden nodes with their children. */
+  #streamLevel(props: StreamLevelProps): Observable<NonGroupingHierarchyNode> {
     const { parentNode, requestedParentNode, instanceFilter, parentContinuationToken, tokenContext, demand } = props;
     return this.#readLevel({
       parentNode,
@@ -571,13 +536,9 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
       continuationToken: props.continuationToken,
       demand,
       processNode: ({ node, position, nestedContinuationToken }) => {
-        const nodeContinuationToken = [...parentContinuationToken, position];
         if (!node.processingParams?.hideInHierarchy) {
           return this.#finalizeNode({ node, parentNode: requestedParentNode }).pipe(
-            map((finalNode) => ({
-              value: finalNode,
-              continuationToken: encodeContinuationToken(nodeContinuationToken, tokenContext),
-            })),
+            tap(() => tokenContext.advance(parentContinuationToken, position)),
           );
         }
         if (node.children === false) {
@@ -588,7 +549,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
           requestedParentNode,
           instanceFilter,
           continuationToken: nestedContinuationToken,
-          parentContinuationToken: nodeContinuationToken,
+          parentContinuationToken: [...parentContinuationToken, position],
           tokenContext,
           demand,
         });
@@ -596,10 +557,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     });
   }
 
-  /**
-   * Reads pre-processed nodes of a hierarchy level and processes them using the given `processNode` function. Nodes
-   * are processed one by one, each of them - only after `demand` emits.
-   */
+  /** Reads pre-processed nodes of the hierarchy level and processes them one by one, each after `demand` emits. */
   #readLevel<TResult>(props: ReadLevelProps<TResult>): Observable<TResult> {
     const { parentNode, instanceFilter, demand, processNode } = props;
     const ownParentNode = parentNode
@@ -679,11 +637,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     ];
   }
 
-  /**
-   * Reads results of the given query in pages, processing each row using `processSourceNode`. A page is requested
-   * when `demand` emits after all rows of the previous page are processed. Similarly, the next row is processed when
-   * `demand` emits after the previous row is processed.
-   */
+  /** Reads query results in pages. Each page and each row is processed only after `demand` emits. */
   #readInstanceNodes<TResult>({
     definition,
     parentNode,
@@ -713,7 +667,6 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
           limit: "unbounded",
         }).pipe(
           tap(() => ++pageRowsCount),
-          // rows of the page are read right away, but each of them is processed only when it's needed
           concatMap((row, index) =>
             onDemand(demand, () => {
               const offset = pageOffset + index;
@@ -746,7 +699,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     });
   }
 
-  /** Finalizes the node the way it's returned by `getNodes`. Completes without a value if the node should be omitted. */
+  /** Completes without a value if the node should be omitted. */
   #finalizeNode({
     node,
     parentNode,
@@ -764,7 +717,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     );
   }
 
-  /** Pre-processes the given source node. Completes without a value if the node is omitted. */
+  /** Completes without a value if the node is omitted. */
   #preProcessNode({
     sourceNode,
     parentNode,
@@ -789,8 +742,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
       parentNode: node,
       // determining children isn't limited by what the consumer has requested - it stops at the first child instead
       demand: of(undefined),
-      // hidden children and children with `hideIfNoChildren` flag only count if they have children themselves - their
-      // `children` attribute is used if set, otherwise their child hierarchy level is checked
+      // hidden and `hideIfNoChildren` children only count if they have children themselves
       processNode: ({ node: child }) =>
         child.processingParams?.hideInHierarchy || child.processingParams?.hideIfNoChildren
           ? this.#determineChildren(child)
@@ -803,10 +755,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   }
 }
 
-/**
- * Fails the stream with `HierarchyRequestInterruptedError` if `interrupt` emits before the stream finishes. When
- * `interrupt` emits synchronously on subscription, the source isn't subscribed to at all.
- */
+/** Fails the stream with `HierarchyRequestInterruptedError` when `interrupt` emits. */
 function throwOnInterrupt<T>(interrupt: Observable<unknown>): MonoTypeOperatorFunction<T> {
   return (source) =>
     new Observable<T>((subscriber) => {
@@ -817,27 +766,22 @@ function throwOnInterrupt<T>(interrupt: Observable<unknown>): MonoTypeOperatorFu
     });
 }
 
-/** Runs the given `work` when `demand` emits. */
 function onDemand<T>(demand: Observable<unknown>, work: () => Observable<T>): Observable<T> {
   return demand.pipe(take(1), concatMap(work));
 }
 
 /**
- * Creates an iterator that subscribes to `source` on the first `next()` call and calls `onRequest` whenever the
- * consumer requests the next value. Unlike async generators, `return()` takes effect immediately, even while a `next()`
- * call is pending: it unsubscribes from `source` and settles pending `next()` calls as done.
+ * Subscribes to `source` on the first `next()` call and calls `onRequest` whenever more values are needed. Unlike
+ * async generators, `return()` takes effect immediately, even while a `next()` call is pending.
  */
 function requestOnDemand<T>({ source, onRequest }: { source: Observable<T>; onRequest: () => void }): AsyncIterator<T> {
-  // values received from `source`, but not yet taken by `next()` calls
   const values: T[] = [];
-  // `next()` calls waiting for a value
   const pending: Array<{ resolve: (result: IteratorResult<T>) => void; reject: (reason: unknown) => void }> = [];
   let subscription: Subscription | undefined;
   let finished = false;
   // wrapped to tell apart "no error" from an error with `undefined` reason
   let error: { reason: unknown } | undefined;
   const done = (): IteratorResult<T> => ({ done: true, value: undefined });
-  // matches received values, errors and completion with pending `next()` calls
   const settle = () => {
     while (pending.length && values.length) {
       pending.shift()!.resolve({ done: false, value: values.shift()! });
@@ -890,38 +834,23 @@ function requestOnDemand<T>({ source, onRequest }: { source: Observable<T>; onRe
   };
 }
 
-/**
- * Creates an iterator that returns values of the given iterator and tracks continuation token of the last node, whose
- * values were all returned.
- */
 function createContinuableAsyncIterableIterator<T>({
   iterator,
-  initialContinuationToken,
+  getContinuationToken,
 }: {
-  iterator: AsyncIterator<StreamedValue<T>>;
-  initialContinuationToken: string | undefined;
+  iterator: AsyncIterator<T>;
+  getContinuationToken: () => string | undefined;
 }): ContinuableAsyncIterableIterator<T> {
-  let continuationToken = initialContinuationToken;
   return {
-    getContinuationToken() {
-      return continuationToken;
-    },
+    getContinuationToken,
     [Symbol.asyncIterator]() {
       return this;
     },
     async next() {
-      const result = await iterator.next();
-      if (result.done) {
-        return result;
-      }
-      if (result.value.continuationToken !== undefined) {
-        continuationToken = result.value.continuationToken;
-      }
-      return { done: false, value: result.value.value };
+      return iterator.next();
     },
     async return() {
-      await iterator.return!();
-      return { done: true, value: undefined };
+      return iterator.return!();
     },
   };
 }
@@ -934,7 +863,6 @@ function omitGroupingParams<TNode extends StreamingProcessedNode>(node: TNode): 
   return { ...node, processingParams };
 }
 
-/** Creates a query that returns up to `limit` rows of the given query, skipping the first `offset` rows. */
 function createPageQuery({
   query,
   offset,
@@ -947,111 +875,149 @@ function createPageQuery({
   return { ...query, ecsql: `SELECT * FROM (${query.ecsql}) LIMIT ${limit} OFFSET ${offset}` };
 }
 
-const CONTINUATION_TOKEN_VERSION = 1;
-
-/** Request-specific data, encoded into continuation tokens and validated when a token is used. */
-interface ContinuationTokenContext {
-  /** Hierarchy generation the token was created in - tokens created before an iModel change can't be used after it. */
-  generation: number;
-  /** Fingerprint of the parent node, instance filter and hierarchy search the token was created for. */
-  fingerprint: string;
+/** Index of the hierarchy level definition and query row (`0` for generic nodes) a node was created from. */
+interface LevelPosition {
+  definitionIndex: number;
+  offset: number;
 }
 
-/** Serialized form of a continuation token. */
+/**
+ * Path to a node in a hierarchy level: each position, except the last one, points to a hidden node, and the next one -
+ * to a node in its child hierarchy level.
+ */
+type ContinuationToken = LevelPosition[];
+
+/**
+ * Continuation tokens of a single request: validates the token the request was made with, and tracks the last node,
+ * whose values were all returned. Tokens can only be used with the same request and hierarchy generation.
+ */
+class ContinuationTokenContext {
+  static readonly #VERSION = 1;
+
+  readonly #generation: number;
+  readonly #fingerprint: string;
+  readonly #initialToken: string | undefined;
+  // combined into a token only when it's requested
+  #currentParentToken: ContinuationToken = [];
+  #currentPosition: LevelPosition | undefined;
+
+  public readonly resumeFrom: ContinuationToken | undefined;
+
+  /** @throws `InvalidContinuationTokenError` */
+  public constructor(props: {
+    continuationToken: string | undefined;
+    generation: number;
+    parentNode: ParentHierarchyNode | undefined;
+    instanceFilter: GenericInstanceFilter | undefined;
+    searchFingerprint: string;
+  }) {
+    this.#generation = props.generation;
+    this.resumeFrom = props.continuationToken !== undefined ? this.#decode(props.continuationToken) : undefined;
+    this.#fingerprint = ContinuationTokenContext.#hash([
+      props.parentNode?.key,
+      props.parentNode?.parentKeys,
+      props.instanceFilter,
+      props.searchFingerprint,
+    ]);
+    this.#initialToken = props.continuationToken;
+  }
+
+  /** Called when the node's last value is returned to the consumer. */
+  public advance(parentToken: ContinuationToken, position: LevelPosition) {
+    this.#currentParentToken = parentToken;
+    this.#currentPosition = position;
+  }
+
+  public getCurrentToken(): string | undefined {
+    return this.#currentPosition
+      ? this.#encode([...this.#currentParentToken, this.#currentPosition])
+      : this.#initialToken;
+  }
+
+  /** Expensive for large searches, so expected to be calculated once per search change. */
+  public static createSearchFingerprint(search: { paths: HierarchySearchTree[] } | undefined): string {
+    return search ? ContinuationTokenContext.#hash(search.paths) : "";
+  }
+
+  #encode(token: ContinuationToken): string {
+    const payload: ContinuationTokenPayload = {
+      v: ContinuationTokenContext.#VERSION,
+      g: this.#generation,
+      f: this.#fingerprint,
+      p: token.map(({ definitionIndex, offset }) => [definitionIndex, offset]),
+    };
+    // URL-safe base64 without padding
+    return btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  #decode(token: string): ContinuationToken {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(atob(token.replace(/-/g, "+").replace(/_/g, "/")));
+    } catch {
+      payload = undefined;
+    }
+    if (!ContinuationTokenContext.#isPayload(payload)) {
+      throw new InvalidContinuationTokenError(`Invalid continuation token: "${token}".`);
+    }
+    if (payload.g !== this.#generation) {
+      throw new InvalidContinuationTokenError(
+        `Continuation token "${token}" was created before a hierarchy change and can't be used anymore.`,
+      );
+    }
+    if (payload.f !== this.#fingerprint) {
+      throw new InvalidContinuationTokenError(
+        `Continuation token "${token}" was created for a different parent node, instance filter or hierarchy search.`,
+      );
+    }
+    return payload.p.map(([definitionIndex, offset]) => ({ definitionIndex, offset }));
+  }
+
+  static #isPayload(value: unknown): value is ContinuationTokenPayload {
+    if (typeof value !== "object" || value === null) {
+      return false;
+    }
+    const { v, g, f, p } = value as {
+      [key in keyof ContinuationTokenPayload]?: unknown;
+    };
+    return (
+      v === ContinuationTokenContext.#VERSION &&
+      Number.isSafeInteger(g) &&
+      typeof f === "string" &&
+      Array.isArray(p) &&
+      p.length > 0 &&
+      p.every(
+        (position) =>
+          Array.isArray(position) &&
+          position.length === 2 &&
+          position.every((item) => Number.isSafeInteger(item) && item >= 0),
+      )
+    );
+  }
+
+  /** 32-bit FNV-1a hash of the value's JSON with sorted object keys. */
+  static #hash(value: unknown): string {
+    const serialized = JSON.stringify(value, (_, item: unknown) =>
+      typeof item === "object" && item !== null && !Array.isArray(item)
+        ? Object.fromEntries(Object.entries(item).sort(([lhs], [rhs]) => (lhs < rhs ? -1 : 1)))
+        : item,
+    );
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < serialized.length; ++i) {
+      hash ^= serialized.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    return (hash >>> 0).toString(36);
+  }
+}
+
 interface ContinuationTokenPayload {
-  /** Format version. */
-  v: typeof CONTINUATION_TOKEN_VERSION;
-  /** Hierarchy generation. */
+  /** Version */
+  v: number;
+  /** Hierarchy generation */
   g: number;
-  /** Parent node, instance filter and hierarchy search fingerprint. */
+  /** Request fingerprint */
   f: string;
-  /** Token path as `[definitionIndex, offset]` pairs. */
+  /** `[definitionIndex, offset]` path */
   p: Array<[number, number]>;
-}
-
-function encodeContinuationToken(token: ContinuationToken, context: ContinuationTokenContext): string {
-  const payload: ContinuationTokenPayload = {
-    v: CONTINUATION_TOKEN_VERSION,
-    g: context.generation,
-    f: context.fingerprint,
-    p: token.map(({ definitionIndex, offset }) => [definitionIndex, offset]),
-  };
-  // the payload only contains ASCII characters, so `btoa` can encode it; use URL-safe base64 alphabet without padding
-  return btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function decodeContinuationToken(token: string, context: ContinuationTokenContext): ContinuationToken {
-  let payload: unknown;
-  try {
-    payload = JSON.parse(atob(token.replace(/-/g, "+").replace(/_/g, "/")));
-  } catch {
-    payload = undefined;
-  }
-  if (!isContinuationTokenPayload(payload)) {
-    throw new InvalidContinuationTokenError(`Invalid continuation token: "${token}".`);
-  }
-  if (payload.g !== context.generation) {
-    throw new InvalidContinuationTokenError(
-      `Continuation token "${token}" was created before a hierarchy change and can't be used anymore.`,
-    );
-  }
-  if (payload.f !== context.fingerprint) {
-    throw new InvalidContinuationTokenError(
-      `Continuation token "${token}" was created for a different parent node, instance filter or hierarchy search.`,
-    );
-  }
-  return payload.p.map(([definitionIndex, offset]) => ({ definitionIndex, offset }));
-}
-
-function isContinuationTokenPayload(value: unknown): value is ContinuationTokenPayload {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  const { v, g, f, p } = value as {
-    [key in keyof ContinuationTokenPayload]?: unknown;
-  };
-  return (
-    v === CONTINUATION_TOKEN_VERSION &&
-    Number.isSafeInteger(g) &&
-    typeof f === "string" &&
-    Array.isArray(p) &&
-    p.length > 0 &&
-    p.every(
-      (position) =>
-        Array.isArray(position) &&
-        position.length === 2 &&
-        position.every((item) => Number.isSafeInteger(item) && item >= 0),
-    )
-  );
-}
-
-/** Creates a short fingerprint of request's parent node key, its parent keys, instance filter and hierarchy search. */
-function createRequestFingerprint({
-  parentNode,
-  instanceFilter,
-  searchFingerprint,
-}: GetStreamedHierarchyNodesProps & { searchFingerprint: string }): string {
-  return hashString(stableStringify([parentNode?.key, parentNode?.parentKeys, instanceFilter, searchFingerprint]));
-}
-
-/** Serializes the value to JSON with object keys sorted, so equal values produce equal strings. */
-function stableStringify(value: unknown): string {
-  return JSON.stringify(value, (_, item: unknown) =>
-    typeof item === "object" && item !== null && !Array.isArray(item)
-      ? Object.fromEntries(Object.entries(item).sort(([lhs], [rhs]) => (lhs < rhs ? -1 : 1)))
-      : item,
-  );
-}
-
-/** Calculates 32-bit FNV-1a hash of the string and returns it in base 36 (at most 7 characters). */
-function hashString(value: string): string {
-  // FNV-1a 32-bit offset basis
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < value.length; ++i) {
-    hash ^= value.charCodeAt(i);
-    // multiply by FNV-1a 32-bit prime, keeping the result within 32 bits
-    hash = Math.imul(hash, 0x01000193);
-  }
-  // convert to unsigned - the largest value, 2^32 - 1 (can always fit in at most 7 length string)
-  return (hash >>> 0).toString(36);
 }

@@ -1373,6 +1373,23 @@ describe("createStreamingIModelHierarchyProvider", () => {
       ]);
     });
 
+    it("reads instance keys only as they're requested", async () => {
+      setupQueries({ Q: createRows(7) });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        pageSize: 3,
+        hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
+      });
+      const iterator = provider.getNodeInstanceKeys({ parentNode: undefined });
+      for (let i = 0; i < 3; ++i) {
+        await iterator.next();
+      }
+      expect(getQueryOffsets("Q")).toEqual([0]);
+
+      expect((await iterator.next()).value).toMatchObject({ id: "0x4" });
+      expect(getQueryOffsets("Q")).toEqual([0, 3]);
+    });
+
     it("fails when hierarchy changes while reading", async () => {
       const definitions = new ResolvablePromise<HierarchyLevelDefinition>();
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => definitions);
