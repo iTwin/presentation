@@ -8,6 +8,7 @@ import {
   collectDifferences,
   createCanonicalEnumeration,
   isPointValue,
+  isUnsupportedLegacyTypeName,
   roundFloatingPointNoise,
 } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
@@ -109,10 +110,9 @@ function createCanonicalRecord(record: CapturedPropertyRecord): CanonicalRecord 
       return { type, value: createCanonicalPrimitiveValue({ ...record, value }) };
     case "struct": {
       const members = keyByLabel(
-        Object.values(value.members).map((member) => ({
-          label: member.property.displayLabel,
-          entry: createCanonicalRecord(member),
-        })),
+        Object.values(value.members)
+          .filter((member) => !isUnsupportedLegacyTypeName(member.property.typename))
+          .map((member) => ({ label: member.property.displayLabel, entry: createCanonicalRecord(member) })),
       );
       return {
         type: { ...type, members: Object.fromEntries(members.map(([key, member]) => [key, member.type])) },

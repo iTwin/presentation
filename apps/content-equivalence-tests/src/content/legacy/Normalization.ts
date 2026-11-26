@@ -11,6 +11,7 @@ import {
   createCanonicalRelationshipPath,
   getRelationshipConstraints,
   isPointValue,
+  isUnsupportedLegacyTypeName,
   roundFloatingPointNoise,
 } from "../../NormalizationCommon.js";
 import { stableStringify } from "../../Persistence.js";
@@ -163,14 +164,8 @@ function createCanonicalFieldType(
 }
 
 function isAllowedFieldType(type: CanonicalFieldType): boolean {
-  const disallowed = ["Bentley.Geometry.Common.IGeometry", "binary"];
-  if (type.kind === "primitive" && disallowed.includes(type.name)) {
-    return false;
-  }
-  if (type.kind === "array" && type.member.kind === "primitive" && disallowed.includes(type.member.name)) {
-    return false;
-  }
-  return true;
+  const primitiveType = type.kind === "array" ? type.member : type;
+  return primitiveType.kind !== "primitive" || !isUnsupportedLegacyTypeName(primitiveType.name);
 }
 
 /**

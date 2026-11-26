@@ -171,6 +171,8 @@ comparing, property grid data is normalized:
   normalized content;
 - the root categories for fields without a category ("Selected Item(s)" and
   the test app's "Miscellaneous") are treated as the same category;
+- struct members of `IGeometry` and `binary` types, or arrays of them, are
+  ignored, because the new pipeline skips such properties;
 - only raw values are compared, except for navigation values, whose display
   labels are compared too. The test app leaves formatting of other values to the
   property grid;
