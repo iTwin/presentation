@@ -15,20 +15,33 @@ import type { ContentValueFilter } from "../../content/Content.js";
 import type { CardinalityHint, ContentSource, ContentTarget } from "../../content/ContentTarget.js";
 import type { CalculatedField, PropertyField } from "../../content/model/Field.js";
 
-// A schema provider whose classes expose no navigation properties, so the real
-// `createRelationshipPathJoinClause` renders every relationship step as a link-table join. Classes
+// A schema provider whose classes expose no navigation properties (except `NavTarget<N>`, see below), so
+// the real `createRelationshipPathJoinClause` renders every relationship step as a link-table join. Classes
 // named `Rel*` are relationship classes (used to classify value-filter property fields); a relationship
-// whose name contains `Many` traverses to a 1:many constraint, everything else is 1:1.
+// whose name contains `Many` traverses to a 1:many constraint, everything else is 1:1. A `NavTarget<N>`
+// class holds a backward `Owner` navigation property for `RelNav<N>`, so that step joins only the target.
 const schemaProvider = {
   getSchema: async (schemaName: string) => ({
     getClass: (className: string) => ({
       fullName: `${schemaName}.${className}`,
-      getProperties: () => [],
+      getProperties: () =>
+        className.startsWith("NavTarget")
+          ? [
+              {
+                isNavigation: () => true,
+                direction: "Backward",
+                name: "Owner",
+                relationshipClass: { fullName: `${schemaName}.RelNav${className.slice("NavTarget".length)}` },
+              },
+            ]
+          : [],
       isRelationshipClass: () => className.startsWith("Rel"),
       source: { multiplicity: { lowerLimit: 0, upperLimit: 1 } },
       target: { multiplicity: { lowerLimit: 0, upperLimit: className.includes("Many") ? 2 : 1 } },
     }),
   }),
+  // Costs every test class like an aspect (3 tables); the join-budget arithmetic in the tests below assumes it.
+  classDerivesFrom: (_derived: string, base: string) => base === "BisCore.ElementAspect",
   getHiddenClassesTree: async () => [],
 } as unknown as ECSchemaProvider;
 const primaryClass: EC.FullClassNameDotNotation = "TestSchema.Primary";
@@ -478,7 +491,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("rejects sort paths that exceed the SQLite JOIN-table limit", async () => {
-      const paths = Array.from({ length: 33 }, (_, index) => [
+      // The anchor reserves 4 tables (3 for the primary class + 1 paging IdSet join), leaving 60. Each
+      // single-step outer link-table path costs 8 (2 for the relationship + 2 target classes × 3), so 7
+      // fit (56) and the 8th (64) exceeds the limit. Sort paths can't spill, so that throws.
+      const paths = Array.from({ length: 8 }, (_, index) => [
         makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
       ]);
       await expect(
@@ -500,10 +516,11 @@ describe("buildBaseQuery", () => {
     });
 
     it("counts shared sort-path prefixes once against the JOIN-table limit", async () => {
-      // 19 two-step sort paths sharing the same first step. Summed per-path the shared step is counted
-      // 19 times (over the 64-table limit); merged, it is joined once and the paths fit the anchor.
+      // 4 two-step sort paths share their first step. Each outer link-table hop costs 8 tables (2 for the
+      // relationship + 2 target classes × 3). Summed per path, that is 4 × 16 = 64 plus 4 reserved, over
+      // the limit; merged, the shared hop is joined once: 4 reserved + 8 shared + 4 × 8 leaves = 44.
       const sharedStep = makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared");
-      const paths = Array.from({ length: 19 }, (_, index) => [
+      const paths = Array.from({ length: 4 }, (_, index) => [
         sharedStep,
         makeStep("TestSchema.Shared", `TestSchema.RelLeaf${index}`, `TestSchema.Leaf${index}`),
       ]);
@@ -522,12 +539,14 @@ describe("buildBaseQuery", () => {
         ),
       });
 
-      // One shared prefix + 19 distinct leaf prefixes are all joined by the anchor.
-      expect(result.anchor.parts.relatedClassAliases).to.have.length(20);
+      // One shared prefix + 4 distinct leaf prefixes are all joined by the anchor.
+      expect(result.anchor.parts.relatedClassAliases).to.have.length(5);
     });
 
     it("keeps an otherwise-overflowed 1:1 sort path on the anchor", async () => {
-      const paths = Array.from({ length: 33 }, (_, index) => [
+      // 60 tables remain after reserves. Seven paths cost 56, but all 8 cost 64; the last path is sorted,
+      // so it stays on the anchor only because sort joins are reserved before packing selected paths.
+      const paths = Array.from({ length: 8 }, (_, index) => [
         makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
       ]);
       const sortPath = paths[paths.length - 1];
@@ -589,13 +608,14 @@ describe("buildBaseQuery", () => {
         pathFromTarget: prefix,
         valueClassNames: ["TestSchema.Shared"],
       });
-      // 18 unrelated single-step paths fill most of the rest of the budget so that only *incremental*
+      // 5 unrelated single-step paths fill most of the rest of the budget so that only *incremental*
       // (not independent, per-path) accounting of `extension`'s prefix — already reserved by the sort
-      // field above — lets everything still fit the anchor: 1 (FROM) + 1 (`PAGE_ID_SET_JOIN_TABLES`) +
-      // 3 (sort's `prefix` hop) + 18*3 (unrelated) + 3 (`extension`'s own unshared suffix hop) = 62
-      // tables, fitting the 64-table budget. Counted independently, `extension` would cost 6 (its own
-      // two hops) instead of 3, totalling 65 — over budget — and would force an overflow group instead.
-      const otherPaths = Array.from({ length: 18 }, (_, index) => [
+      // field above — lets everything still fit the anchor. Every outer link-table hop costs 8 tables:
+      // 3 (FROM) + 1 (`PAGE_ID_SET_JOIN_TABLES`) + 8 (sort's `prefix` hop) + 5*8 (unrelated) + 8
+      // (`extension`'s own unshared suffix hop) = 60 tables, fitting the 64-table budget. Counted
+      // independently, `extension` would cost 16 instead of 8, totalling 68 — over budget — and would
+      // force an overflow group instead.
+      const otherPaths = Array.from({ length: 5 }, (_, index) => [
         makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
       ]);
       const source: ContentSource = {
@@ -1234,29 +1254,32 @@ describe("buildBaseQuery", () => {
       expect(trimWhitespace(result.anchor.parts.joins).split("LEFT OUTER JOIN").length - 1).to.equal(4);
     });
 
-    it("reserves a table for the paging IdSet join, so a would-be-full anchor still leaves it room", async () => {
-      // 21 single-step 1:1 paths cost exactly 63 tables (21 × 3) — precisely `SQLITE_MAX_JOIN_TABLES`
-      // minus the 1 FROM table, i.e. what a "full" anchor would use if nothing reserved room for the
-      // `IdSet` join `buildValueQuery` (PageQueries.ts) appends when paging. With that table reserved,
-      // only 20 of the 21 paths fit and the last one spills into its own additional group.
-      const paths = Array.from({ length: 21 }, (_, index) => [
-        makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
+    it.each([
+      { mode: "without explicit IDs", target: { primaryClass }, groupSizes: [20, 19] },
+      { mode: "with explicit IDs", target: { primaryClass, instanceIds: ["0x1"] }, groupSizes: [19, 19, 1] },
+    ])("reserves room for the IdSet tables $mode", async ({ target, groupSizes }) => {
+      // Each navigation-property path costs 3 tables. The primary class and paging IdSet leave room
+      // for 20 paths per group, but the explicit-ID IdSet lowers that to 19. With 39 paths, that
+      // extra table forces a third group and checks the budget in both the anchor and overflow groups.
+      const paths = Array.from({ length: 39 }, (_, index) => [
+        makeStep(primaryClass, `TestSchema.RelNav${index}`, `TestSchema.NavTarget${index}`),
       ]);
 
       const result = await buildBaseQuery({
         schemaProvider,
-        source: makeSource(paths),
+        source: makeSource(paths, target),
         includeRelatedJoins: true,
         propertySelectorPaths: paths,
       });
 
-      expect(result.anchor.paths).to.have.length(20);
-      expect(result.additional).to.have.length(1);
-      expect(result.additional![0].paths).to.have.length(1);
+      expect([result.anchor, ...result.additional!].map((group) => group.paths.length)).to.deep.equal(groupSizes);
     });
 
     it("splits 1:1 paths across groups when they exceed the join budget", async () => {
-      const paths = Array.from({ length: 40 }, (_, i) => [
+      // Each group reserves 4 tables (3 for the primary + 1 paging IdSet), leaving 60. Each path costs 8,
+      // so 7 fit in each group:
+      // 12 paths fill exactly the anchor and one additional group.
+      const paths = Array.from({ length: 12 }, (_, i) => [
         makeStep(primaryClass, `TestSchema.Rel${i}`, `TestSchema.Target${i}`),
       ]);
 
@@ -1270,11 +1293,11 @@ describe("buildBaseQuery", () => {
       expect(result.additional).to.have.length(1);
       const anchorCount = result.anchor.paths.length;
       const additionalCount = result.additional![0].paths.length;
-      // Disjoint partition of all 40 paths, each group within the 64-table budget (1 reserved for FROM
-      // + 1 for the paging IdSet join; 3 tables per single-step outer link-table path).
-      expect(anchorCount + additionalCount).to.equal(40);
-      expect(2 + anchorCount * 3).to.be.at.most(64);
-      expect(2 + additionalCount * 3).to.be.at.most(64);
+      // Disjoint partition of all 12 paths, each group within the 64-table budget (3 reserved for the
+      // primary + 1 for paging; each outer link-table path costs 2 relationship tables + 2 target classes × 3).
+      expect(anchorCount + additionalCount).to.equal(12);
+      expect(4 + anchorCount * 8).to.be.at.most(64);
+      expect(4 + additionalCount * 8).to.be.at.most(64);
       const relationshipName = (group: (typeof result.anchor.paths)[number]) => group.path[0].relationshipName;
       const anchorKeys = new Set(result.anchor.paths.map(relationshipName));
       expect(result.additional![0].paths.some((p) => anchorKeys.has(relationshipName(p)))).to.equal(false);
@@ -1284,7 +1307,9 @@ describe("buildBaseQuery", () => {
     });
 
     it("rejects a 1:1 path that cannot fit in an additional group", async () => {
-      const path = makeMultiStepPath(21, "Rel");
+      // An overflow group reserves 4 tables (3 for the primary + 1 paging IdSet), leaving 60. Each outer
+      // link-table step costs 8, so 7 steps fit (56) and 8 (64) can't fit any group.
+      const path = makeMultiStepPath(8, "Rel");
 
       await expect(
         buildBaseQuery({
@@ -1297,7 +1322,9 @@ describe("buildBaseQuery", () => {
     });
 
     it("rejects a 1:many path that cannot fit in its isolated group", async () => {
-      const path = makeMultiStepPath(32, "RelMany");
+      // A 1:many group reserves 4 tables, leaving 60. Each inner link-table step costs 5 (2 relationship
+      // tables + 3 target-class tables), so 12 steps fit and 13 (65) can't.
+      const path = makeMultiStepPath(13, "RelMany");
 
       await expect(
         buildBaseQuery({
@@ -1553,7 +1580,7 @@ describe("buildBaseQuery", () => {
     }
 
     it("keeps fitting 1:1 filters joined and spills overflow filters to existential subqueries", async () => {
-      const paths = Array.from({ length: 21 }, (_, index) => makeIndexedOneToOnePath(index));
+      const paths = Array.from({ length: 8 }, (_, index) => makeIndexedOneToOnePath(index));
       const oneToOneFilters = paths.map((path, index) => makeIndexedOneToOneFilter(path, index));
       const oneToManyPath = makeOneToManyPath();
       const filters: ContentValueFilter[] = [
@@ -1563,34 +1590,37 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({
         schemaProvider,
-        source: makeSource([paths[20]]),
+        source: makeSource([paths[7]]),
         includeRelatedJoins: true,
-        propertySelectorPaths: [paths[20]],
+        propertySelectorPaths: [paths[7]],
         filters,
       });
 
-      // FROM + the reserved paging IdSet join consume 2 tables, leaving room for 20 three-table outer
-      // link paths. The 21st 1:1 filter and the 1:many filter use independent EXISTS scopes.
-      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(40);
-      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel20]");
+      // The primary (3) + paging IdSet (1) consume 4 tables. An outer link path costs its relationship
+      // (2) + 2 target classes × 3 tables = 8, so 7 paths fit. The 8th 1:1 filter and the
+      // 1:many filter use independent EXISTS scopes.
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(14);
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel7]");
       expect(result.anchor.parts.joins).to.not.include("[TestSchema].[RelMany]");
-      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel20]");
+      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel7]");
       expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[RelMany]");
 
       // Selected overflow path is owned by an additional group instead of being pulled back onto anchor.
       expect(result.anchor.paths).to.deep.equal([]);
       expect(result.additional).to.have.length(1);
-      expect(result.additional![0].paths.map((entry) => entry.path)).to.deep.equal([[...paths[20]]]);
+      expect(result.additional![0].paths.map((entry) => entry.path)).to.deep.equal([[...paths[7]]]);
 
-      // 20 joined + overflow 1:1 + 1:many filters each own a distinct binding index.
-      expect(Object.keys(result.anchor.parts.bindings!)).to.have.length(22);
-      for (let index = 0; index < 22; ++index) {
+      // 7 joined + overflow 1:1 + 1:many filters each own a distinct binding index.
+      expect(Object.keys(result.anchor.parts.bindings!)).to.have.length(9);
+      for (let index = 0; index < 9; ++index) {
         expect(result.anchor.parts.bindings).to.have.property(`${ECSQL_PREFIX}vf${index}`);
       }
     });
 
     it("uses the full JOIN budget in primaries-only mode", async () => {
-      const paths = Array.from({ length: 21 }, (_, index) => makeIndexedOneToOnePath(index));
+      // Primaries-only mode doesn't page through an IdSet, so it reserves 3 tables for FROM, leaving 61.
+      // Each filter path costs 8, so all 7 (56) are joined.
+      const paths = Array.from({ length: 7 }, (_, index) => makeIndexedOneToOnePath(index));
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([]),
@@ -1598,13 +1628,14 @@ describe("buildBaseQuery", () => {
         filters: paths.map((path, index) => makeIndexedOneToOneFilter(path, index)),
       });
 
-      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
-      expect(result.anchor.parts.joins).to.include("[TestSchema].[Rel20]");
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(14);
+      expect(result.anchor.parts.joins).to.include("[TestSchema].[Rel6]");
       expect(result.anchor.parts.where).to.not.include("EXISTS");
     });
 
     it("spills overflowing 1:1 filters in primaries-only mode", async () => {
-      const paths = Array.from({ length: 22 }, (_, index) => makeIndexedOneToOnePath(index));
+      // 61 tables remain after FROM, and each path costs 8, so 7 fit (56) and the 8th (64) spills.
+      const paths = Array.from({ length: 8 }, (_, index) => makeIndexedOneToOnePath(index));
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([]),
@@ -1612,21 +1643,23 @@ describe("buildBaseQuery", () => {
         filters: paths.map((path, index) => makeIndexedOneToOneFilter(path, index)),
       });
 
-      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
-      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel21]");
-      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel21]");
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(14);
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel7]");
+      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel7]");
     });
 
     it("evaluates an overflowing 1:1 is-null filter with the aggregate existential form", async () => {
-      const fittingPaths = Array.from({ length: 20 }, (_, index) => makeIndexedOneToOnePath(index));
-      const overflowPath = makeIndexedOneToOnePath(20);
+      // 60 tables remain after the anchor's reserves. Seven filter paths cost 56, so the 8th (the `is-null`
+      // one) spills to an existential subquery.
+      const fittingPaths = Array.from({ length: 7 }, (_, index) => makeIndexedOneToOnePath(index));
+      const overflowPath = makeIndexedOneToOnePath(7);
       const filters = fittingPaths.map((path, index) => makeIndexedOneToOneFilter(path, index));
       filters.push({
         field: makePropertyField({
           propertyName: "Name",
-          propertyClassName: "TestSchema.Target20",
+          propertyClassName: "TestSchema.Target7",
           pathFromTarget: overflowPath,
-          valueClassNames: ["TestSchema.Target20"],
+          valueClassNames: ["TestSchema.Target7"],
           primaryClassNames: [primaryClass],
           pathCardinality: "one",
         }),
@@ -1641,7 +1674,7 @@ describe("buildBaseQuery", () => {
         filters,
       });
 
-      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel20]");
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel7]");
       const allPaths = [...fittingPaths, overflowPath];
       const sortedPathKeys = allPaths.map((path) => serializeRelationshipPath({ path })).sort();
       const targetAlias = (path: RelationshipPath) =>
@@ -1655,11 +1688,12 @@ describe("buildBaseQuery", () => {
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
           WHERE (${joinedPredicates}) AND (
-            (
-              SELECT COUNT(*) = 0 OR COUNT([${targetAlias(overflowPath)}].[Name]) < COUNT(*)
-              FROM [TestSchema].[Rel20] [${relationshipAlias(overflowPath)}]
-              INNER JOIN [TestSchema].[Target20] [${targetAlias(overflowPath)}] ON [${targetAlias(overflowPath)}].[ECInstanceId] = [${relationshipAlias(overflowPath)}].[TargetECInstanceId]
+            EXISTS (
+              SELECT COUNT(*)
+              FROM [TestSchema].[Rel7] [${relationshipAlias(overflowPath)}]
+              INNER JOIN [TestSchema].[Target7] [${targetAlias(overflowPath)}] ON [${targetAlias(overflowPath)}].[ECInstanceId] = [${relationshipAlias(overflowPath)}].[TargetECInstanceId]
               WHERE [${relationshipAlias(overflowPath)}].[SourceECInstanceId] = [this].[ECInstanceId]
+              HAVING COUNT(*) = 0 OR COUNT([${targetAlias(overflowPath)}].[Name]) < COUNT(*)
             )
           )
         `),
@@ -1844,6 +1878,7 @@ describe("buildBaseQuery", () => {
       ]);
       const navSchemaProvider = {
         getSchema: async () => ({ getClass: (className: string) => navClasses.get(className) }),
+        classDerivesFrom: () => false,
         getHiddenClassesTree: async () => [],
       } as unknown as ECSchemaProvider;
 
@@ -1950,15 +1985,17 @@ describe("buildBaseQuery", () => {
     });
 
     it("keeps a filtered-and-selected path on the anchor even when other selected paths overflow", async () => {
-      const paths = Array.from({ length: 40 }, (_, i) => [
+      // The filtered path costs 8 and is reserved first. Of the 7 other paths, 6 fit in the remaining
+      // budget; ordinary packing would spill the filtered path instead and leave no room for one of them.
+      const paths = Array.from({ length: 8 }, (_, i) => [
         makeStep(primaryClass, `TestSchema.Rel${i}`, `TestSchema.Target${i}`),
       ]);
       const filteredPath = paths[paths.length - 1];
       const field = makePropertyField({
         propertyName: "Name",
-        propertyClassName: "TestSchema.Target39",
+        propertyClassName: "TestSchema.Target7",
         pathFromTarget: filteredPath,
-        valueClassNames: ["TestSchema.Target39"],
+        valueClassNames: ["TestSchema.Target7"],
         primaryClassNames: [filteredPath[0].sourceClassName],
         pathCardinality: "one",
       });
@@ -1972,17 +2009,17 @@ describe("buildBaseQuery", () => {
       });
       const relationshipName = (p: { path: RelationshipPath }) => p.path[0].relationshipName;
 
-      // All 40 paths are accounted for
+      // All 8 paths are accounted for.
       expect(result.additional).to.have.length(1);
-      expect(result.anchor.paths.length + result.additional![0].paths.length).to.equal(40);
+      expect(result.anchor.paths.length + result.additional![0].paths.length).to.equal(8);
 
       // The filtered path is pre-seeded onto the anchor (its join is already reserved to evaluate the
       // filter), so it is never packed into an overflow group — only the other, unfiltered paths spill.
-      expect(result.anchor.paths.some((p) => relationshipName(p) === "TestSchema.Rel39")).to.equal(true);
-      expect(result.additional![0].paths.some((p) => relationshipName(p) === "TestSchema.Rel39")).to.equal(false);
+      expect(result.anchor.paths.some((p) => relationshipName(p) === "TestSchema.Rel7")).to.equal(true);
+      expect(result.additional![0].paths.some((p) => relationshipName(p) === "TestSchema.Rel7")).to.equal(false);
 
       const aliases = result.anchor.parts.relatedClassAliases.get(
-        "TestSchema.Primary-[TestSchema.Rel39]->TestSchema.Target39",
+        "TestSchema.Primary-[TestSchema.Rel7]->TestSchema.Target7",
       );
       expect(aliases).toBeDefined();
       expect(result.anchor.parts.where).to.equal(`WHERE [${aliases!.target}].[Name] = :${ECSQL_PREFIX}vf0`);
@@ -2010,11 +2047,12 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.joins).to.equal("");
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
-          WHERE (
-            SELECT COUNT(*) = 0 OR COUNT([${ECSQL_PREFIX}t0].[Name]) < COUNT(*)
+          WHERE EXISTS (
+            SELECT COUNT(*)
             FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
             WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
+            HAVING COUNT(*) = 0 OR COUNT([${ECSQL_PREFIX}t0].[Name]) < COUNT(*)
           )
         `),
       );
@@ -2045,34 +2083,32 @@ describe("buildBaseQuery", () => {
 });
 
 describe("buildTargetScopedQuery", () => {
-  it("evaluates the given and filtered calculated fields on the primary alias", async () => {
-    const createField = (id: string): CalculatedField => ({
+  it("evaluates the given calculated fields on the primary alias", async () => {
+    const field: CalculatedField = {
       category: { type: "target" },
       kind: "calculated",
-      id,
-      label: id,
+      id: "requested",
+      label: "requested",
       type: { kind: "primitive", type: "Double" },
       expression: "this.Length",
       sourceClassName: primaryClass,
       primaryClassNames: [primaryClass],
-    });
-    const requested = createField("requested");
-    const filtered = createField("filtered");
+    };
 
+    const parts = await buildTargetScopedQuery({ schemaProvider, target: { primaryClass }, field });
+
+    expect(parts.calculatedFieldAliases).to.deep.equal(new Map([["requested", "this"]]));
+  });
+
+  it("outer-joins a property field's related path", async () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [{ field: filtered, operator: "greater-than", value: 1 }],
-      calculatedFields: [requested],
+      field: makeOneToOneNameField(),
     });
 
-    expect(parts.calculatedFieldAliases).to.deep.equal(
-      new Map([
-        ["filtered", "this"],
-        ["requested", "this"],
-      ]),
-    );
+    expect(parts.relatedClassAliases.size).to.equal(1);
+    expect(parts.joins).to.contain("LEFT OUTER JOIN [TestSchema].[Target]");
   });
 
   describe("calculated fields declared on a class narrower than the target's", () => {
@@ -2098,9 +2134,7 @@ describe("buildTargetScopedQuery", () => {
       const parts = await buildTargetScopedQuery({
         schemaProvider: narrowingSchemaProvider,
         target: { primaryClass },
-        paths: [],
-        filters: [],
-        calculatedFields: [pumpField],
+        field: pumpField,
         primaryClassScope: { kind: "restricted", classNames: [pump, wall] },
       });
       expect(parts.calculatedFieldAliases).to.deep.equal(new Map([["flow", `${SOURCE_CLASS_ALIAS_PREFIX}0`]]));
@@ -2113,9 +2147,7 @@ describe("buildTargetScopedQuery", () => {
       const parts = await buildTargetScopedQuery({
         schemaProvider: narrowingSchemaProvider,
         target: { primaryClass },
-        paths: [],
-        filters: [],
-        calculatedFields: [pumpField],
+        field: pumpField,
         primaryClassScope: { kind: "restricted", classNames: [wall] },
       });
       expect(parts.calculatedFieldAliases.size).to.equal(0);
@@ -2124,7 +2156,11 @@ describe("buildTargetScopedQuery", () => {
   });
 
   it("uses a plain (polymorphic) FROM class selector by default", async () => {
-    const parts = await buildTargetScopedQuery({ schemaProvider, target: { primaryClass }, paths: [], filters: [] });
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      field: makePropertyField({ propertyName: "Name" }),
+    });
 
     expect(trimWhitespace(parts.from)).to.equal(`FROM [TestSchema].[Primary] [this]`);
   });
@@ -2133,8 +2169,7 @@ describe("buildTargetScopedQuery", () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [],
+      field: makePropertyField({ propertyName: "Name" }),
       primaryClassScope: { kind: "exact" },
     });
 
@@ -2145,8 +2180,7 @@ describe("buildTargetScopedQuery", () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [],
+      field: makePropertyField({ propertyName: "Name" }),
       primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1", "TestSchema.A2"] },
     });
 
@@ -2159,27 +2193,11 @@ describe("buildTargetScopedQuery", () => {
     );
   });
 
-  it("ANDs the class restriction with value filters", async () => {
-    const field = makePropertyField({ propertyName: "Name" });
-    const parts = await buildTargetScopedQuery({
-      schemaProvider,
-      target: { primaryClass },
-      paths: [],
-      filters: [{ field, operator: "is-not-null" }],
-      primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1"] },
-    });
-
-    expect(trimWhitespace(parts.where!)).to.equal(
-      `WHERE ([this].[ECClassId] IS (ONLY [TestSchema].[A1])) AND ([this].[Name] IS NOT NULL)`,
-    );
-  });
-
   it("omits the class restriction when the list is empty", async () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [],
+      field: makePropertyField({ propertyName: "Name" }),
       primaryClassScope: { kind: "restricted", classNames: [] },
     });
 

@@ -109,17 +109,7 @@ export async function buildDistinctValuesQuery(props: {
     throw new Error(`Getting distinct values for ${field.type.kind} fields is not supported.`);
   }
 
-  const navigationTargetClassName = field.type.kind === "navigation" ? field.type.targetClassName : undefined;
-  const fieldPath = field.kind === "property" ? field.pathFromTarget : undefined;
-  const parts = await buildTargetScopedQuery({
-    schemaProvider,
-    target,
-    paths: fieldPath ? [fieldPath] : [],
-    filters: [],
-    calculatedFields: field.kind === "calculated" ? [field] : [],
-    primaryClassScope,
-  });
-
+  const parts = await buildTargetScopedQuery({ schemaProvider, target, field, primaryClassScope });
   const relationshipPropertyClasses =
     field.kind === "property" && field.pathFromTarget.length > 0
       ? await classifyRelationshipClasses(schemaProvider, [field.propertyClassName])
@@ -135,6 +125,7 @@ export async function buildDistinctValuesQuery(props: {
   const bindings: Record<string, ECSqlBinding> = { ...parts.bindings };
   mergeBindings(bindings, resolved.bindings);
 
+  const navigationTargetClassName = field.type.kind === "navigation" ? field.type.targetClassName : undefined;
   const innerSelector = navigationTargetClassName ? `${resolved.selector}.[Id] AS [id]` : resolved.selector;
   const innerEcsql = `SELECT DISTINCT ${innerSelector} ${parts.from} ${parts.joins}${parts.where ? ` ${parts.where}` : ""}`;
 

@@ -102,6 +102,32 @@ export const FILTER_SCENARIOS: ContentSelectionScenario[] = [
       });
     },
   }),
+
+  defineContentSelectionScenario({
+    name: "type-label filter",
+    imodelName: "50k elements with properties, types and aspects",
+    setup: async (context) => {
+      const { schema, typeClassName, typeUserLabelPrefix, elementCount, typeCount } = context.dataset.meta;
+      const primaryClass = `${schema.name}.${schema.className}` as const;
+      const value = `${typeUserLabelPrefix}_0`;
+      const expectedIds = await queryIds(
+        context.imodelAccess,
+        `SELECT e.ECInstanceId FROM ${primaryClass} e JOIN ${typeClassName} t ON t.ECInstanceId = e.TypeDefinition.Id WHERE t.UserLabel = '${value}'`,
+      );
+      expect(expectedIds).toHaveLength(elementCount / typeCount);
+      return setupFilteredQuery({
+        ...context,
+        primaryClass,
+        filterFieldPredicate: (field) =>
+          field.propertyName === "UserLabel" &&
+          field.pathCardinality === "one" &&
+          field.pathFromTarget.length === 1 &&
+          field.pathFromTarget[0].targetClassName === typeClassName,
+        value,
+        expectedIds,
+      });
+    },
+  }),
 ];
 
 /** Scenarios for counting and listing instances: filters, plus a target with explicit IDs. */
