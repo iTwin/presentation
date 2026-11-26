@@ -19,6 +19,22 @@ import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider
 export type CardinalityHint = "one" | "many";
 
 /**
+ * Whether the properties of related instances reached over a relationship path step are shown as properties of a
+ * separate related instance, or as part of the instance they're related to (e.g. element aspects).
+ *
+ * - `"relatedInstance"`: property categories of the step's properties are nested under the step's class category.
+ *   On the outermost step of a category chain, the chain starts at the top level.
+ * - `"sameInstance"`: property categories of the step's properties attach to the enclosing category, or to the
+ *   content target's category without one. On the outermost step of a category chain, the chain is placed in the
+ *   content target's category.
+ *
+ * See `RelatedPropertiesDeclaration.relationshipMeaning` for details.
+ *
+ * @public
+ */
+export type RelationshipMeaning = "relatedInstance" | "sameInstance";
+
+/**
  * The starting point for a content request, scoped to a single EC class.
  *
  * Answers the question: "what am I getting properties for?"
@@ -201,12 +217,18 @@ export interface ResolvedPath {
 
 /**
  * Ordered class categories enclosing a related-properties declaration, from root to leaf.
- * Each entry identifies a class at a zero-based step of the resolved relationship path.
+ * Each entry identifies a class at a zero-based step of the resolved relationship path, along with the
+ * `relationshipMeaning` in effect for that step. The outermost entry's meaning decides where the categories are
+ * placed: in the content target's category for `"sameInstance"`, at the top level otherwise.
  * An empty context places categories at the root.
  *
  * @public
  */
-export type CategoryContext = { stepIndex: number; kind: "targetClass" | "relationshipClass" }[];
+export type CategoryContext = {
+  stepIndex: number;
+  kind: "targetClass" | "relationshipClass";
+  relationshipMeaning: RelationshipMeaning;
+}[];
 
 /**
  * A group of concrete relationship paths resolved from a single provider declaration.
@@ -264,7 +286,11 @@ interface ResolvedDeclarationGroup {
      */
     prefixStepCount: number;
 
-    /** Resolved category ancestry inherited from the enclosing declaration. */
+    /**
+     * Resolved category ancestry inherited from the enclosing declaration. When several enclosing declarations place
+     * categories the same way, this is the first one's context: all of them share its entries' steps and kinds and the
+     * outermost entry's `relationshipMeaning`, but inner entries' meanings may differ.
+     */
     categoryContext: CategoryContext;
 
     /**

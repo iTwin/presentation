@@ -102,13 +102,17 @@ describe("CategoryDefinition", () => {
       expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B" });
     });
 
-    it("includes parentId when provided", () => {
+    it("includes parent when provided", () => {
       const result = CategoryDefinition.create({
-        parentId: "parent-cat",
+        parent: { type: "category", id: "parent-cat" },
         path: [{ sourceClassName: "S.A", targetClassName: "S.B", relationshipName: "S.Rel" }],
         label: "Related B",
       });
-      expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B", parentId: "parent-cat" });
+      expect(result).to.deep.equal({
+        id: "S.A-[S.Rel]->S.B",
+        label: "Related B",
+        parent: { type: "category", id: "parent-cat" },
+      });
     });
 
     it("includes description when provided", () => {
@@ -116,16 +120,22 @@ describe("CategoryDefinition", () => {
         path: [{ sourceClassName: "S.A", targetClassName: "S.B", relationshipName: "S.Rel" }],
         label: "Related B",
         description: "Some description",
+        parent: { type: "target" },
       });
-      expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B", description: "Some description" });
+      expect(result).to.deep.equal({
+        id: "S.A-[S.Rel]->S.B",
+        label: "Related B",
+        description: "Some description",
+        parent: { type: "target" },
+      });
     });
 
-    it("omits parentId and description when not provided", () => {
+    it("omits description when not provided", () => {
       const result = CategoryDefinition.create({
         path: [{ sourceClassName: "S.A", targetClassName: "S.B", relationshipName: "S.Rel" }],
         label: "Test",
+        parent: { type: "target" },
       });
-      expect(result).not.to.have.property("parentId");
       expect(result).not.to.have.property("description");
     });
   });

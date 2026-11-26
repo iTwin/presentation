@@ -103,8 +103,8 @@ describe("Content", () => {
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       const transformer = defineDescriptorTransformer({
         async transform({ descriptor: view }) {
-          view.categories.custom = { id: "custom", label: "Custom Category" };
-          findField(view, "Keep").categoryId = "custom";
+          view.categories.custom = { id: "custom", label: "Custom Category", parent: { type: "target" } };
+          findField(view, "Keep").category = { type: "category", id: "custom" };
         },
       });
       const descriptor = await buildDescriptor({
@@ -114,7 +114,7 @@ describe("Content", () => {
       });
 
       const keep = getPropertyFieldByName(descriptor, "Keep");
-      expect(keep.categoryId).toBe("custom");
+      expect(keep.category).toEqual({ type: "category", id: "custom" });
       expect(getFieldCategory(descriptor, keep)?.label).toBe("Custom Category");
     });
 

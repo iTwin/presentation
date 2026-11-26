@@ -12,17 +12,22 @@ permissions:
   contents: read
 
 jobs:
-  changes:
-    name: Detect changed suites
+  # Select affected suites and assign the same test files to each base/head shard.
+  select-suites:
+    name: Select benchmark suites
     if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     outputs:
+      # [{ id, name, shards: [{ index, files }] }]; files is a space-separated list.
       suites: ${{ steps.changes.outputs.suites }}
+      # The same shards flattened for job matrices: [{ suite: { id, name }, index, files }].
+      shards: ${{ steps.shards.outputs.shards }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Use Node.js 24
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -37,66 +42,181 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           EVENT_NAME: ${{ github.event_name }}
 
-  prepare:
-    name: Prepare datasets
-    needs: changes
-    if: needs.changes.outputs.suites != '[]'
+      - name: Create shard matrix
+        id: shards
+        run: |
+          shards=$(jq -c '[.[] | {id, name} as $suite | .shards[] | {suite: $suite, index, files}]' <<< "$SUITES")
+          printf 'shards=%s\n' "$shards" >> "$GITHUB_OUTPUT"
+        env:
+          SUITES: ${{ steps.changes.outputs.suites }}
+
+  # Look up the head dataset cache and provide its key to benchmark jobs.
+  check-head-datasets:
+    name: Check head dataset cache
+    needs: select-suites
+    if: needs.select-suites.outputs.suites != '[]'
     runs-on: ubuntu-latest
     outputs:
-      cache-key: ${{ steps.cache.outputs.cache-primary-key }}
+      # Cache key of the head revision datasets, restored from `./apps/performance-tests/datasets/*.bim`.
+      key: ${{ steps.key.outputs.key }}
+      cache-hit: ${{ steps.lookup.outputs.cache-hit }}
     steps:
-      - name: Checkout
+      - name: Checkout head revision
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Export cache key
+        id: key
+        run: printf 'key=performance-test-datasets-%s\n' "$KEY" >> "$GITHUB_OUTPUT"
+        env:
+          KEY: ${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts', './apps/performance-tests/src/util/IModelUtilities.ts', './packages/test-utilities/src/**', './pnpm-lock.yaml') }}
 
       - name: Check datasets cache
-        id: cache
+        id: lookup
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./apps/performance-tests/datasets/*.bim
-          key: performance-test-datasets-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts', './apps/performance-tests/src/util/IModelUtilities.ts', './packages/test-utilities/src/**', './pnpm-lock.yaml') }}
+          key: ${{ steps.key.outputs.key }}
           lookup-only: true
 
+  # Generate the head datasets only when the cache is missing.
+  prepare-head-datasets:
+    name: Prepare head datasets
+    needs: [select-suites, check-head-datasets]
+    if: >-
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.check-head-datasets.outputs.cache-hit != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout head revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
       - name: Install pnpm
-        if: steps.cache.outputs.cache-hit != 'true'
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
 
       - name: Use Node.js 24
-        if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: 24.15.0
           cache: 'pnpm'
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build benchmark tests
-        if: steps.cache.outputs.cache-hit != 'true'
         run: pnpm lage build --to presentation-performance-tests
 
       - name: Generate datasets
-        if: steps.cache.outputs.cache-hit != 'true'
         run: pnpm --dir apps/performance-tests prepare:datasets
 
       - name: Save datasets
-        if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./apps/performance-tests/datasets/*.bim
-          key: ${{ steps.cache.outputs.cache-primary-key }}
+          key: ${{ needs.check-head-datasets.outputs.key }}
 
+  # Look up the base dataset cache and provide its key to benchmark jobs.
+  check-base-datasets:
+    name: Check base dataset cache
+    needs: select-suites
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]'
+    runs-on: ubuntu-latest
+    outputs:
+      # Cache key of the base revision datasets, restored from `./.benchmark-base/apps/performance-tests/datasets/*.bim`.
+      key: ${{ steps.key.outputs.key }}
+      cache-hit: ${{ steps.lookup.outputs.cache-hit }}
+    steps:
+      - name: Checkout base revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .benchmark-base
+          persist-credentials: false
+
+      - name: Export cache key
+        id: key
+        run: printf 'key=performance-test-datasets-%s\n' "$KEY" >> "$GITHUB_OUTPUT"
+        env:
+          KEY: ${{ hashFiles('./.benchmark-base/apps/performance-tests/src/util/Datasets.ts', './.benchmark-base/apps/performance-tests/src/util/IModelUtilities.ts', './.benchmark-base/packages/test-utilities/src/**', './.benchmark-base/pnpm-lock.yaml') }}
+
+      - name: Check datasets cache
+        id: lookup
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ./.benchmark-base/apps/performance-tests/datasets/*.bim
+          key: ${{ steps.key.outputs.key }}
+          lookup-only: true
+
+  # Generate the base datasets only when the cache is missing.
+  prepare-base-datasets:
+    name: Prepare base datasets
+    needs: [select-suites, check-base-datasets]
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.check-base-datasets.outputs.cache-hit != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .benchmark-base
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+        with:
+          package_json_file: .benchmark-base/package.json
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+          cache: 'pnpm'
+          cache-dependency-path: .benchmark-base/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: .benchmark-base
+        run: pnpm install --frozen-lockfile
+
+      - name: Build benchmark tests
+        working-directory: .benchmark-base
+        run: pnpm lage build --to presentation-performance-tests
+
+      - name: Generate datasets
+        working-directory: .benchmark-base
+        run: pnpm --dir apps/performance-tests prepare:datasets
+
+      - name: Save datasets
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ./.benchmark-base/apps/performance-tests/datasets/*.bim
+          key: ${{ needs.check-base-datasets.outputs.key }}
+
+  # Run master/manual benchmarks without comparing against a second checkout.
   benchmark:
-    name: '${{ matrix.suite.name }}: Benchmark performance'
-    needs: [changes, prepare]
+    name: '${{ matrix.shard.suite.name }}: Benchmark performance (shard ${{ matrix.shard.index }})'
+    needs: [select-suites, check-head-datasets, prepare-head-datasets]
+    if: >-
+      ${{ !cancelled() &&
+      github.event_name != 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.select-suites.result == 'success' &&
+      needs.check-head-datasets.result == 'success' &&
+      (needs.prepare-head-datasets.result == 'success' || needs.prepare-head-datasets.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
-        suite: ${{ fromJSON(needs.changes.outputs.suites) }}
+        shard: ${{ fromJSON(needs.select-suites.outputs.shards) }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -116,50 +236,69 @@ jobs:
       - name: Build benchmark tests
         run: pnpm lage build --to presentation-performance-tests
 
-      # The cache may be missing if a concurrent run with the same key saved it first. Test setup then generates the datasets.
       - name: Restore datasets
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./apps/performance-tests/datasets/*.bim
-          key: ${{ needs.prepare.outputs.cache-key }}
+          key: ${{ needs.check-head-datasets.outputs.key }}
 
       - name: Run benchmark tests
-        run: pnpm "benchmark:$SUITE"
+        run: |
+          mkdir -p benchmark-results/head
+          pnpm --dir apps/performance-tests test $TEST_FILES --allowOnly=false
         env:
-          SUITE: ${{ matrix.suite.id }}
-          BENCHMARK_ITERATIONS: ${{ github.event_name == 'pull_request' && '1' || '3' }}
+          TEST_FILES: ${{ matrix.shard.files }}
+          BENCHMARK_ITERATIONS: '3'
+          BENCHMARK_OUTPUT_PATH: ${{ github.workspace }}/benchmark-results/head/${{ matrix.shard.suite.id }}-benchmark-shard-${{ matrix.shard.index }}.json
 
-      - name: Upload benchmark result
-        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+      - name: Upload benchmark shard result
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: benchmark-${{ matrix.suite.id }}
-          path: ./apps/performance-tests/${{ matrix.suite.id }}-benchmark.json
+          name: benchmark-${{ matrix.shard.suite.id }}-shard-${{ matrix.shard.index }}
+          path: ./benchmark-results
           if-no-files-found: error
 
-      - name: Post benchmark summary
-        uses: JonasDov/github-action-benchmark@04d30c72aa7aad091b58aacbb6c182ebb2ecb6c0
-        if: ${{ github.event_name == 'pull_request' }}
+  # Combine master/manual shard results of all suites into one result set.
+  merge:
+    name: Merge benchmark results
+    needs: [select-suites, benchmark]
+    if: >-
+      ${{ !cancelled() &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.benchmark.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Download benchmark shard results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          name: ${{ matrix.suite.name }} benchmark
-          tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/${{ matrix.suite.id }}-benchmark.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          save-data-file: false
-          comment-on-pull-request: true
+          pattern: benchmark-*-shard-*
+          path: ./benchmark-results
+          merge-multiple: true
 
+      - name: Merge benchmark results
+        run: jq -s 'add' ./benchmark-results/head/*.json > ./benchmark.json
+
+      - name: Upload benchmark result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: benchmark
+          path: ./benchmark.json
+          if-no-files-found: error
+
+  # Append master results to the existing gh-pages benchmark history.
   publish:
-    name: '${{ matrix.suite.name }}: Publish benchmark'
-    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.benchmark.result != 'skipped' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
-    needs: [changes, benchmark]
+    name: Publish benchmark
+    if: >-
+      ${{ !cancelled() &&
+      needs.select-suites.result == 'success' &&
+      needs.merge.result == 'success' &&
+      github.ref == 'refs/heads/master' }}
+    needs: [select-suites, merge]
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        suite: ${{ fromJSON(needs.changes.outputs.suites) }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -169,14 +308,190 @@ jobs:
       - name: Download benchmark result
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          name: benchmark-${{ matrix.suite.id }}
+          name: benchmark
           path: ./apps/performance-tests
 
       - name: Store benchmark result
         uses: JonasDov/github-action-benchmark@04d30c72aa7aad091b58aacbb6c182ebb2ecb6c0
         with:
-          name: ${{ matrix.suite.name }} benchmark
+          name: Performance benchmark
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/${{ matrix.suite.id }}-benchmark.json
+          output-file-path: ./apps/performance-tests/benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
+
+  # Build base and PR revisions, then alternate their benchmarks on the same runner.
+  benchmark-pr:
+    name: '${{ matrix.shard.suite.name }}: Benchmark A/B performance (shard ${{ matrix.shard.index }})'
+    needs:
+      [
+        select-suites,
+        check-head-datasets,
+        prepare-head-datasets,
+        check-base-datasets,
+        prepare-base-datasets,
+      ]
+    if: >-
+      ${{ !cancelled() &&
+      github.event_name == 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.select-suites.result == 'success' &&
+      needs.check-head-datasets.result == 'success' &&
+      (needs.prepare-head-datasets.result == 'success' || needs.prepare-head-datasets.result == 'skipped') &&
+      needs.check-base-datasets.result == 'success' &&
+      (needs.prepare-base-datasets.result == 'success' || needs.prepare-base-datasets.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.select-suites.outputs.shards) }}
+    steps:
+      - name: Checkout head revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Checkout base revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .benchmark-base
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build benchmark tests
+        run: pnpm lage build --to presentation-performance-tests
+
+      - name: Install base dependencies
+        working-directory: .benchmark-base
+        run: pnpm install --frozen-lockfile
+
+      - name: Build base benchmark tests
+        working-directory: .benchmark-base
+        run: pnpm lage build --to presentation-performance-tests
+
+      - name: Restore head datasets
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ./apps/performance-tests/datasets/*.bim
+          key: ${{ needs.check-head-datasets.outputs.key }}
+
+      - name: Restore base datasets
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ./.benchmark-base/apps/performance-tests/datasets/*.bim
+          key: ${{ needs.check-base-datasets.outputs.key }}
+
+      - name: Run alternating base and PR benchmarks
+        run: |
+          node apps/performance-tests/tools/BenchmarkComparison.ts run \
+            "$GITHUB_WORKSPACE/.benchmark-base" "$GITHUB_WORKSPACE" \
+            "$GITHUB_WORKSPACE/benchmark-results" "$RESULT_NAME" $TEST_FILES
+        env:
+          TEST_FILES: ${{ matrix.shard.files }}
+          RESULT_NAME: ${{ matrix.shard.suite.id }}-benchmark-shard-${{ matrix.shard.index }}
+
+      - name: Upload benchmark shard result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: benchmark-${{ matrix.shard.suite.id }}-shard-${{ matrix.shard.index }}
+          path: ./benchmark-results
+          if-no-files-found: error
+
+  # Combine PR shard results and report the base/head comparison for each suite.
+  compare-pr:
+    name: '${{ matrix.suite.name }}: Compare A/B benchmark results'
+    needs: [select-suites, benchmark-pr]
+    if: >-
+      ${{ !cancelled() &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.benchmark-pr.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON(needs.select-suites.outputs.suites) }}
+    steps:
+      - name: Checkout head revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+
+      - name: Download benchmark shard results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: benchmark-${{ matrix.suite.id }}-shard-*
+          path: ./benchmark-results
+          merge-multiple: true
+
+      - name: Merge head benchmark results
+        run: jq -s 'add' ./benchmark-results/head/*.json > ./${{ matrix.suite.id }}-head-benchmark.json
+
+      - name: Merge base benchmark results
+        run: jq -s 'add' ./benchmark-results/base/*.json > ./${{ matrix.suite.id }}-base-benchmark.json
+
+      - name: Upload benchmark result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: benchmark-${{ matrix.suite.id }}
+          path: ./*-benchmark.json
+          if-no-files-found: error
+
+      - name: Compare same-runner benchmark results
+        run: |
+          node apps/performance-tests/tools/BenchmarkComparison.ts report \
+            "$SUITE_NAME" "$SUITE-base-benchmark.json" "$SUITE-head-benchmark.json" comparison.md
+        env:
+          SUITE: ${{ matrix.suite.id }}
+          SUITE_NAME: ${{ matrix.suite.name }}
+
+      - name: Post benchmark summary
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          SUITE: ${{ matrix.suite.id }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const pr = context.payload.pull_request;
+            const marker = `<!-- benchmark-comparison-${process.env.SUITE} -->`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              marker,
+              fs.readFileSync('comparison.md', 'utf8'),
+              `Base: \`${pr.base.sha}\`. PR: \`${pr.head.sha}\`. [Workflow run](${runUrl}).`,
+            ].join('\n');
+            await core.summary.addRaw(body).write();
+            if (pr.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
+              core.notice('Fork PR tokens cannot write comments; the comparison is available in this job summary.');
+              return;
+            }
+            const params = { ...context.repo, issue_number: pr.number };
+            const comments = await github.paginate(github.rest.issues.listComments, params);
+            const previous = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
+            if (previous) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: previous.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...params, body });
+            }

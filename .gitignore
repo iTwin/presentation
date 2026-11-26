@@ -5,6 +5,9 @@ lib
 node_modules
 built-packages
 
+# Keep the nested benchmark checkout out of Lage's Git-based input hashing.
+/.benchmark-base/
+
 /packages/*/api/temp
 
 

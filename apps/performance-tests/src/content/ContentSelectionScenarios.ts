@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from "node:assert/strict";
 import { collect } from "presentation-test-utilities";
-import { expect } from "vitest";
+import { assert, expect } from "vitest";
 import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
 import { getPropertyFields } from "./ContentTestUtilities.js";
 
@@ -100,6 +99,32 @@ export const FILTER_SCENARIOS: ContentSelectionScenario[] = [
         // Aspect values are non-negative.
         value: -1,
         expectedIds: [],
+      });
+    },
+  }),
+
+  defineContentSelectionScenario({
+    name: "type-label filter",
+    imodelName: "50k elements with properties, types and aspects",
+    setup: async (context) => {
+      const { schema, typeClassName, typeUserLabelPrefix, elementCount, typeCount } = context.dataset.meta;
+      const primaryClass = `${schema.name}.${schema.className}` as const;
+      const value = `${typeUserLabelPrefix}_0`;
+      const expectedIds = await queryIds(
+        context.imodelAccess,
+        `SELECT e.ECInstanceId FROM ${primaryClass} e JOIN ${typeClassName} t ON t.ECInstanceId = e.TypeDefinition.Id WHERE t.UserLabel = '${value}'`,
+      );
+      expect(expectedIds).toHaveLength(elementCount / typeCount);
+      return setupFilteredQuery({
+        ...context,
+        primaryClass,
+        filterFieldPredicate: (field) =>
+          field.propertyName === "UserLabel" &&
+          field.pathCardinality === "one" &&
+          field.pathFromTarget.length === 1 &&
+          field.pathFromTarget[0].targetClassName === typeClassName,
+        value,
+        expectedIds,
       });
     },
   }),

@@ -27,6 +27,7 @@ function propertyField(props: {
     pathFromTarget: props.pathFromTarget,
   });
   return {
+    category: { type: "target" },
     kind: "property",
     id,
     label: props.label ?? "Label",
@@ -49,6 +50,7 @@ function calculatedField(props: {
   bindings?: Record<string, ECSqlBinding>;
 }): CalculatedField {
   return {
+    category: { type: "target" },
     kind: "calculated",
     id: props.id,
     label: "Calc",

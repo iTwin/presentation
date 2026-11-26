@@ -8,12 +8,12 @@ import { createTransformableDescriptor } from "../../../content/extensions/Descr
 import { PropertyField } from "../../../content/model/Field.js";
 import { serializeRelationshipPath } from "../../../content/model/Utils.js";
 import {
+  createContentValuesProjector,
   createPropertyValueDecoder,
   createRowDecoder,
   decodeGroupRows as decodePreparedGroupRows,
   decodePrimaryKey,
   mergeGroupValues,
-  toContentValues,
 } from "../../../content/query/value-loading/RowDecoder.js";
 
 import type { ECSqlQueryRow, InstanceKey, RelationshipPath, Value, ValueDescriptor } from "@itwin/presentation-shared";
@@ -173,9 +173,11 @@ describe("RowDecoder", () => {
         createPropertyValueDecoder({ kind: "array", elementType: dateType })(["2021-11-08T10:18:23.317", undefined]),
       ).toEqual([new Date("2021-11-08T10:18:23.317Z"), undefined]);
       expect(
-        createPropertyValueDecoder({ kind: "struct", members: [{ name: "When", label: "When", type: dateType }] })({
-          ["When"]: "2021-11-08T10:18:23.317Z",
-        }),
+        createPropertyValueDecoder({
+          kind: "struct",
+          className: "TestSchema.TestStruct",
+          members: [{ name: "When", label: "When", type: dateType }],
+        })({ ["When"]: "2021-11-08T10:18:23.317Z" }),
       ).toEqual({ ["When"]: new Date("2021-11-08T10:18:23.317Z") });
     });
 
@@ -224,8 +226,16 @@ describe("RowDecoder", () => {
       { type: { kind: "primitive", type: "Point2d" }, raw: {}, message: /point property/ },
       { type: { kind: "primitive", type: "Point2d" }, raw: { ["X"]: "1", ["Y"]: 2 }, message: /point property/ },
       { type: { kind: "primitive", type: "Point3d" }, raw: { ["X"]: 1, ["Y"]: 2 }, message: /numeric Z coordinate/ },
-      { type: { kind: "struct", members: [] }, raw: "value", message: /struct property/ },
-      { type: { kind: "struct", members: [] }, raw: [], message: /struct property/ },
+      {
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+        raw: "value",
+        message: /struct property/,
+      },
+      {
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+        raw: [],
+        message: /struct property/,
+      },
       {
         type: { kind: "array", elementType: { kind: "primitive", type: "Point2d" } },
         raw: [{ ["X"]: 1 }],
@@ -235,6 +245,7 @@ describe("RowDecoder", () => {
       {
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Nav", label: "Nav", type: { kind: "navigation", targetClassName: "Schema.B" } }],
         },
         raw: { ["Nav"]: { ["Id"]: false } },
@@ -276,12 +287,14 @@ describe("RowDecoder", () => {
           kind: "array",
           elementType: {
             kind: "struct",
+            className: "TestSchema.TestStruct",
             members: [
               {
                 name: "Nested",
                 label: "Nested",
                 type: {
                   kind: "struct",
+                  className: "TestSchema.TestStruct",
                   members: [
                     { name: "Point", label: "Point", type: { kind: "primitive", type: "Point3d" } },
                     { name: "Nav", label: "Nav", type: { kind: "navigation", targetClassName: "Schema.B" } },
@@ -305,6 +318,7 @@ describe("RowDecoder", () => {
       {
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [
             { name: "X", label: "X", type: { kind: "primitive", type: "Double" } },
             { name: "Y", label: "Y", type: { kind: "primitive", type: "Double" } },
@@ -541,7 +555,7 @@ describe("RowDecoder", () => {
     });
   });
 
-  describe("toContentValues", () => {
+  describe("createContentValuesProjector", () => {
     function createPropertyField(overrides: Partial<PropertyField> = {}): PropertyField {
       const props = {
         propertyClassName: "Schema.Base",
@@ -553,7 +567,7 @@ describe("RowDecoder", () => {
         kind: "property",
         id: PropertyField.computeId(props),
         label: "Code",
-        categoryId: "test",
+        category: { type: "category", id: "test" },
         readOnly: false,
         type: stringType,
         pathCardinality: "one",
@@ -568,11 +582,12 @@ describe("RowDecoder", () => {
       const forkedDescriptor: ContentDescriptor = { sources: [], categories: {}, fields: { [field.id]: field } };
       const fork = createTransformableDescriptor(forkedDescriptor).forkField(field.id, ["Schema.B"]);
 
-      const contentValues = toContentValues({
+      const contentValues = createContentValuesProjector({
         descriptor: forkedDescriptor,
+        fieldSelectorIds: { [field.id]: field.id, [fork.id]: field.id },
+      })({
         primaryKey: { className: "Schema.B", id: "0x1" },
         values: { selectorValues: new Map([[field.id, ["B1"]]]), relatedInstances: new Map() },
-        fieldSelectorIds: { [field.id]: field.id, [fork.id]: field.id },
       });
 
       expect(contentValues.values).to.deep.equal({ [fork.id]: "B1" });
@@ -582,9 +597,10 @@ describe("RowDecoder", () => {
       "keeps a direct EC array property intact: $value",
       ({ value }) => {
         const field = createPropertyField({ type: { kind: "array", elementType: stringType } });
-        const contentValues = toContentValues({
+        const contentValues = createContentValuesProjector({
           descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
           fieldSelectorIds: { [field.id]: field.id },
+        })({
           primaryKey: { className: "Schema.B", id: "0x1" },
           values: { selectorValues: new Map([[field.id, [value]]]), relatedInstances: new Map() },
         });
@@ -624,9 +640,10 @@ describe("RowDecoder", () => {
         ];
         const selectorValue = pathCardinality === "many" ? ["first", "second"] : ["first"];
         const selectorValues = new Map([[field.id, selectorValue]]);
-        const contentValues = toContentValues({
+        const contentValues = createContentValuesProjector({
           descriptor: relatedDescriptor,
           fieldSelectorIds: { [field.id]: field.id, [fork.id]: field.id },
+        })({
           primaryKey: { className: "Schema.A", id: "0x1" },
           values: {
             selectorValues,
@@ -656,9 +673,10 @@ describe("RowDecoder", () => {
           primaryClassNames: ["Schema.A"],
         });
         const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
-        const contentValues = toContentValues({
+        const contentValues = createContentValuesProjector({
           descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
           fieldSelectorIds: { [field.id]: field.id },
+        })({
           primaryKey: { className: value === undefined ? "Schema.Unrelated" : "Schema.A", id: "0x1" },
           values: {
             selectorValues: value === undefined ? new Map() : new Map([[field.id, value]]),
@@ -677,9 +695,10 @@ describe("RowDecoder", () => {
         pathCardinality: "many",
         primaryClassNames: ["Schema.A"],
       });
-      const contentValues = toContentValues({
+      const contentValues = createContentValuesProjector({
         descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
         fieldSelectorIds: { [field.id]: field.id },
+      })({
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: { selectorValues: new Map([[field.id, []]]), relatedInstances: new Map() },
       });
@@ -695,9 +714,10 @@ describe("RowDecoder", () => {
       });
       const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
       const value = ["first", "second"];
-      const contentValues = toContentValues({
+      const contentValues = createContentValuesProjector({
         descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
         fieldSelectorIds: { [field.id]: field.id },
+      })({
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: {
           selectorValues: new Map([[field.id, [value]]]),
@@ -730,9 +750,10 @@ describe("RowDecoder", () => {
       const manyField = { ...field, id: `${field.id}#many`, pathCardinality: "many" as const };
       const pathKey = serializeRelationshipPath({ path: field.pathFromTarget });
       const selectorValues = new Map([[field.id, values]]);
-      const contentValues = toContentValues({
+      const contentValues = createContentValuesProjector({
         descriptor: { sources: [], categories: {}, fields: { [field.id]: field, [manyField.id]: manyField } },
         fieldSelectorIds: { [field.id]: field.id, [manyField.id]: field.id },
+      })({
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: {
           selectorValues,
@@ -755,9 +776,10 @@ describe("RowDecoder", () => {
       });
       const pathKey = serializeRelationshipPath({ path: field.pathFromTarget });
       expect(() =>
-        toContentValues({
+        createContentValuesProjector({
           descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
           fieldSelectorIds: { [field.id]: field.id },
+        })({
           primaryKey: { className: "Schema.A", id: "0x1" },
           values: {
             selectorValues: value === undefined ? new Map() : new Map([[field.id, value]]),
@@ -770,13 +792,14 @@ describe("RowDecoder", () => {
     });
 
     it("maps selector values onto fields and leaves external fields undefined", () => {
-      const contentValues = toContentValues({
+      const contentValues = createContentValuesProjector({
         descriptor,
         fieldSelectorIds: {
           "Schema.A.Code": "Schema.A.Code",
           "Schema.A.Label": "Schema.A.Label",
           "calc:score": "calc:score",
         },
+      })({
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: {
           selectorValues: new Map<string, Value[]>([
@@ -798,9 +821,10 @@ describe("RowDecoder", () => {
         categories: {},
         fields: { "calc:when": { kind: "calculated", id: "calc:when", type: { kind: "primitive", type: "DateTime" } } },
       } as unknown as ContentDescriptor;
-      const contentValues = toContentValues({
+      const contentValues = createContentValuesProjector({
         descriptor: dateDescriptor,
         fieldSelectorIds: { "calc:when": "calc:when" },
+      })({
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: {
           selectorValues: new Map<string, Value[]>([["calc:when", ["2021-11-08T10:18:23.317"]]]),
@@ -823,9 +847,7 @@ describe("RowDecoder", () => {
         ],
         includeInstanceFilters: true,
       });
-      const contentValues = toContentValues({
-        descriptor,
-        fieldSelectorIds: {},
+      const contentValues = createContentValuesProjector({ descriptor, fieldSelectorIds: {} })({
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: { selectorValues: new Map(), relatedInstances: new Map([[pathKey, entries]]) },
       });

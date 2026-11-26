@@ -138,9 +138,9 @@ export function getCalculatedFieldByLabel(descriptor: Descriptor, label: string)
   return matches[0];
 }
 
-/** Returns the category a field is assigned to, or `undefined` when it has none. */
+/** Returns the defined category a field is placed in, or `undefined` when it's in the content target's category. */
 export function getFieldCategory(descriptor: Descriptor, field: Field) {
-  return field.categoryId ? descriptor.categories[field.categoryId] : undefined;
+  return field.category.type === "category" ? descriptor.categories[field.category.id] : undefined;
 }
 
 /** Looks up a field by its stable ID (e.g. one produced by `PropertyField.computeId`). */

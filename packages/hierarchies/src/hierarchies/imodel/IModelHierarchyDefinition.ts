@@ -70,47 +70,65 @@ export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 /**
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
+ *
+ * @template TParentProps Props that identify the parent of the node being parsed. Defaults to the `parentNode` attribute.
  * @public
  */
-export type NodeParser = (props: {
-  /** The ECSQL row object to parse. Keys & value types depend on the executed query. */
-  row: { [columnName: string]: any };
+export type NodeParser<
+  TParentProps extends {} = {
+    /** The parent node whose child node is being parsed. */
+    parentNode?: HierarchyDefinitionParentNode;
+  },
+> = (
+  props: {
+    /** The ECSQL row object to parse. Keys & value types depend on the executed query. */
+    row: { [columnName: string]: any };
 
-  /** The parent node whose child node is being parsed. */
-  parentNode?: HierarchyDefinitionParentNode;
-
-  /** The key of iModel which is used to run the query. */
-  imodelKey: string;
-}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+    /** The key of iModel which is used to run the query. */
+    imodelKey: string;
+  } & TParentProps,
+) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
  * it should return a new - modified - node, rather than modifying the given one. Returning `undefined` omits the node
  * from the hierarchy.
  *
+ * @template TParentProps Props that identify the parent of the node being pre-processed. Defaults to the `parentNode`
+ * attribute.
  * @public
  */
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
-  /** Node to be pre-processed. */
-  node: TNode;
-
-  /** The parent node whose child node is being pre-processed. */
-  parentNode?: ParentHierarchyNode;
-}) => Promise<TNode | undefined>;
+export type NodePreProcessor<
+  TParentProps extends {} = {
+    /** The parent node whose child node is being pre-processed. */
+    parentNode?: ParentHierarchyNode;
+  },
+> = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(
+  props: {
+    /** Node to be pre-processed. */
+    node: TNode;
+  } & TParentProps,
+) => Promise<TNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
  * it should return a new - modified - node, rather than modifying the given one.
  *
+ * @template TParentProps Props that identify the parent of the node being post-processed. Defaults to the `parentNode`
+ * attribute.
  * @public
  */
-export type NodePostProcessor = (props: {
-  /** Node to be post-processed. */
-  node: ProcessedHierarchyNode;
-
-  /** The parent node whose child node is being post-processed. */
-  parentNode?: ParentHierarchyNode;
-}) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor<
+  TParentProps extends {} = {
+    /** The parent node whose child node is being post-processed. */
+    parentNode?: ParentHierarchyNode;
+  },
+> = (
+  props: {
+    /** Node to be post-processed. */
+    node: ProcessedHierarchyNode;
+  } & TParentProps,
+) => Promise<ProcessedHierarchyNode>;
 
 /**
  * A type of node that can be passed to `HierarchyDefinition.defineHierarchyLevel`. This basically means

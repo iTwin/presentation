@@ -26,11 +26,11 @@ import { createExternalValuePopulator } from "./ExternalValues.js";
 import { createNavigationValuePopulator } from "./NavigationValues.js";
 import { buildAnchorPageQuery, buildKeyStreamQuery, buildValueQuery } from "./PageQueries.js";
 import {
+  createContentValuesProjector,
   createRowDecoder,
   decodeGroupRows,
   decodePrimaryKey,
   mergeGroupValues,
-  toContentValues,
   toInstanceKeyString,
 } from "./RowDecoder.js";
 
@@ -50,7 +50,7 @@ import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
 import type { ExternalValuePopulator } from "./ExternalValues.js";
 import type { NavigationValuePopulator } from "./NavigationValues.js";
 import type { Cursor, PlannedGroup, SourcePlan } from "./PageQueries.js";
-import type { GroupValues } from "./RowDecoder.js";
+import type { ContentValuesProjector, GroupValues } from "./RowDecoder.js";
 
 /**
  * Loads content items for the configured sources, paging with a keyset cursor and stitching SQL-backed
@@ -88,6 +88,7 @@ function loadItems(props: {
   const hasSort = sorting.length > 0;
   return from(getContentDefinition()).pipe(
     mergeMap(({ descriptor, selectors, fieldSelectorIds, externalInputs, externalProviders }) => {
+      const projectContentValues = createContentValuesProjector({ descriptor, fieldSelectorIds });
       const populateExternalValues = createExternalValuePopulator({ descriptor, plans: externalProviders });
       const populateNavigationValues = createNavigationValuePopulator({ imodelAccess, selectors, labelsFactory });
       return from(sources).pipe(
@@ -105,7 +106,7 @@ function loadItems(props: {
                   pageAnchor({
                     imodelAccess,
                     descriptor,
-                    fieldSelectorIds,
+                    projectContentValues,
                     plan,
                     sorting,
                     populateNavigationValues,
@@ -120,7 +121,7 @@ function loadItems(props: {
           return pageMultiSourceSorted({
             imodelAccess,
             descriptor,
-            fieldSelectorIds,
+            projectContentValues,
             plans,
             sorting,
             populateNavigationValues,
@@ -249,7 +250,7 @@ interface PageResult {
 function pageAnchor(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
-  fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
+  projectContentValues: ContentValuesProjector;
   plan: SourcePlan;
   sorting: ContentQuerySort[];
   populateNavigationValues: NavigationValuePopulator | undefined;
@@ -258,7 +259,7 @@ function pageAnchor(props: {
   const {
     imodelAccess,
     descriptor,
-    fieldSelectorIds,
+    projectContentValues,
     plan,
     sorting,
     populateNavigationValues,
@@ -288,7 +289,7 @@ function pageAnchor(props: {
       mergeMap((decoded) =>
         materializeItems({
           descriptor,
-          fieldSelectorIds,
+          projectContentValues,
           populateNavigationValues,
           populateExternalValues,
           rows: decoded,
@@ -318,7 +319,7 @@ interface KeyPage {
 function pageMultiSourceSorted(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
-  fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
+  projectContentValues: ContentValuesProjector;
   plans: SourcePlan[];
   sorting: ContentQuerySort[];
   populateNavigationValues: NavigationValuePopulator | undefined;
@@ -327,7 +328,7 @@ function pageMultiSourceSorted(props: {
   const {
     imodelAccess,
     descriptor,
-    fieldSelectorIds,
+    projectContentValues,
     plans,
     sorting,
     populateNavigationValues,
@@ -363,7 +364,7 @@ function pageMultiSourceSorted(props: {
         const valuesByKey = stitchPlans({ plans, rowsByGroup });
         return materializeItems({
           descriptor,
-          fieldSelectorIds,
+          projectContentValues,
           populateNavigationValues,
           populateExternalValues,
           rows: keys.map((key) => ({
@@ -396,19 +397,17 @@ function pageMultiSourceSorted(props: {
 // rather than bare target ids.
 function materializeItems(props: {
   descriptor: ContentDescriptor;
-  fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
+  projectContentValues: ContentValuesProjector;
   populateNavigationValues: NavigationValuePopulator | undefined;
   populateExternalValues: ExternalValuePopulator | undefined;
   rows: Array<{ primaryKey: InstanceKey; values: GroupValues }>;
 }): Observable<ContentItem[]> {
-  const { descriptor, fieldSelectorIds, populateNavigationValues, populateExternalValues, rows } = props;
+  const { descriptor, projectContentValues, populateNavigationValues, populateExternalValues, rows } = props;
   if (rows.length === 0) {
     return of([]);
   }
   const createItems = defer(() => {
-    const contentValues = rows.map((row) =>
-      toContentValues({ descriptor, fieldSelectorIds, primaryKey: row.primaryKey, values: row.values }),
-    );
+    const contentValues = rows.map((row) => projectContentValues({ primaryKey: row.primaryKey, values: row.values }));
     if (!populateExternalValues) {
       return of(contentValues.map((values) => createContentItem({ descriptor, contentValues: values })));
     }

@@ -19,6 +19,7 @@ import type { ContentQuerySort, SelectProjection } from "../../../content/query/
 import type { Cursor, SourcePlan } from "../../../content/query/value-loading/PageQueries.js";
 
 const codeField: PropertyField = {
+  category: { type: "target" },
   kind: "property",
   id: "Schema.A.Code",
   label: "Code",
@@ -338,7 +339,10 @@ describe("buildKeyStreamQuery", () => {
   it("throws when a cursor references a non-primitive sort field", () => {
     const cursor: Cursor = { sortValues: ["A"], primaryKey: { className: "Schema.A", id: "0x1" } };
     const structSorting: ContentQuerySort[] = [
-      { field: { ...codeField, type: { kind: "struct", members: [] } }, direction: "asc" },
+      {
+        field: { ...codeField, type: { kind: "struct", className: "TestSchema.TestStruct", members: [] } },
+        direction: "asc",
+      },
     ];
     expect(() =>
       buildKeyStreamQuery({

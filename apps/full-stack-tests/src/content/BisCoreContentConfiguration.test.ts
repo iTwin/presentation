@@ -570,6 +570,120 @@ describe("Content", () => {
       });
     });
 
+    it("filters by type label when related columns exceed the join budget", async () => {
+      const { imodelConnection, matching, different, untyped, nullLabel } = await buildTestIModel(
+        "TypeFilterWithManyAspects",
+        async (imodel, testName) => {
+          const schema = await importSchema(
+            testName,
+            imodel,
+            `
+              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+              <ECEntityClass typeName="MyElement"><BaseClass>bis:PhysicalElement</BaseClass></ECEntityClass>
+              ${Array.from(
+                { length: 70 },
+                (_, index) => `
+                <ECEntityClass typeName="Aspect${index}">
+                  <BaseClass>bis:ElementUniqueAspect</BaseClass>
+                  <ECProperty propertyName="Value" typeName="int" />
+                </ECEntityClass>
+              `,
+              ).join("")}
+            `,
+          );
+          return withEditTxn(imodel, (txn) => {
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "Category" });
+            const partitionKey = insertPhysicalPartition({ txn, codeValue: "Model", parentId: IModel.rootSubjectId });
+            const modelKey = insertPhysicalSubModel({ txn, modeledElementId: partitionKey.id });
+            const matchingType = insertPhysicalType({ txn, userLabel: "Matching" });
+            const differentType = insertPhysicalType({ txn, userLabel: "Different" });
+            const nullLabelType = insertPhysicalType({ txn });
+            const elementProps = {
+              txn,
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              classFullName: schema.items.MyElement.fullName,
+            };
+            const matchingElement = insertPhysicalElement({
+              ...elementProps,
+              userLabel: "First",
+              typeDefinitionId: matchingType.id,
+            });
+            const differentElement = insertPhysicalElement({ ...elementProps, typeDefinitionId: differentType.id });
+            const untypedElement = insertPhysicalElement(elementProps);
+            const nullLabelElement = insertPhysicalElement({ ...elementProps, typeDefinitionId: nullLabelType.id });
+            for (let index = 0; index < 70; ++index) {
+              for (const id of [matchingElement.id, matchingType.id]) {
+                txn.insertAspect({
+                  classFullName: schema.items[`Aspect${index}`].fullName,
+                  element: { id },
+                  value: index,
+                } as ElementAspectProps);
+              }
+            }
+            return {
+              matching: matchingElement,
+              different: differentElement,
+              untyped: untypedElement,
+              nullLabel: nullLabelElement,
+            };
+          });
+        },
+      );
+
+      const imodelAccess = createContentIModelAccess(imodelConnection);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: matching.className }],
+        config,
+      });
+      const provider = createContentProvider({ imodelAccess, sources, config });
+      const labelFields = getPropertyFieldsByName(await provider.getContentDescriptor(), "UserLabel");
+      const typeLabelFields = labelFields.filter(
+        (candidate) => candidate.pathFromTarget[0]?.relationshipName === "BisCore.PhysicalElementIsOfType",
+      );
+      expect(typeLabelFields).toHaveLength(1);
+      const [typeLabelField] = typeLabelFields;
+
+      const directField = labelFields.find((candidate) => candidate.pathFromTarget.length === 0);
+      expect(directField).toBeDefined();
+      if (!directField) {
+        throw new Error("Missing element label field");
+      }
+
+      const scenarios: Array<{
+        filters: NonNullable<Parameters<typeof provider.getSize>[0]>["filters"];
+        ids: string[];
+      }> = [
+        { filters: [{ field: typeLabelField, operator: "is-equal", value: "Matching" }], ids: [matching.id] },
+        { filters: [{ field: typeLabelField, operator: "is-not-equal", value: "Matching" }], ids: [different.id] },
+        { filters: [{ field: typeLabelField, operator: "is-null" }], ids: [untyped.id, nullLabel.id] },
+        { filters: [{ field: typeLabelField, operator: "is-not-null" }], ids: [matching.id, different.id] },
+        { filters: [{ field: typeLabelField, operator: "is-equal", value: "Missing" }], ids: [] },
+        {
+          filters: [
+            { field: typeLabelField, operator: "is-equal", value: "Matching" },
+            { field: directField, operator: "is-equal", value: "First" },
+          ],
+          ids: [matching.id],
+        },
+      ];
+      for (const { filters, ids } of scenarios) {
+        expect(await provider.getSize({ filters })).toBe(ids.length);
+        expect((await collect(provider.getInstanceKeys({ filters }))).map((key) => key.id)).toEqual(ids);
+        expect((await collect(provider.getItems({ filters }))).map((item) => item.primaryKey.id)).toEqual(ids);
+      }
+
+      const sortedItems = await collect(
+        provider.getItems({
+          filters: [{ field: typeLabelField, operator: "is-equal" as const, value: "Matching" }],
+          sorting: [{ field: typeLabelField, direction: "asc" }],
+        }),
+      );
+      expect(sortedItems.map((item) => item.primaryKey.id)).toEqual([matching.id]);
+    });
+
     it("adds 3d type-definition fields, keeps the schema-provided PhysicalMaterial label, and hides internal DefinitionElement/TypeDefinitionElement properties", async () => {
       const { imodelConnection, elementClassName } = await buildTestIModel(async (imodel) => {
         return withEditTxn(imodel, (txn) => {

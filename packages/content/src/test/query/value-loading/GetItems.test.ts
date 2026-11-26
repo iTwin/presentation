@@ -80,6 +80,7 @@ function createTestDefinition(
 }
 
 const codeField: PropertyField = {
+  category: { type: "target" },
   kind: "property",
   id: "Schema.A.Code",
   label: "Code",
@@ -131,6 +132,7 @@ function createExternalStatusDefinition(getValues: ExternalFieldsProvider["getVa
 }
 
 const navField: PropertyField = {
+  category: { type: "target" },
   kind: "property",
   id: "Schema.A.Nav",
   label: "Nav",
@@ -190,6 +192,7 @@ const manyPath: RelationshipPath = [
 ];
 
 const relCodeField: PropertyField = {
+  category: { type: "target" },
   kind: "property",
   id: "code",
   label: "Code",
@@ -203,6 +206,7 @@ const relCodeField: PropertyField = {
 };
 
 const relNameField: PropertyField = {
+  category: { type: "target" },
   kind: "property",
   id: "name",
   label: "Name",
@@ -988,6 +992,7 @@ describe("getItems", () => {
       },
     ];
     const sortField: PropertyField = {
+      category: { type: "target" },
       kind: "property",
       id: "sortOnly",
       label: "SortOnly",

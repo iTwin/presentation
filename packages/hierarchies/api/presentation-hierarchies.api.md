@@ -67,6 +67,17 @@ export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearc
     };
 };
 
+// @beta
+export function createIModelHierarchyNodePaths(props: CreateIModelHierarchyNodePathsProps): AsyncIterableIterator<HierarchyNode[]>;
+
+// @beta
+interface CreateIModelHierarchyNodePathsProps extends Pick<Props<typeof createIModelHierarchyProvider>, "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"> {
+    abortSignal?: AbortSignal;
+    hierarchyDefinition: PathBasedHierarchyDefinition;
+    hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
+    paths: Iterable<DeepReadonly<HierarchySearchPath>> | AsyncIterable<DeepReadonly<HierarchySearchPath>>;
+}
+
 // @public
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
@@ -245,6 +256,11 @@ type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
 // @public
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
+
+// @beta
+export interface HierarchyLevelPathProps {
+    path: HierarchyNodeIdentifier[];
+}
 
 // @public
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
@@ -627,25 +643,28 @@ export function mergeProviders(input: MergeHierarchyProvidersProps): HierarchyPr
 };
 
 // @public
-export type NodeParser = (props: {
+export type NodeParser<TParentProps extends {} = {
+    parentNode?: HierarchyDefinitionParentNode;
+}> = (props: {
     row: {
         [columnName: string]: any;
     };
-    parentNode?: HierarchyDefinitionParentNode;
     imodelKey: string;
-}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+} & TParentProps) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
-export type NodePostProcessor = (props: {
+export type NodePostProcessor<TParentProps extends {} = {
+    parentNode?: ParentHierarchyNode;
+}> = (props: {
     node: ProcessedHierarchyNode;
-    parentNode?: ParentHierarchyNode;
-}) => Promise<ProcessedHierarchyNode>;
+} & TParentProps) => Promise<ProcessedHierarchyNode>;
 
 // @public
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
-    node: TNode;
+export type NodePreProcessor<TParentProps extends {} = {
     parentNode?: ParentHierarchyNode;
-}) => Promise<TNode | undefined>;
+}> = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+    node: TNode;
+} & TParentProps) => Promise<TNode | undefined>;
 
 // @public
 interface NodeSelectClauseProps {
@@ -673,6 +692,13 @@ interface NodeSelectClauseProps {
     // (undocumented)
     supportsFiltering?: boolean | ECSqlValueSelector;
 }
+
+// @beta
+type NodeSelectClausePropsWithoutLabelMerging = Omit<NodeSelectClauseProps, "grouping"> & {
+    grouping?: Omit<ECSqlSelectClauseGroupingParams, "byLabel"> & {
+        byLabel?: Exclude<ECSqlSelectClauseLabelGroupingParams, ECSqlSelectClauseLabelGroupingMergeParams>;
+    };
+};
 
 // @public
 interface NodesQueryClauseFactory {
@@ -708,6 +734,19 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 
 // @public
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
+
+// @beta
+export interface PathBasedDefineHierarchyLevelProps extends Omit<DefineHierarchyLevelProps, "parentNode" | "createSelectClause">, HierarchyLevelPathProps {
+    createSelectClause(props: NodeSelectClausePropsWithoutLabelMerging): Promise<string>;
+}
+
+// @beta
+export interface PathBasedHierarchyDefinition {
+    defineHierarchyLevel(props: PathBasedDefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
+    parseNode?: NodeParser<HierarchyLevelPathProps>;
+    postProcessNode?: NodePostProcessor<HierarchyLevelPathProps>;
+    preProcessNode?: NodePreProcessor<HierarchyLevelPathProps>;
+}
 
 // @public
 interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinition, "parseNode" | "preProcessNode" | "postProcessNode"> {

@@ -16,6 +16,7 @@ type PrimitiveValueType = PrimitiveValueDescriptor["type"];
  *
  * Array properties are wrapped as `{ kind: "array", elementType }` around their scalar element
  * shape, carrying the schema's `minOccurs` (when above `0`) and `maxOccurs` (when bounded) limits.
+ * Struct properties become `{ kind: "struct", className, members }` carrying the struct class's full name.
  * Navigation properties become `{ kind: "navigation", targetClassName }` carrying the
  * relationship's target-constraint class (the runtime value stays a bare id). Enumeration properties
  * become a `primitive` descriptor of their backing type with the enumeration's metadata preserved on
@@ -118,7 +119,7 @@ function createStructValueDescriptor(property: EC.StructProperty): StructValueDe
     }
     members.push({ name: member.name, label: member.label ?? member.name, type });
   }
-  return { kind: "struct", members };
+  return { kind: "struct", className: property.structClass.fullName, members };
 }
 
 function createPrimitiveValueDescriptor(
