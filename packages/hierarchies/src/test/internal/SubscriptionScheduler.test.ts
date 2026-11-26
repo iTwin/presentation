@@ -8,9 +8,10 @@ import {
   asapScheduler,
   asyncScheduler,
   defer,
+  finalize,
   from,
   NEVER,
-  Observable,
+  of,
   queueScheduler,
   scheduled,
   throwError,
@@ -18,7 +19,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SubscriptionScheduler } from "../../hierarchies/internal/SubscriptionScheduler.js";
 
-import type { ObservableInput, SchedulerLike, Subscription } from "rxjs";
+import type { Observable, ObservableInput, SchedulerLike, Subscription } from "rxjs";
 
 describe("SubscriptionScheduler", () => {
   const concurrentSubscriptions = 3;
@@ -29,6 +30,25 @@ describe("SubscriptionScheduler", () => {
   });
 
   describe("scheduleSubscription", () => {
+    it("tears down a cancelled active source and starts the next queued source", async () => {
+      const scheduler = new SubscriptionScheduler(1);
+      const onTeardown = vi.fn();
+      const activeSource = NEVER.pipe(finalize(onTeardown));
+      const onSubscribe = vi.spyOn(activeSource, "subscribe");
+      const active = scheduler.scheduleSubscription(activeSource).subscribe();
+      const onNext = vi.fn();
+      const queued = scheduler.scheduleSubscription(of(1)).subscribe(onNext);
+
+      await Promise.resolve();
+      expect(onSubscribe).toHaveBeenCalledOnce();
+      expect(onNext).not.toHaveBeenCalled();
+
+      active.unsubscribe();
+      expect(onTeardown).toHaveBeenCalledOnce();
+      await waitForUnsubscription(queued);
+      expect(onNext).toHaveBeenCalledExactlyOnceWith(1);
+    });
+
     // Affects when input observables emit values to `SubscriptionScheduler`.
     const schedulers: Array<[string, undefined | SchedulerLike]> = [
       ["no", undefined],
@@ -164,23 +184,6 @@ describe("SubscriptionScheduler", () => {
         });
       });
     }
-
-    it("unsubscribes from running source observable and schedules the next one after schedule cancellation", async () => {
-      const teardown = vi.fn();
-      const runningSource = vi.fn(() => teardown);
-      const subscription = subscriptionScheduler.scheduleSubscription(new Observable(runningSource)).subscribe();
-      for (let i = 1; i < concurrentSubscriptions; ++i) {
-        subscriptionScheduler.scheduleSubscription(NEVER).subscribe();
-      }
-      const queuedSource = vi.fn();
-      subscriptionScheduler.scheduleSubscription(new Observable(queuedSource)).subscribe();
-      await vi.waitFor(() => expect(runningSource).toHaveBeenCalledOnce());
-      expect(queuedSource).not.toHaveBeenCalled();
-
-      subscription.unsubscribe();
-      expect(teardown).toHaveBeenCalledOnce();
-      await vi.waitFor(() => expect(queuedSource).toHaveBeenCalledOnce());
-    });
   });
 });
 

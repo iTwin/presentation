@@ -51,27 +51,21 @@ export class SubscriptionScheduler {
   /**
    * Schedules `source` for subscription in the current scheduler.
    *
-   * The actual scheduling is performed when the returned observable is subscribed to. To cancel, remove all subscribers
-   * from the returned observable - `source` is then unsubscribed from if it's running, or never subscribed to if it's
-   * still queued.
+   * Each subscription queues the source. Unsubscribing prevents it from starting or stops an active subscription.
    *
    * @param source Input observable for which to schedule a subscription.
    * @returns Hot observable which starts emitting `source` values after subscription.
    */
   public scheduleSubscription<T>(source: Observable<T>): Observable<T> {
     return defer(() => {
-      // replays the cancellation to `takeUntil`, so a queued `source` completes without being subscribed to
+      // Replay cancellation if the job is still queued when the caller unsubscribes.
       const cancelled = new ReplaySubject<void>(1);
       const connectableObservable = connectable(source.pipe(takeUntil(cancelled)), {
         connector: () => new Subject<T>(),
         resetOnDisconnect: false,
       });
       this._scheduler.next(connectableObservable);
-      return connectableObservable.pipe(
-        finalize(() => {
-          cancelled.next();
-        }),
-      );
+      return connectableObservable.pipe(finalize(() => cancelled.next()));
     });
   }
 }
