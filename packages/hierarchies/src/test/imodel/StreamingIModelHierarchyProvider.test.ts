@@ -134,7 +134,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
     ]);
   });
 
-  it("loads root instance nodes using a query limited to 10 000 rows", async () => {
+  it("loads root instance nodes using a query limited to 1000 rows", async () => {
     imodelAccess.createQueryReader.mockReturnValue(createAsyncIterator([createRow("0x1", { HasChildren: true })]));
     const query: ECSqlQueryDef = { ecsql: "QUERY", bindings: [{ type: "string", value: "binding" }], ctes: ["CTE"] };
     using provider = createStreamingIModelHierarchyProvider({
@@ -152,7 +152,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
     ]);
     expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
     expect(imodelAccess.createQueryReader).toHaveBeenCalledWith(
-      { ...query, ecsql: "SELECT * FROM (QUERY) LIMIT 10000 OFFSET 0" },
+      { ...query, ecsql: "SELECT * FROM (QUERY) LIMIT 1000 OFFSET 0" },
       expect.objectContaining({ rowFormat: "ECSqlPropertyNames", limit: "unbounded" }),
     );
   });

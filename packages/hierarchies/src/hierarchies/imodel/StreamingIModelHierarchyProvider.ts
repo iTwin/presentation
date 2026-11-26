@@ -69,7 +69,7 @@ import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js
 import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.StreamingIModelHierarchyProvider`;
-const DEFAULT_PAGE_SIZE = 10_000;
+const DEFAULT_PAGE_SIZE = 1000;
 
 /**
  * Props for `createStreamingIModelHierarchyProvider`.
@@ -108,7 +108,7 @@ export interface StreamingIModelHierarchyProviderProps {
    * are loaded in pages of this size - the next page is requested only when the consumer requests a node that's not
    * in the already loaded pages.
    *
-   * Must be a positive integer. Defaults to `10 000`.
+   * Must be a positive integer. Defaults to `1000`.
    */
   pageSize?: number;
 
