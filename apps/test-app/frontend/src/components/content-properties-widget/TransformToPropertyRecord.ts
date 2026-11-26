@@ -138,14 +138,19 @@ async function createValue({
   isMemberReadonly,
   structTypeName,
 }: RecordProps): Promise<PropertyValue> {
+  // Like the legacy property grid, show missing struct and array values as empty primitive values, rather than structs
+  // with empty members or empty arrays.
+  if (value === undefined && (type.kind === "struct" || type.kind === "array")) {
+    return { valueFormat: PropertyValueFormat.Primitive, value: undefined };
+  }
   switch (type.kind) {
     case "struct": {
-      const struct = value as DeepReadonly<Record<string, Value>> | undefined;
+      const struct = value as DeepReadonly<Record<string, Value>>;
       const members = await Promise.all(
         type.members.map(async (member) => {
           const record = await createRecord({
             ...member,
-            value: struct?.[member.name],
+            value: struct[member.name],
             isReadonly: isMemberReadonly?.(member.name) ?? isReadonly,
           });
           return [member.name, record] as const;
@@ -154,7 +159,7 @@ async function createValue({
       return { valueFormat: PropertyValueFormat.Struct, members: Object.fromEntries(members) };
     }
     case "array": {
-      const elements = (value ?? []) as Array<DeepReadonly<Value>>;
+      const elements = value as Array<DeepReadonly<Value>>;
       const items = await Promise.all(
         elements.map(async (element, index) =>
           createRecord({
