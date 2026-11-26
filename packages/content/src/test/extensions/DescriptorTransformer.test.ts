@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { createTransformableDescriptor } from "../../content/extensions/DescriptorTransformer.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../../content/model/Utils.js";
@@ -25,6 +25,7 @@ function propertyField(props: {
     pathFromTarget: props.pathFromTarget,
   });
   return {
+    category: { type: "target" },
     kind: "property",
     id: fieldId,
     label: "Label",
@@ -115,6 +116,22 @@ describe("createTransformableDescriptor", () => {
 
       expect(field.valueClassNames).to.deep.equal(["Stuff.Roof", "Stuff.Window"]);
       expect(field.primaryClassNames).to.deep.equal(field.valueClassNames);
+    });
+
+    it("doesn't share the category reference between the fork and the original", () => {
+      const field = propertyField({
+        sourceClassName: "Stuff.Thing",
+        propertyName: "Height",
+        valueClassNames: ["Stuff.Door", "Stuff.Window"],
+      });
+      field.category = { type: "category", id: "original" };
+      const transformable = createTransformableDescriptor(createDescriptor([field]));
+
+      const fork = transformable.forkField(field.id, ["Stuff.Door"]);
+      assert(fork.category.type === "category");
+      fork.category.id = "forked";
+
+      expect(field.category).to.deep.equal({ type: "category", id: "original" });
     });
 
     it("carves a related-endpoint subclass over a relationship path", () => {
@@ -216,6 +233,7 @@ describe("createTransformableDescriptor", () => {
 
     it("throws when the field is not a property field", () => {
       const calculated: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         sourceClassName: "Stuff.Thing",
         id: "calc",

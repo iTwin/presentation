@@ -678,8 +678,6 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
               // the query has its own limit - reaching it means there's another page rather than a failure
               limit: "unbounded",
             }),
-            // stop reading when nodes are no longer needed, e.g. the consumer stops or the first child is found
-            { cancelOnUnsubscribe: true },
           )
           .pipe(
             tap(() => ++pageRowsCount),

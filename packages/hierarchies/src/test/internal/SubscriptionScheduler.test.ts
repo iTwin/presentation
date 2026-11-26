@@ -3,17 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResolvablePromise, waitFor } from "presentation-test-utilities";
+import { ResolvablePromise } from "presentation-test-utilities";
 import {
   asapScheduler,
   asyncScheduler,
   defer,
   finalize,
-  firstValueFrom,
   from,
+  NEVER,
+  of,
   queueScheduler,
   scheduled,
-  Subject,
   throwError,
 } from "rxjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,6 +30,25 @@ describe("SubscriptionScheduler", () => {
   });
 
   describe("scheduleSubscription", () => {
+    it("tears down a cancelled active source and starts the next queued source", async () => {
+      const scheduler = new SubscriptionScheduler(1);
+      const onTeardown = vi.fn();
+      const activeSource = NEVER.pipe(finalize(onTeardown));
+      const onSubscribe = vi.spyOn(activeSource, "subscribe");
+      const active = scheduler.scheduleSubscription(activeSource).subscribe();
+      const onNext = vi.fn();
+      const queued = scheduler.scheduleSubscription(of(1)).subscribe(onNext);
+
+      await Promise.resolve();
+      expect(onSubscribe).toHaveBeenCalledOnce();
+      expect(onNext).not.toHaveBeenCalled();
+
+      active.unsubscribe();
+      expect(onTeardown).toHaveBeenCalledOnce();
+      await waitForUnsubscription(queued);
+      expect(onNext).toHaveBeenCalledExactlyOnceWith(1);
+    });
+
     // Affects when input observables emit values to `SubscriptionScheduler`.
     const schedulers: Array<[string, undefined | SchedulerLike]> = [
       ["no", undefined],
@@ -165,44 +184,6 @@ describe("SubscriptionScheduler", () => {
         });
       });
     }
-
-    it("keeps running started source after unsubscribing by default", async () => {
-      const finalized = vi.fn();
-      const source = new Subject<number>();
-      const subscription = subscriptionScheduler.scheduleSubscription(source.pipe(finalize(finalized))).subscribe();
-      await waitFor(() => expect(source.observed).toBe(true));
-      subscription.unsubscribe();
-      expect(finalized).not.toHaveBeenCalled();
-    });
-
-    it("unsubscribes from started source and frees its slot when unsubscribing with `cancelOnUnsubscribe`", async () => {
-      // a single slot - the second source has to wait until the first one releases it
-      const scheduler = new SubscriptionScheduler(1);
-
-      // the first source never completes on its own, so it holds the slot until it's unsubscribed from
-      const firstSourceFinalized = vi.fn();
-      const firstSource = new Subject<number>();
-      const firstSubscription = scheduler
-        .scheduleSubscription(firstSource.pipe(finalize(firstSourceFinalized)), { cancelOnUnsubscribe: true })
-        .subscribe();
-      await waitFor(() => expect(firstSource.observed).toBe(true));
-
-      const secondSourceSubscribed = vi.fn();
-      const secondResult = firstValueFrom(
-        scheduler.scheduleSubscription(
-          defer(() => {
-            secondSourceSubscribed();
-            return from([1]);
-          }),
-        ),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      expect(secondSourceSubscribed).not.toHaveBeenCalled();
-
-      firstSubscription.unsubscribe();
-      expect(firstSourceFinalized).toHaveBeenCalledOnce();
-      expect(await secondResult).toBe(1);
-    });
   });
 });
 

@@ -55,6 +55,7 @@ describe("collectDirectPropertyFields", () => {
         valueClassNames: ["TestSchema.Element"],
         primaryClassNames: ["TestSchema.Element"],
         pathCardinality: "one",
+        category: { type: "target" },
       },
     ]);
   });
@@ -296,6 +297,7 @@ describe("collectDirectPropertyFields", () => {
 
     expect(categorization).to.deep.equal({
       categoryContext: [],
+      relationshipMeaning: "relatedInstance",
       anchor: "none",
       category: { source: "propertyCategory", id: "TestSchema.Identity", label: "Identity" },
     });

@@ -7,13 +7,12 @@ import {
   asapScheduler,
   connectable,
   defer,
-  EMPTY,
   finalize,
-  iif,
   mergeMap,
   observeOn,
   onErrorResumeNextWith,
   queueScheduler,
+  ReplaySubject,
   Subject,
   subscribeOn,
   takeUntil,
@@ -52,30 +51,21 @@ export class SubscriptionScheduler {
   /**
    * Schedules `source` for subscription in the current scheduler.
    *
-   * The actual scheduling is performed when the returned observable is subscribed to. To cancel, remove all subscribers
-   * from the returned observable.
+   * Each subscription queues the source. Unsubscribing prevents it from starting or stops an active subscription.
    *
    * @param source Input observable for which to schedule a subscription.
-   * @param options.cancelOnUnsubscribe By default, once `source` is subscribed to, it runs to completion, even if all
-   * subscribers of the returned observable unsubscribe. When this is set, `source` is unsubscribed from at that point,
-   * freeing its slot in the scheduler.
    * @returns Hot observable which starts emitting `source` values after subscription.
    */
-  public scheduleSubscription<T>(source: Observable<T>, options?: { cancelOnUnsubscribe?: boolean }): Observable<T> {
+  public scheduleSubscription<T>(source: Observable<T>): Observable<T> {
     return defer(() => {
-      let unsubscribed = false;
-      const cancel = new Subject<void>();
-      const connectableObservable = connectable(
-        iif(() => unsubscribed, EMPTY, options?.cancelOnUnsubscribe ? source.pipe(takeUntil(cancel)) : source),
-        { connector: () => new Subject<T>(), resetOnDisconnect: false },
-      );
+      // Replay cancellation if the job is still queued when the caller unsubscribes.
+      const cancelled = new ReplaySubject<void>(1);
+      const connectableObservable = connectable(source.pipe(takeUntil(cancelled)), {
+        connector: () => new Subject<T>(),
+        resetOnDisconnect: false,
+      });
       this._scheduler.next(connectableObservable);
-      return connectableObservable.pipe(
-        finalize(() => {
-          unsubscribed = true;
-          cancel.next();
-        }),
-      );
+      return connectableObservable.pipe(finalize(() => cancelled.next()));
     });
   }
 }

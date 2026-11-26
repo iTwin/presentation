@@ -5,7 +5,7 @@
 
 import { mergeBindings } from "../InternalUtils.js";
 
-import type { ECSql, ECSqlBinding } from "@itwin/presentation-shared";
+import type { EC, ECSql, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
 import type { ResolvedPath } from "../ContentTarget.js";
 
 /**
@@ -37,16 +37,97 @@ export type RelationshipPathJoinInfo = Awaited<ReturnType<typeof ECSql.createRel
  */
 type ResolvedPathWithJoinInfo = ResolvedPath & { joinInfo: RelationshipPathJoinInfo };
 
+/*
+ * Per-class table estimates. One ECClass in an ECSQL query can expand to several SQLite table references:
+ * the hierarchy's base table, a joined table (`JoinedTablePerDirectSubclass` mapping), an `_Overflow`
+ * table once shared columns run out, and `ec_cache_ClassHierarchy` for polymorphic class checks. How many
+ * of them a query joins depends on what it selects or filters, so the budget assumes the worst case.
+ *
+ * The numbers come from `EXPLAIN QUERY PLAN` on the native SQL of `SELECT *` queries against subclasses
+ * with 150 properties (enough to spill into overflow tables), one for each mapping kind below:
+ * - `BisCore.Element` subclass: 4 tables (`bis_Element`, joined table, overflow, class-hierarchy cache).
+ * - `BisCore.ElementAspect` and `BisCore.Model` subclasses: 3 tables. BIS maps these hierarchies to a
+ *   single table per hierarchy, so there's no joined table.
+ * - Link-table relationship with subclasses: 2 tables (link table, class-hierarchy cache).
+ * - Plain ECDb class mapped with `TablePerHierarchy` + `JoinedTablePerDirectSubclass` + `ShareColumns`:
+ *   4 tables for a polymorphic query on a subclass that has subclasses of its own (base table, joined
+ *   table, overflow, class-hierarchy cache), same count as an element.
+ *
+ * Any other entity class may use a joined-table mapping, so it gets the full 4-table estimate.
+ */
+
+/** Estimated SQLite tables for an entity class that may use a joined-table mapping, e.g. a `BisCore.Element` subclass. */
+export const MAX_TABLES_PER_ENTITY_CLASS = 4;
+
+/** Estimated SQLite tables for a `BisCore.ElementAspect` or `BisCore.Model` subclass, which have no joined table. */
+export const MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS = 3;
+
+/** Estimated SQLite tables for a link-table relationship. */
+export const MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP = 2;
+
+const ASPECT_OR_MODEL_BASE_CLASSES: EC.FullClassNameDotNotation[] = ["BisCore.ElementAspect", "BisCore.Model"];
+
+/**
+ * Maps each entity class to its estimated SQLite table count: {@link MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS}
+ * for aspects and models, {@link MAX_TABLES_PER_ENTITY_CLASS} for every other class.
+ */
+export async function resolveClassTableCounts(props: {
+  schemaProvider: Pick<ECSchemaProvider, "classDerivesFrom">;
+  classNames: ReadonlySet<EC.FullClassNameDotNotation>;
+}): Promise<ReadonlyMap<string, number>> {
+  const entries = await Promise.all(
+    [...props.classNames].map(
+      async (className) =>
+        [
+          className,
+          (await isAspectOrModelClass(props.schemaProvider, className))
+            ? MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS
+            : MAX_TABLES_PER_ENTITY_CLASS,
+        ] as const,
+    ),
+  );
+  return new Map(entries);
+}
+
+async function isAspectOrModelClass(
+  schemaProvider: Pick<ECSchemaProvider, "classDerivesFrom">,
+  className: EC.FullClassNameDotNotation,
+): Promise<boolean> {
+  for (const baseClassName of ASPECT_OR_MODEL_BASE_CLASSES) {
+    if (await schemaProvider.classDerivesFrom(className, baseClassName)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Counts how many tables a resolved relationship-path join info contributes to the SQLite JOIN
- * budget. This is not `info.joins.length`: an outer link-table entry (`relationship-select`) wraps a
- * subquery that itself joins the relationship + target, so it counts as two tables. A single step's
- * info therefore spans 1 to 3 tables (nav property → 1, inner link-table → 2, outer link-table → 3).
+ * budget. Entity classes use their resolved table count, defaulting to {@link MAX_TABLES_PER_ENTITY_CLASS};
+ * link-table relationships use {@link MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP}. A step therefore costs
+ * `T` (navigation property), `R + T` (inner link-table) or `R + 2T` (outer link-table).
  */
-function countJoinTables(info: RelationshipPathJoinInfo): number {
-  return info.steps
-    .flatMap((step) => step.joins)
-    .reduce((count, join) => count + 1 + (join.joinTarget.kind === "relationship-select" ? 1 : 0), 0);
+function countJoinTables(info: RelationshipPathJoinInfo, classTableCounts?: ReadonlyMap<string, number>): number {
+  const classTableCount = (className: string) => classTableCounts?.get(className) ?? MAX_TABLES_PER_ENTITY_CLASS;
+  return info.steps.reduce(
+    (count, step) =>
+      count +
+      step.joins.reduce((stepCount, join, i) => {
+        if (join.joinTarget.kind === "relationship-select") {
+          return (
+            stepCount + MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP + classTableCount(join.joinTarget.innerTarget.className)
+          );
+        }
+        const isLinkTableRelationship = step.joins.length > 1 && i === 0;
+        return (
+          stepCount +
+          (isLinkTableRelationship
+            ? MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP
+            : classTableCount(join.joinTarget.className))
+        );
+      }, 0),
+    0,
+  );
 }
 
 function mergeJoinInfoSteps(infos: readonly RelationshipPathJoinInfo[]): RelationshipPathJoinInfo["steps"] {
@@ -101,12 +182,18 @@ export interface JoinBudget {
  * {@link mergeJoinInfos}), so a path sharing a prefix with one already added costs only its own unshared
  * suffix — not its full, independently-counted cost. `budget` defaults to {@link SQLITE_MAX_JOIN_TABLES}.
  */
-export function createJoinBudget(props: { reservedTables: number; budget?: number }): JoinBudget {
+export function createJoinBudget(props: {
+  reservedTables: number;
+  budget?: number;
+  classTableCounts?: ReadonlyMap<string, number>;
+}): JoinBudget {
   const limit = props.budget ?? SQLITE_MAX_JOIN_TABLES;
+  const classTableCounts = props.classTableCounts;
   let merged: RelationshipPathJoinInfo = { steps: [] };
   const costOf = (info: RelationshipPathJoinInfo): number =>
-    countJoinTables({ steps: mergeJoinInfoSteps([merged, info]) }) - countJoinTables(merged);
-  const remaining = (): number => limit - props.reservedTables - countJoinTables(merged);
+    countJoinTables({ steps: mergeJoinInfoSteps([merged, info]) }, classTableCounts) -
+    countJoinTables(merged, classTableCounts);
+  const remaining = (): number => limit - props.reservedTables - countJoinTables(merged, classTableCounts);
   return {
     costOf,
     remaining,
@@ -138,11 +225,16 @@ export function partitionPathsByJoinBudget(props: {
   paths: readonly ResolvedPathWithJoinInfo[];
   reservedTables: number;
   budget?: number;
+  classTableCounts?: ReadonlyMap<string, number>;
 }): ResolvedPathWithJoinInfo[][] {
   const groups: ResolvedPathWithJoinInfo[][] = [];
   let index = 0;
   while (index < props.paths.length) {
-    const budget = createJoinBudget({ reservedTables: props.reservedTables, budget: props.budget });
+    const budget = createJoinBudget({
+      reservedTables: props.reservedTables,
+      budget: props.budget,
+      classTableCounts: props.classTableCounts,
+    });
     const group = [props.paths[index]];
     if (!budget.tryAdd(props.paths[index].joinInfo)) {
       throw new Error("A relationship path exceeds the SQLite JOIN-table limit.");

@@ -67,15 +67,14 @@ export async function collectCalculatedFields(props: {
       sourceClassName: declaration.sourceClassName,
       expression: declaration.expression,
       primaryClassNames,
+      category:
+        declaration.categoryId !== undefined ? { type: "category", id: declaration.categoryId } : { type: "target" },
     };
     if (declaration.targetAlias !== undefined) {
       field.targetAlias = declaration.targetAlias;
     }
     if (declaration.bindings !== undefined) {
       field.bindings = declaration.bindings;
-    }
-    if (declaration.categoryId !== undefined) {
-      field.categoryId = declaration.categoryId;
     }
 
     const existing = id in result ? result[id] : undefined;

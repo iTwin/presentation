@@ -5,15 +5,16 @@
 
 import { PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { transformContent } from "@itwin/presentation-content";
-import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, formatConcatenatedValue, parseFullClassName } from "@itwin/presentation-shared";
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
-import type { CategoryDefinition, PropertyGridEntry } from "@itwin/presentation-content";
+import type { CategoryDefinition, Field, PropertyGridEntry } from "@itwin/presentation-content";
 import type { Content } from "@itwin/presentation-content-react";
 import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescriptor } from "@itwin/presentation-shared";
 
-const DEFAULT_CATEGORY: CategoryDefinition = { id: "/default-category/", label: "Miscellaneous" };
+/** The category of the content target's own properties. */
+const TARGET_CATEGORY = { name: "/default-category/", label: "Miscellaneous" };
 
 const navigationLabelFormatter = createDefaultValueFormatter();
 
@@ -26,7 +27,7 @@ export async function createPropertyData(content: Content): Promise<PropertyData
   const tree = createCategoryTree(categories);
   const records: PropertyData["records"] = {};
   for (const entry of entries) {
-    const category = tree.get(getCategoryId(entry));
+    const category = tree.get(getCategory(entry));
     (records[category.name] ??= []).push(await createEntryRecord(entry, categories));
   }
   for (const categoryRecords of Object.values(records)) {
@@ -54,13 +55,15 @@ interface RecordProps {
   isReadonly: boolean;
   /** Overrides `isReadonly` for members of struct values, by member name. */
   isMemberReadonly?: (memberName: string) => boolean;
+  /** Overrides type name of the struct value, or of struct array items, by default taken from the struct class. */
+  structTypeName?: string;
 }
 
 type CategoryDefinitions = Content["descriptor"]["categories"];
 
 /** Entries take their category from their field. All fields of a related instances entry share the same category. */
-function getCategoryId(entry: PropertyGridEntry): string | undefined {
-  return entry.kind === "field" ? entry.field.categoryId : entry.fields[0].categoryId;
+function getCategory(entry: PropertyGridEntry): DeepReadonly<Field["category"]> {
+  return entry.kind === "field" ? entry.field.category : entry.fields[0].category;
 }
 
 async function createEntryRecord(entry: PropertyGridEntry, categories: CategoryDefinitions): Promise<PropertyRecord> {
@@ -90,18 +93,21 @@ function getEntryRecordProps(entry: PropertyGridEntry, categories: CategoryDefin
   // Related instances are shown as an array of structs, one struct per related instance. The array and its structs
   // are read-only, while struct members take read-only status from their fields.
   const { fields } = entry;
-  const { pathFromTarget, categoryId } = fields[0];
+  const { pathFromTarget, category } = fields[0];
   const readonlyFieldIds = new Set(fields.filter((field) => field.readOnly).map((field) => field.id));
   const instances = entry.values.find((itemInstances) => itemInstances.length > 0) ?? [];
+  const targetClassName = pathFromTarget[pathFromTarget.length - 1].targetClassName;
+  const label = (category.type === "category" ? categories[category.id]?.label : undefined) ?? targetClassName;
   return {
     name: `related(${fields[0].id})`,
-    label:
-      (categoryId !== undefined ? categories[categoryId]?.label : undefined) ??
-      pathFromTarget[pathFromTarget.length - 1].targetClassName,
+    label,
+    // Like the legacy property grid, related instance structs are named by their label.
+    structTypeName: label,
     type: {
       kind: "array",
       elementType: {
         kind: "struct",
+        className: targetClassName,
         members: fields.map((field) => ({ name: field.id, label: field.label, type: field.type })),
       },
     },
@@ -117,7 +123,13 @@ async function createRecord(props: RecordProps): Promise<PropertyRecord> {
   return record;
 }
 
-async function createValue({ type, value, isReadonly, isMemberReadonly }: RecordProps): Promise<PropertyValue> {
+async function createValue({
+  type,
+  value,
+  isReadonly,
+  isMemberReadonly,
+  structTypeName,
+}: RecordProps): Promise<PropertyValue> {
   switch (type.kind) {
     case "struct": {
       const struct = value as DeepReadonly<Record<string, Value>> | undefined;
@@ -144,10 +156,15 @@ async function createValue({ type, value, isReadonly, isMemberReadonly }: Record
             value: element,
             isReadonly,
             isMemberReadonly,
+            structTypeName,
           }),
         ),
       );
-      return { valueFormat: PropertyValueFormat.Array, items, itemsTypeName: getTypeName(type.elementType) };
+      return {
+        valueFormat: PropertyValueFormat.Array,
+        items,
+        itemsTypeName: getTypeName(type.elementType, structTypeName),
+      };
     }
     case "navigation": {
       const navigation = value as NavigationValue | undefined;
@@ -164,8 +181,8 @@ async function createValue({ type, value, isReadonly, isMemberReadonly }: Record
   }
 }
 
-function createDescription({ name, label, type }: Omit<RecordProps, "value">): PropertyDescription {
-  const description: PropertyDescription = { name, displayLabel: label, typename: getTypeName(type) };
+function createDescription({ name, label, type, structTypeName }: Omit<RecordProps, "value">): PropertyDescription {
+  const description: PropertyDescription = { name, displayLabel: label, typename: getTypeName(type, structTypeName) };
   if (type.kind === "primitive") {
     description.kindOfQuantityName = type.kindOfQuantity;
     if (type.enumeration) {
@@ -181,17 +198,24 @@ function createDescription({ name, label, type }: Omit<RecordProps, "value">): P
   return description;
 }
 
-function getTypeName(type: DeepReadonly<ValueDescriptor>): string {
+/**
+ * Names types the same way the legacy property grid does: primitives by their extended type name when set, structs by
+ * their class name without the schema, and arrays by their element type name with a `[]` suffix.
+ */
+function getTypeName(type: DeepReadonly<ValueDescriptor>, structTypeName?: string): string {
   switch (type.kind) {
     case "struct":
-      return StandardTypeNames.Struct;
+      return structTypeName ?? parseFullClassName(type.className).className;
     case "array":
-      return StandardTypeNames.Array;
+      return `${getTypeName(type.elementType, structTypeName)}[]`;
     case "navigation":
       return StandardTypeNames.Navigation;
     case "primitive":
       if (type.enumeration) {
         return StandardTypeNames.Enum;
+      }
+      if (type.extendedType) {
+        return type.extendedType;
       }
       switch (type.type) {
         case "Boolean":
@@ -201,8 +225,9 @@ function getTypeName(type: DeepReadonly<ValueDescriptor>): string {
         case "Double":
           return StandardTypeNames.Double;
         case "Integer":
-        case "Long":
           return StandardTypeNames.Int;
+        case "Long":
+          return "long";
         case "Point2d":
           return StandardTypeNames.Point2d;
         case "Point3d":
@@ -216,20 +241,30 @@ function getTypeName(type: DeepReadonly<ValueDescriptor>): string {
 
 /**
  * Creates property categories on demand, so that only categories with records (and their ancestors) end up in the
- * tree. The default category is the only root: it holds fields without a category, and categories without a parent.
+ * tree. The content target's category and top-level categories are roots. References to unknown categories fall back
+ * to the content target's category.
  */
 function createCategoryTree(definitions: Partial<CategoryDefinitions>) {
   const roots: PropertyCategory[] = [];
   const created = new Map<string, PropertyCategory>();
-  function get(categoryId: string | undefined): PropertyCategory {
-    const definition = (categoryId !== undefined ? definitions[categoryId] : undefined) ?? DEFAULT_CATEGORY;
-    let category = created.get(definition.id);
+  function getOrCreate(props: {
+    name: string;
+    label: string;
+    parent: DeepReadonly<CategoryDefinition["parent"]>;
+  }): PropertyCategory {
+    let category = created.get(props.name);
     if (!category) {
-      category = { name: definition.id, label: definition.label, expand: true, childCategories: [] };
-      created.set(definition.id, category);
-      (definition === DEFAULT_CATEGORY ? roots : get(definition.parentId).childCategories!).push(category);
+      category = { name: props.name, label: props.label, expand: true, childCategories: [] };
+      created.set(props.name, category);
+      (props.parent ? get(props.parent).childCategories! : roots).push(category);
     }
     return category;
+  }
+  function get(reference: DeepReadonly<Field["category"]>): PropertyCategory {
+    const definition = reference.type === "category" ? definitions[reference.id] : undefined;
+    return definition
+      ? getOrCreate({ name: definition.id, label: definition.label, parent: definition.parent })
+      : getOrCreate({ ...TARGET_CATEGORY, parent: undefined });
   }
   return { roots, get };
 }

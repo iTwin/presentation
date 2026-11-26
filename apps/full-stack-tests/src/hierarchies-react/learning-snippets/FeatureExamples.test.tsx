@@ -251,6 +251,41 @@ describe("Hierarchies React", () => {
         await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
       });
 
+      it("scrolls to node programmatically", async function () {
+        function TreeWithScrollToNode() {
+          // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.ScrollToNode
+          // Hold a ref to the renderer and call `scrollToNode` to scroll the first node matching the predicate into
+          // view. The node must already be loaded; if it's under a collapsed parent or deep in the hierarchy, its
+          // collapsed ancestors are expanded first.
+          const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+          const revealMyModel = () =>
+            treeRef.current?.scrollToNode({ nodePredicate: (node) => node.label === "My Model A" });
+          // __PUBLISH_EXTRACT_END__
+          const treeProps = useTree({ getHierarchyProvider });
+          if (treeProps.rootErrorRendererProps) {
+            return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+          }
+          if (!treeProps.treeRendererProps || treeProps.isLoading) {
+            return "Loading...";
+          }
+          return (
+            // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.ScrollToNodeRenderer
+            <>
+              <button onClick={revealMyModel}>Show model</button>
+              <StrataKitTreeRenderer {...treeProps.treeRendererProps} ref={treeRef} treeLabel="My Tree" />
+            </>
+            // __PUBLISH_EXTRACT_END__
+          );
+        }
+
+        const { getByText } = render(
+          <Root colorScheme="light">
+            <TreeWithScrollToNode />
+          </Root>,
+        );
+        await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
+      });
+
       it("renders a tree with custom errors", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.ErrorRendering
         // The payload your application attaches to a node's error through `additionalData`. Carry whatever the

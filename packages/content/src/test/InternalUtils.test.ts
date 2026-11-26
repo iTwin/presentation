@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCategoryContext,
   collectInParallel,
+  getCategoryContextKey,
   getClassLabel,
   isSchemaVersionAtLeast,
   isSchemaVersionBelow,
@@ -24,7 +25,9 @@ describe("buildCategoryContext", () => {
   const includeAll = () => true;
 
   it("appends offset step spec classes after inherited ancestry without mutating either input", () => {
-    const inheritedContext = Object.freeze([{ stepIndex: 0, kind: "targetClass" }] as const);
+    const inheritedContext = Object.freeze([
+      { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+    ] as const);
     const properties = Object.freeze([
       { stepIndex: 1, target: { select: "all" } },
       { stepIndex: 0, target: { select: "none" }, relationship: { select: "none" } },
@@ -32,12 +35,18 @@ describe("buildCategoryContext", () => {
     ] as const);
 
     expect(
-      buildCategoryContext({ inheritedContext, properties, stepIndexOffset: 1, include: includeAll }),
+      buildCategoryContext({
+        inheritedContext,
+        properties,
+        relationshipMeaning: "relatedInstance",
+        stepIndexOffset: 1,
+        include: includeAll,
+      }),
     ).to.deep.equal([
-      { stepIndex: 0, kind: "targetClass" },
-      { stepIndex: 1, kind: "relationshipClass" },
-      { stepIndex: 1, kind: "targetClass" },
-      { stepIndex: 2, kind: "targetClass" },
+      { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+      { stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "relatedInstance" },
+      { stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+      { stepIndex: 2, kind: "targetClass", relationshipMeaning: "relatedInstance" },
     ]);
   });
 
@@ -51,18 +60,28 @@ describe("buildCategoryContext", () => {
       buildCategoryContext({
         inheritedContext: [],
         properties,
+        relationshipMeaning: "relatedInstance",
         stepIndexOffset: 0,
         include: (entry) => entry.stepIndex === 0 && entry.kind === "targetClass",
       }),
-    ).to.deep.equal([{ stepIndex: 0, kind: "targetClass" }]);
+    ).to.deep.equal([{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }]);
   });
 
   it.each([
     { name: "root", inheritedContext: [] },
-    { name: "inherited", inheritedContext: [{ stepIndex: 0, kind: "targetClass" }] },
+    {
+      name: "inherited",
+      inheritedContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
+    },
   ] as const)("preserves the $name context when no step specs are given", ({ inheritedContext }) => {
     expect(
-      buildCategoryContext({ inheritedContext, properties: [], stepIndexOffset: 0, include: includeAll }),
+      buildCategoryContext({
+        inheritedContext,
+        properties: [],
+        relationshipMeaning: "relatedInstance",
+        stepIndexOffset: 0,
+        include: includeAll,
+      }),
     ).to.deep.equal(inheritedContext);
   });
 
@@ -70,11 +89,60 @@ describe("buildCategoryContext", () => {
     const spec = { stepIndex: 0, target: { select: "none" }, relationship: { select: "all" } } as const;
 
     expect(
-      buildCategoryContext({ inheritedContext: [], properties: [spec, spec], stepIndexOffset: 0, include: includeAll }),
+      buildCategoryContext({
+        inheritedContext: [],
+        properties: [spec, spec],
+        relationshipMeaning: "relatedInstance",
+        stepIndexOffset: 0,
+        include: includeAll,
+      }),
     ).to.deep.equal([
-      { stepIndex: 0, kind: "relationshipClass" },
-      { stepIndex: 0, kind: "targetClass" },
+      { stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" },
+      { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
     ]);
+  });
+
+  it("records each step's own relationship meaning, else the given one", () => {
+    const properties = [
+      { stepIndex: 0, target: { select: "none" }, relationshipMeaning: "sameInstance" },
+      { stepIndex: 1, target: { select: "all" }, relationship: { select: "all" } },
+      { stepIndex: 2, target: { select: "all" }, relationshipMeaning: "relatedInstance" },
+    ] as const;
+
+    expect(
+      buildCategoryContext({
+        inheritedContext: [],
+        properties,
+        relationshipMeaning: "sameInstance",
+        stepIndexOffset: 0,
+        include: includeAll,
+      }),
+    ).to.deep.equal([
+      { stepIndex: 0, kind: "targetClass", relationshipMeaning: "sameInstance" },
+      { stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "sameInstance" },
+      { stepIndex: 1, kind: "targetClass", relationshipMeaning: "sameInstance" },
+      { stepIndex: 2, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+    ]);
+  });
+});
+
+describe("getCategoryContextKey", () => {
+  const outer = { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" } as const;
+  const inner = { stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "relatedInstance" } as const;
+
+  it("ignores meanings of entries other than the outermost one", () => {
+    expect(getCategoryContextKey([outer, inner])).toBe(
+      getCategoryContextKey([outer, { ...inner, relationshipMeaning: "sameInstance" }]),
+    );
+  });
+
+  it.each([
+    { name: "outermost meaning", other: [{ ...outer, relationshipMeaning: "sameInstance" }, inner] },
+    { name: "step index", other: [outer, { ...inner, stepIndex: 2 }] },
+    { name: "kind", other: [outer, { ...inner, kind: "targetClass" }] },
+    { name: "length", other: [outer] },
+  ] as const)("distinguishes contexts with different $name", ({ other }) => {
+    expect(getCategoryContextKey([outer, inner])).not.toBe(getCategoryContextKey(other));
   });
 });
 
