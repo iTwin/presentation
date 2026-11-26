@@ -39,11 +39,11 @@ export interface InstanceNodesQueryDefinition {
    * An ECSQL query that selects nodes from an iModel. `SELECT` clause of the query is expected
    * to be built using `NodeSelectQueryFactory.createSelectClause`.
    *
-   * When an array of queries is provided, they're treated as alternatives that return the same nodes. All of them
-   * are executed in parallel, nodes are taken from the one that responds first, and the others are ignored. This
-   * is useful when different queries perform better on different iModels.
+   * Use `{ race: [...] }` to provide alternative queries that return the same nodes. All of them are executed in
+   * parallel, nodes are taken from the one that responds first, and the others are cancelled. This is useful when
+   * different queries perform better on different iModels.
    */
-  query: ECSqlQueryDef | ECSqlQueryDef[];
+  query: ECSqlQueryDef | { race: ECSqlQueryDef[] };
 }
 
 /**

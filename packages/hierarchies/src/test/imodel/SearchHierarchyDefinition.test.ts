@@ -653,10 +653,10 @@ describe("applyECInstanceIdsSearch", () => {
 
   it("applies search to each query alternative", () => {
     const result = applyECInstanceIdsSearch(
-      { fullClassName: "SchemaName.ClassName", query: [{ ecsql: "query 1" }, { ecsql: "query 2" }] },
+      { fullClassName: "SchemaName.ClassName", query: { race: [{ ecsql: "query 1" }, { ecsql: "query 2" }] } },
       [{ className: "test.class", id: "0x1" }],
     );
-    const queries = result.query as ECSqlQueryDef[];
+    const queries = (result.query as { race: ECSqlQueryDef[] }).race;
     expect(queries).toHaveLength(2);
     expect(trimWhitespace(queries[0].ecsql)).toContain("FROM (query 1) [q] JOIN SearchInfo");
     expect(trimWhitespace(queries[1].ecsql)).toContain("FROM (query 2) [q] JOIN SearchInfo");
@@ -688,9 +688,9 @@ describe("applyECInstanceIdsSelector", () => {
   it("wraps each query alternative", () => {
     const result = applyECInstanceIdsSelector({
       fullClassName: "SchemaName.ClassName",
-      query: [{ ecsql: "query 1" }, { ecsql: "query 2" }],
+      query: { race: [{ ecsql: "query 1" }, { ecsql: "query 2" }] },
     });
-    const queries = result.query as ECSqlQueryDef[];
+    const queries = (result.query as { race: ECSqlQueryDef[] }).race;
     expect(queries).toHaveLength(2);
     expect(trimWhitespace(queries[0].ecsql)).toContain("FROM (query 1) [q]");
     expect(trimWhitespace(queries[1].ecsql)).toContain("FROM (query 2) [q]");

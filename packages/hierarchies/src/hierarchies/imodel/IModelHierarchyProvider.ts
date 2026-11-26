@@ -1048,10 +1048,10 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
 
 /** Runs all query alternatives in parallel and mirrors the first one to emit, unsubscribing from the rest. */
 function raceQueryAlternatives<T>(
-  query: ECSqlQueryDef | ECSqlQueryDef[],
+  query: InstanceNodesQueryDefinition["query"],
   factory: (query: ECSqlQueryDef) => Observable<T>,
 ): Observable<T> {
-  const queries = Array.isArray(query) ? query : [query];
+  const queries = "race" in query ? query.race : [query];
   return queries.length > 0 ? race(queries.map(factory)) : EMPTY;
 }
 

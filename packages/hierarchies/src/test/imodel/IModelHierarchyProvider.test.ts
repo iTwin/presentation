@@ -187,12 +187,12 @@ describe("createIModelHierarchyProvider", () => {
   });
 
   describe("Query alternatives", () => {
-    const createProvider = (query: ECSqlQueryDef[]) =>
+    const createProvider = (queries: ECSqlQueryDef[]) =>
       createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
-            return parentNode ? [] : [{ fullClassName: "a.b", query }];
+            return parentNode ? [] : [{ fullClassName: "a.b", query: { race: queries } }];
           },
         },
       });
