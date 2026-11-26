@@ -29,6 +29,7 @@ import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, createNodeIdentifierForLogging } from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
 import { getRxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
+import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
 import {
   createGenericSourceNode,
   createIModelNodesQueryClauseFactory,
@@ -69,6 +70,7 @@ import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js
 import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.StreamingIModelHierarchyProvider`;
+const DEFAULT_QUERY_CONCURRENCY = 10;
 const DEFAULT_PAGE_SIZE = 1000;
 
 /**
@@ -111,6 +113,9 @@ export interface StreamingIModelHierarchyProviderProps {
    * Must be a positive integer. Defaults to `1000`.
    */
   pageSize?: number;
+
+  /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
+  queryConcurrency?: number;
 
   /**
    * A values formatter for formatting node labels. Defaults to the result of `createDefaultValueFormatter` called with
@@ -290,6 +295,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   readonly #componentId = Guid.createValue();
   readonly #sourceName: string;
   readonly #pageSize: number;
+  readonly #queryScheduler: SubscriptionScheduler;
   // incremented on any hierarchy change or disposal - requests started before that fail
   readonly #interruptGeneration = new BehaviorSubject(0);
   // incremented on iModel change - older continuation tokens become invalid
@@ -301,6 +307,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
 
   public constructor(props: StreamingIModelHierarchyProviderProps & { sourceName?: string }) {
     this.#pageSize = props.pageSize ?? DEFAULT_PAGE_SIZE;
+    this.#queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
     if (!Number.isSafeInteger(this.#pageSize) || this.#pageSize < 1) {
       throw new Error(`Invalid page size: ${this.#pageSize}. Expected a positive integer.`);
     }
@@ -661,35 +668,43 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
       const readNextPage = defer(() => {
         const pageOffset = startOffset + pagesCount++ * this.#pageSize;
         pageRowsCount = 0;
-        return readNodeRows({
-          queryExecutor: this.#imodelAccess,
-          query: createPageQuery({ query: definition.query, offset: pageOffset, limit: this.#pageSize }),
-          // the query has its own limit - reaching it means there's another page rather than a failure
-          limit: "unbounded",
-        }).pipe(
-          tap(() => ++pageRowsCount),
-          concatMap((row, index) =>
-            onDemand(demand, () => {
-              const offset = pageOffset + index;
-              return parseSourceInstanceNode({
-                row,
-                parentNode,
-                imodelKey: this.#imodelAccess.imodelKey,
-                parseNode: this.#hierarchyDefinition.parseNode,
-              }).pipe(
-                concatMap((sourceNode) =>
-                  processSourceNode({
-                    sourceNode,
-                    offset,
-                    ...(resume?.nestedContinuationToken && offset === resume.offset
-                      ? { nestedContinuationToken: resume.nestedContinuationToken }
-                      : undefined),
-                  }),
-                ),
-              );
+        // only reading the page is scheduled - processing its rows may run other queries, which would otherwise
+        // wait for a slot taken by this one
+        return this.#queryScheduler
+          .scheduleSubscription(
+            readNodeRows({
+              queryExecutor: this.#imodelAccess,
+              query: createPageQuery({ query: definition.query, offset: pageOffset, limit: this.#pageSize }),
+              // the query has its own limit - reaching it means there's another page rather than a failure
+              limit: "unbounded",
             }),
-          ),
-        );
+            // stop reading when nodes are no longer needed, e.g. the consumer stops or the first child is found
+            { cancelOnUnsubscribe: true },
+          )
+          .pipe(
+            tap(() => ++pageRowsCount),
+            concatMap((row, index) =>
+              onDemand(demand, () => {
+                const offset = pageOffset + index;
+                return parseSourceInstanceNode({
+                  row,
+                  parentNode,
+                  imodelKey: this.#imodelAccess.imodelKey,
+                  parseNode: this.#hierarchyDefinition.parseNode,
+                }).pipe(
+                  concatMap((sourceNode) =>
+                    processSourceNode({
+                      sourceNode,
+                      offset,
+                      ...(resume?.nestedContinuationToken && offset === resume.offset
+                        ? { nestedContinuationToken: resume.nestedContinuationToken }
+                        : undefined),
+                    }),
+                  ),
+                );
+              }),
+            ),
+          );
       });
       return onDemand(demand, () =>
         readNextPage.pipe(

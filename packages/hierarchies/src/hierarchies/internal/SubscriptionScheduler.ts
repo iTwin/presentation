@@ -16,6 +16,7 @@ import {
   queueScheduler,
   Subject,
   subscribeOn,
+  takeUntil,
   tap,
 } from "rxjs";
 
@@ -55,19 +56,24 @@ export class SubscriptionScheduler {
    * from the returned observable.
    *
    * @param source Input observable for which to schedule a subscription.
+   * @param options.cancelOnUnsubscribe By default, once `source` is subscribed to, it runs to completion, even if all
+   * subscribers of the returned observable unsubscribe. When this is set, `source` is unsubscribed from at that point,
+   * freeing its slot in the scheduler.
    * @returns Hot observable which starts emitting `source` values after subscription.
    */
-  public scheduleSubscription<T>(source: Observable<T>): Observable<T> {
+  public scheduleSubscription<T>(source: Observable<T>, options?: { cancelOnUnsubscribe?: boolean }): Observable<T> {
     return defer(() => {
       let unsubscribed = false;
+      const cancel = new Subject<void>();
       const connectableObservable = connectable(
-        iif(() => unsubscribed, EMPTY, source),
+        iif(() => unsubscribed, EMPTY, options?.cancelOnUnsubscribe ? source.pipe(takeUntil(cancel)) : source),
         { connector: () => new Subject<T>(), resetOnDisconnect: false },
       );
       this._scheduler.next(connectableObservable);
       return connectableObservable.pipe(
         finalize(() => {
           unsubscribed = true;
+          cancel.next();
         }),
       );
     });

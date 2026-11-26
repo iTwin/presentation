@@ -337,6 +337,26 @@ describe("createStreamingIModelHierarchyProvider", () => {
       expect(defineHierarchyLevel).toHaveBeenCalledTimes(2);
     });
 
+    it("limits the number of queries executed in parallel", async () => {
+      const rows = new ResolvablePromise<RowDef[]>();
+      setupQueries({ Q: rows });
+      using provider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        queryConcurrency: 1,
+        hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
+      });
+      const first = readLabels(provider.getNodes({ parentNode: undefined }), 1);
+      const second = readLabels(provider.getNodes({ parentNode: undefined }), 1);
+      await waitFor(() => expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce());
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
+
+      await rows.resolve(createRows(1));
+      expect(await first).toEqual(["0x1"]);
+      expect(await second).toEqual(["0x1"]);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
+    });
+
     it("stops reading when the consumer stops", async () => {
       const secondRow = new ResolvablePromise<RowDef>();
       const thirdRowRead = vi.fn();

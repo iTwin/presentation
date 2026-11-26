@@ -886,6 +886,7 @@ interface StreamingIModelHierarchyProviderProps {
     imodelChanged?: Event_2<() => void>;
     instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
     pageSize?: number;
+    queryConcurrency?: number;
     search?: {
         paths: HierarchySearchTree[];
     };
