@@ -65,7 +65,7 @@ import { createGroupingOperator } from "./operators/Grouping.js";
 import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js";
 import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy.js";
 import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
-import { parseNodes, readNodes } from "./TreeNodesReader.js";
+import { fromQueryReader, parseNodes, readNodes } from "./TreeNodesReader.js";
 import { ECSQL_PREFIX } from "./Utils.js";
 
 import type { Observable, ObservableInput, ObservedValueOf } from "rxjs";
@@ -913,7 +913,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                   restartToken: `${this.#componentName}/${this.#componentId}/node-instance-keys/${Guid.createValue()}`,
                 },
               );
-              return from(reader).pipe(
+              return fromQueryReader(reader).pipe(
                 map((row) => ({
                   key: {
                     className: normalizeFullClassName(row[0]),

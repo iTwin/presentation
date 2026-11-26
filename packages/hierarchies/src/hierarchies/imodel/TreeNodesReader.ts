@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, of } from "rxjs";
+import { finalize, from, mergeMap, of } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import { parseInstanceLabel } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
@@ -34,7 +34,16 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
     restartToken: `readNodes/${Guid.createValue()}`,
     ...(limit !== undefined ? { limit } : undefined),
   };
-  return parseNodes({ rows: queryExecutor.createQueryReader(query, config), parser });
+  return parseNodes({ rows: fromQueryReader(queryExecutor.createQueryReader(query, config)), parser });
+}
+
+/**
+ * Creates an observable from given query reader. Unsubscribing before all rows are read calls reader's `return()`,
+ * which cancels the query.
+ * @internal
+ */
+export function fromQueryReader<T>(reader: AsyncIterableIterator<T>): Observable<T> {
+  return from(reader).pipe(finalize(() => void reader.return?.(undefined)));
 }
 
 /**

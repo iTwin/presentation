@@ -7,10 +7,15 @@ import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { defaultNodesParser, parseNodes, readNodes } from "../../hierarchies/imodel/TreeNodesReader.js";
+import {
+  defaultNodesParser,
+  fromQueryReader,
+  parseNodes,
+  readNodes,
+} from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createTestSourceInstanceNode } from "../Utils.js";
 
-import type { ConcatenatedValue } from "@itwin/presentation-shared";
+import type { ConcatenatedValue, ECSqlQueryRow } from "@itwin/presentation-shared";
 import type { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import type { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
@@ -50,6 +55,19 @@ describe("readNodes", () => {
       query,
       expect.objectContaining({ rowFormat: "ECSqlPropertyNames", limit: 123, restartToken: expect.any(String) }),
     );
+  });
+});
+
+describe("fromQueryReader", () => {
+  it("cancels the reader when unsubscribed before all rows are read", () => {
+    // `next()` never resolves - plain `from(reader)` would only call `return()` after the next row arrives
+    const reader = {
+      [Symbol.asyncIterator]: () => reader,
+      next: async () => new Promise<IteratorResult<ECSqlQueryRow>>(() => {}),
+      return: vi.fn(async () => ({ done: true as const, value: undefined })),
+    };
+    fromQueryReader(reader).subscribe().unsubscribe();
+    expect(reader.return).toHaveBeenCalledOnce();
   });
 });
 

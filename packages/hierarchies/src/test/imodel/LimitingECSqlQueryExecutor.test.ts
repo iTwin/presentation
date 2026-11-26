@@ -9,7 +9,7 @@ import { trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { createLimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 
-import type { ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 
 describe("createLimitingECSqlQueryExecutor", () => {
   const baseExecutor = { createQueryReader: vi.fn<ECSqlQueryExecutor["createQueryReader"]>() };
@@ -56,5 +56,29 @@ describe("createLimitingECSqlQueryExecutor", () => {
     expect(baseExecutor.createQueryReader).toHaveBeenCalledOnce();
     const calledArgs = baseExecutor.createQueryReader.mock.calls[0][0];
     expect(trimWhitespace(calledArgs.ecsql)).toBe(trimWhitespace("SELECT * FROM (query) LIMIT 2"));
+  });
+
+  it("cancels base reader when returned while waiting for a row", async () => {
+    const baseReader = {
+      [Symbol.asyncIterator]: () => baseReader,
+      next: vi.fn(async () => new Promise<IteratorResult<ECSqlQueryRow>>(() => {})),
+      return: vi.fn(async () => ({ done: true as const, value: undefined })),
+    };
+    baseExecutor.createQueryReader.mockReturnValue(baseReader);
+    const reader = createLimitingECSqlQueryExecutor(baseExecutor, 1).createQueryReader({ ecsql: "query" });
+    void reader.next();
+    await vi.waitFor(() => expect(baseReader.next).toHaveBeenCalled());
+    void reader.return!();
+    await vi.waitFor(() => expect(baseReader.return).toHaveBeenCalledOnce());
+  });
+
+  it("doesn't cancel base reader when returned after all its rows are read", async () => {
+    const baseReader = createAsyncIterator([{ id: 1 }, { id: 2 }]);
+    const returnSpy = vi.fn();
+    baseExecutor.createQueryReader.mockReturnValue(Object.assign(baseReader, { return: returnSpy }));
+    const reader = createLimitingECSqlQueryExecutor(baseExecutor, 10).createQueryReader({ ecsql: "query" });
+    expect(await reader.next()).toEqual({ done: false, value: { id: 1 } });
+    await reader.return!();
+    expect(returnSpy).not.toHaveBeenCalled();
   });
 });

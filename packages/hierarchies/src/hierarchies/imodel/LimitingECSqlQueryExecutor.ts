@@ -45,49 +45,59 @@ export function createLimitingECSqlQueryExecutor(
   defaultLimit: number | "unbounded",
 ): LimitingECSqlQueryExecutor {
   return {
-    async *createQueryReader(
-      query: ECSqlQueryDef,
-      config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
-    ) {
-      const { limit: configLimit, ...restConfig } = config ?? {};
-      const limit = configLimit ?? defaultLimit;
-      const queryLogger = createQueryLogger(query);
-      const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
+    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {
+      let baseReader: ReturnType<ECSqlQueryExecutor["createQueryReader"]> | undefined;
+      const rows = (async function* () {
+        const { limit: configLimit, ...restConfig } = config ?? {};
+        const limit = configLimit ?? defaultLimit;
+        const queryLogger = createQueryLogger(query);
+        const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
 
-      // handle "unbounded" case without a buffer
-      const reader = baseExecutor.createQueryReader({ ...query, ecsql: addLimit(query.ecsql, limit) }, restConfig);
-      if (limit === "unbounded") {
+        // handle "unbounded" case without a buffer
+        const reader = baseExecutor.createQueryReader({ ...query, ecsql: addLimit(query.ecsql, limit) }, restConfig);
+        baseReader = reader;
+        if (limit === "unbounded") {
+          try {
+            for await (const row of reader) {
+              await releaseMainThread();
+              queryLogger.onStep();
+              yield row;
+            }
+          } finally {
+            baseReader = undefined;
+            queryLogger.onComplete();
+          }
+          return;
+        }
+
+        // avoid streaming until we know the number of rows is okay
+        const buffer: ECSqlQueryRow[] = [];
         try {
           for await (const row of reader) {
             await releaseMainThread();
             queryLogger.onStep();
-            yield row;
+            buffer.push(row);
+            if (buffer.length > limit) {
+              throw new RowsLimitExceededError({ limit, rows: buffer.slice(0, limit) });
+            }
           }
         } finally {
+          baseReader = undefined;
           queryLogger.onComplete();
         }
-        return;
-      }
 
-      // avoid streaming until we know the number of rows is okay
-      const buffer: ECSqlQueryRow[] = [];
-      try {
-        for await (const row of reader) {
+        for (const row of buffer) {
           await releaseMainThread();
-          queryLogger.onStep();
-          buffer.push(row);
-          if (buffer.length > limit) {
-            throw new RowsLimitExceededError({ limit, rows: buffer.slice(0, limit) });
-          }
+          yield row;
         }
-      } finally {
-        queryLogger.onComplete();
-      }
-
-      for (const row of buffer) {
-        await releaseMainThread();
-        yield row;
-      }
+      })();
+      const generatorReturn = rows.return.bind(rows);
+      // generator's `return()` waits for the pending `next()` to settle, so cancel the base reader right away
+      rows.return = async (value) => {
+        await baseReader?.return?.();
+        return generatorReturn(value);
+      };
+      return rows;
     },
   };
 }
