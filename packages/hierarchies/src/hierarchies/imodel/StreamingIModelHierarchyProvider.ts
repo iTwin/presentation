@@ -181,10 +181,9 @@ export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonG
    * Nodes with `hideInHierarchy` processing param are replaced by their children in place. Nodes with `hideIfNoChildren`
    * processing param are omitted if they have no children.
    *
-   * @throws `InvalidContinuationTokenError` if the given `continuationToken` is malformed, was created for a different
-   * parent node, instance filter or hierarchy search, or was created before an iModel change.
-   * @throws `InvalidContinuationTokenError` from the iterator, if the given `continuationToken` points to a hierarchy
-   * level definition that doesn't exist.
+   * @throws `InvalidContinuationTokenError` if the given `continuationToken` can't be used: it's malformed, was created
+   * for a different parent node, instance filter or hierarchy search, or was created before an iModel change
+   * or it points to a hierarchy level definition that doesn't exist.
    * @throws `HierarchyRequestInterruptedError` from the iterator, if the hierarchy changes or the provider is disposed
    * after `getNodes` is called and before all nodes are streamed, or if the provider was already disposed when
    * `getNodes` was called. The iterator only finishes without an error after the last node of the hierarchy level.
