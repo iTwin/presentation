@@ -468,7 +468,9 @@ describe("SearchHierarchyDefinition", () => {
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty("query.ecsql");
-      expect(trimWhitespace(((result[0] as InstanceNodesQueryDefinition).query as ECSqlQueryDef).ecsql)).toContain("SearchInfo");
+      expect(trimWhitespace(((result[0] as InstanceNodesQueryDefinition).query as ECSqlQueryDef).ecsql)).toContain(
+        "SearchInfo",
+      );
     });
 
     it("skips instance definitions with non-matching class", async () => {
@@ -628,7 +630,7 @@ describe("SearchHierarchyDefinition", () => {
         undefined,
       ]);
       // instances are filtered using the search CTE
-      const searchCte = (result[1] as InstanceNodesQueryDefinition).query.ctes!.find((cte) =>
+      const searchCte = ((result[1] as InstanceNodesQueryDefinition).query as ECSqlQueryDef).ctes!.find((cte) =>
         cte.includes("SearchInfo"),
       );
       expect(trimWhitespace(searchCte!)).toContain("0x1");
