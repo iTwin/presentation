@@ -6,16 +6,13 @@
 import { collect } from "presentation-test-utilities";
 import { assert, describe, expect } from "vitest";
 import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
-import { getPropertyFields, PAGE_SIZE, runContentTest } from "./ContentTestUtilities.js";
+import { getPropertyFields, runContentTest } from "./ContentTestUtilities.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 
 describe("Content items", () => {
-  // Combines many classes with a large ID filter when loading items, which count and instance key benchmarks don't do.
-  // Only a few pages are loaded, as loading all items of 500 classes is too slow for a benchmark.
-  const pageCount = 5;
   runContentTest({
-    testName: `first ${pageCount} pages of items in 500 classes targeted by 50k explicit instance IDs`,
+    testName: "all items in 500 classes targeted by 50k explicit instance IDs",
     imodelName: "50k elements in 500 classes",
     setup: async ({ imodelAccess, config, dataset }) => {
       const { schema } = dataset.meta;
@@ -39,7 +36,6 @@ describe("Content items", () => {
     },
     test: async ({ provider, ids, propertyField, dataset }) => {
       const { elementCount, classCount, propertyValuePrefix } = dataset.meta;
-      const expectedCount = pageCount * PAGE_SIZE;
       const loaded = new Set<Id64String>();
       const classes = new Set<string>();
       for await (const item of provider.getItems()) {
@@ -48,12 +44,9 @@ describe("Content items", () => {
         assert(typeof value === "string" && value.startsWith(propertyValuePrefix));
         loaded.add(item.primaryKey.id);
         classes.add(item.primaryKey.className);
-        if (loaded.size === expectedCount) {
-          break;
-        }
       }
-      expect(loaded.size).toBe(expectedCount);
-      expect(classes.size).toBe(expectedCount / (elementCount / classCount));
+      expect(loaded.size).toBe(elementCount);
+      expect(classes.size).toBe(classCount);
     },
   });
 });
