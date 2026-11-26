@@ -48,7 +48,6 @@ import type {
   ContinuableAsyncIterableIterator,
   ECSchemaProvider,
   ECSqlQueryDef,
-  ECSqlQueryRow,
   Event,
   EventListener,
   IInstanceLabelSelectClauseFactory,
@@ -63,7 +62,6 @@ import type { ProviderSourceNode } from "./HierarchyProviderUtils.js";
 import type {
   GenericHierarchyNodeDefinition,
   HierarchyDefinition,
-  HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "./IModelHierarchyDefinition.js";
 import type { ProcessedGenericHierarchyNode, ProcessedInstanceHierarchyNode } from "./IModelHierarchyNode.js";
@@ -615,7 +613,12 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     const resumePosition: LevelPosition | undefined = props.continuationToken?.[0];
     const resumeNestedContinuationToken = props.continuationToken?.slice(1) ?? [];
     const startDefinitionIndex = resumePosition?.definitionIndex ?? 0;
-    return this.#defineHierarchyLevel({ parentNode: ownParentNode, instanceFilter }).pipe(
+    return defineHierarchyLevel({
+      hierarchyDefinition: this.#hierarchyDefinition,
+      nodesQueryClauseFactory: this.#nodesQueryClauseFactory,
+      parentNode: ownParentNode,
+      ...(instanceFilter ? { instanceFilter } : undefined),
+    }).pipe(
       concatMap((definitions) => {
         if (startDefinitionIndex >= definitions.length && resumePosition) {
           return throwError(
@@ -704,13 +707,23 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
       const readNextPage = defer(() => {
         const pageOffset = startOffset + pagesCount++ * this.#pageSize;
         pageRowsCount = 0;
-        return this.#readQueryPage({ query: definition.query, offset: pageOffset }).pipe(
+        return readNodeRows({
+          queryExecutor: this.#imodelAccess,
+          query: createPageQuery({ query: definition.query, offset: pageOffset, limit: this.#pageSize }),
+          // the query has its own limit - reaching it means there's another page rather than a failure
+          limit: "unbounded",
+        }).pipe(
           tap(() => ++pageRowsCount),
           // rows of the page are read right away, but each of them is processed only when it's needed
           concatMap((row, index) =>
             onDemand(demand, () => {
               const offset = pageOffset + index;
-              return this.#parseNode({ row, parentNode }).pipe(
+              return parseSourceInstanceNode({
+                row,
+                parentNode,
+                imodelKey: this.#imodelAccess.imodelKey,
+                parseNode: this.#hierarchyDefinition.parseNode,
+              }).pipe(
                 concatMap((sourceNode) =>
                   processSourceNode({
                     sourceNode,
@@ -734,15 +747,6 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     });
   }
 
-  #readQueryPage({ query, offset }: { query: ECSqlQueryDef; offset: number }): Observable<ECSqlQueryRow> {
-    return readNodeRows({
-      queryExecutor: this.#imodelAccess,
-      query: createPageQuery({ query, offset, limit: this.#pageSize }),
-      // the query has its own limit - reaching it means there's another page rather than a failure
-      limit: "unbounded",
-    });
-  }
-
   /** Finalizes the node the way it's returned by `getNodes`. Completes without a value if the node should be omitted. */
   #finalizeNode({
     node,
@@ -759,33 +763,6 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
       ),
       map((postProcessed) => toFinalNode(postProcessed as StreamingProcessedNode)),
     );
-  }
-
-  #defineHierarchyLevel({
-    parentNode,
-    instanceFilter,
-  }: Pick<ReadLevelProps<never>, "parentNode" | "instanceFilter">): Observable<HierarchyLevelDefinition> {
-    return defineHierarchyLevel({
-      hierarchyDefinition: this.#hierarchyDefinition,
-      nodesQueryClauseFactory: this.#nodesQueryClauseFactory,
-      parentNode,
-      ...(instanceFilter ? { instanceFilter } : undefined),
-    });
-  }
-
-  #parseNode({
-    row,
-    parentNode,
-  }: {
-    row: ECSqlQueryRow;
-    parentNode: StreamingParentNode | undefined;
-  }): Observable<ProviderSourceNode> {
-    return parseSourceInstanceNode({
-      row,
-      parentNode,
-      imodelKey: this.#imodelAccess.imodelKey,
-      parseNode: this.#hierarchyDefinition.parseNode,
-    });
   }
 
   /** Pre-processes the given source node. Completes without a value if the node is omitted. */
