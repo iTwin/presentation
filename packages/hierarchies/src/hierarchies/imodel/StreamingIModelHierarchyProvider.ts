@@ -15,10 +15,10 @@ import {
   finalize,
   from,
   map,
-  Observable,
   of,
   repeat,
   take,
+  takeUntil,
   tap,
   throwError,
 } from "rxjs";
@@ -42,7 +42,7 @@ import { HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
 import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
 import { readNodeRows } from "./TreeNodesReader.js";
 
-import type { MonoTypeOperatorFunction, Subscription } from "rxjs";
+import type { MonoTypeOperatorFunction, Observable, Subscription } from "rxjs";
 import type { GenericInstanceFilter } from "@itwin/core-common";
 import type {
   ContinuableAsyncIterableIterator,
@@ -757,13 +757,13 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
 
 /** Fails the stream with `HierarchyRequestInterruptedError` when `interrupt` emits. */
 function throwOnInterrupt<T>(interrupt: Observable<unknown>): MonoTypeOperatorFunction<T> {
-  return (source) =>
-    new Observable<T>((subscriber) => {
-      subscriber.add(interrupt.subscribe(() => subscriber.error(new HierarchyRequestInterruptedError())));
-      if (!subscriber.closed) {
-        subscriber.add(source.subscribe(subscriber));
-      }
-    });
+  return takeUntil(
+    interrupt.pipe(
+      map(() => {
+        throw new HierarchyRequestInterruptedError();
+      }),
+    ),
+  );
 }
 
 function onDemand<T>(demand: Observable<unknown>, work: () => Observable<T>): Observable<T> {
@@ -912,7 +912,6 @@ class ContinuationTokenContext {
     searchFingerprint: string;
   }) {
     this.#generation = props.generation;
-    this.resumeFrom = props.continuationToken !== undefined ? this.#decode(props.continuationToken) : undefined;
     this.#fingerprint = ContinuationTokenContext.#hash([
       props.parentNode?.key,
       props.parentNode?.parentKeys,
@@ -920,6 +919,7 @@ class ContinuationTokenContext {
       props.searchFingerprint,
     ]);
     this.#initialToken = props.continuationToken;
+    this.resumeFrom = props.continuationToken !== undefined ? this.#decode(props.continuationToken) : undefined;
   }
 
   /** Called when the node's last value is returned to the consumer. */
