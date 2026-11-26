@@ -161,7 +161,9 @@ invalidates the affected property grid captures.
 
 The legacy provider uses the default property grid ruleset, extended with the
 same supplemental rules as other legacy captures. Its favorites category is
-disabled. Before comparing, property grid data is normalized:
+disabled. Like the content suite's legacy normalization, it hides properties
+declared on hidden classes, which the new pipeline doesn't show. Before
+comparing, property grid data is normalized:
 
 - categories, records and struct members are matched by label, because their
   names are implementation-specific. Implementations order entries with equal
