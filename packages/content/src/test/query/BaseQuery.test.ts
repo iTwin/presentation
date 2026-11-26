@@ -40,7 +40,8 @@ const schemaProvider = {
       target: { multiplicity: { lowerLimit: 0, upperLimit: className.includes("Many") ? 2 : 1 } },
     }),
   }),
-  classDerivesFrom: () => false,
+  // Costs every test class like an aspect (3 tables); the join-budget arithmetic in the tests below assumes it.
+  classDerivesFrom: (_derived: string, base: string) => base === "BisCore.ElementAspect",
   getHiddenClassesTree: async () => [],
 } as unknown as ECSchemaProvider;
 const primaryClass: EC.FullClassNameDotNotation = "TestSchema.Primary";
@@ -2082,34 +2083,32 @@ describe("buildBaseQuery", () => {
 });
 
 describe("buildTargetScopedQuery", () => {
-  it("evaluates the given and filtered calculated fields on the primary alias", async () => {
-    const createField = (id: string): CalculatedField => ({
+  it("evaluates the given calculated fields on the primary alias", async () => {
+    const field: CalculatedField = {
       category: { type: "target" },
       kind: "calculated",
-      id,
-      label: id,
+      id: "requested",
+      label: "requested",
       type: { kind: "primitive", type: "Double" },
       expression: "this.Length",
       sourceClassName: primaryClass,
       primaryClassNames: [primaryClass],
-    });
-    const requested = createField("requested");
-    const filtered = createField("filtered");
+    };
 
+    const parts = await buildTargetScopedQuery({ schemaProvider, target: { primaryClass }, field });
+
+    expect(parts.calculatedFieldAliases).to.deep.equal(new Map([["requested", "this"]]));
+  });
+
+  it("outer-joins a property field's related path", async () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [{ field: filtered, operator: "greater-than", value: 1 }],
-      calculatedFields: [requested],
+      field: makeOneToOneNameField(),
     });
 
-    expect(parts.calculatedFieldAliases).to.deep.equal(
-      new Map([
-        ["filtered", "this"],
-        ["requested", "this"],
-      ]),
-    );
+    expect(parts.relatedClassAliases.size).to.equal(1);
+    expect(parts.joins).to.contain("LEFT OUTER JOIN [TestSchema].[Target]");
   });
 
   describe("calculated fields declared on a class narrower than the target's", () => {
@@ -2135,9 +2134,7 @@ describe("buildTargetScopedQuery", () => {
       const parts = await buildTargetScopedQuery({
         schemaProvider: narrowingSchemaProvider,
         target: { primaryClass },
-        paths: [],
-        filters: [],
-        calculatedFields: [pumpField],
+        field: pumpField,
         primaryClassScope: { kind: "restricted", classNames: [pump, wall] },
       });
       expect(parts.calculatedFieldAliases).to.deep.equal(new Map([["flow", `${SOURCE_CLASS_ALIAS_PREFIX}0`]]));
@@ -2150,9 +2147,7 @@ describe("buildTargetScopedQuery", () => {
       const parts = await buildTargetScopedQuery({
         schemaProvider: narrowingSchemaProvider,
         target: { primaryClass },
-        paths: [],
-        filters: [],
-        calculatedFields: [pumpField],
+        field: pumpField,
         primaryClassScope: { kind: "restricted", classNames: [wall] },
       });
       expect(parts.calculatedFieldAliases.size).to.equal(0);
@@ -2161,7 +2156,11 @@ describe("buildTargetScopedQuery", () => {
   });
 
   it("uses a plain (polymorphic) FROM class selector by default", async () => {
-    const parts = await buildTargetScopedQuery({ schemaProvider, target: { primaryClass }, paths: [], filters: [] });
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      field: makePropertyField({ propertyName: "Name" }),
+    });
 
     expect(trimWhitespace(parts.from)).to.equal(`FROM [TestSchema].[Primary] [this]`);
   });
@@ -2170,8 +2169,7 @@ describe("buildTargetScopedQuery", () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [],
+      field: makePropertyField({ propertyName: "Name" }),
       primaryClassScope: { kind: "exact" },
     });
 
@@ -2182,8 +2180,7 @@ describe("buildTargetScopedQuery", () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [],
+      field: makePropertyField({ propertyName: "Name" }),
       primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1", "TestSchema.A2"] },
     });
 
@@ -2196,27 +2193,11 @@ describe("buildTargetScopedQuery", () => {
     );
   });
 
-  it("ANDs the class restriction with value filters", async () => {
-    const field = makePropertyField({ propertyName: "Name" });
-    const parts = await buildTargetScopedQuery({
-      schemaProvider,
-      target: { primaryClass },
-      paths: [],
-      filters: [{ field, operator: "is-not-null" }],
-      primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1"] },
-    });
-
-    expect(trimWhitespace(parts.where!)).to.equal(
-      `WHERE ([this].[ECClassId] IS (ONLY [TestSchema].[A1])) AND ([this].[Name] IS NOT NULL)`,
-    );
-  });
-
   it("omits the class restriction when the list is empty", async () => {
     const parts = await buildTargetScopedQuery({
       schemaProvider,
       target: { primaryClass },
-      paths: [],
-      filters: [],
+      field: makePropertyField({ propertyName: "Name" }),
       primaryClassScope: { kind: "restricted", classNames: [] },
     });
 

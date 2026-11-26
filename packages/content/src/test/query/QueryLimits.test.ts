@@ -6,9 +6,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   createJoinBudget,
-  MAX_TABLES_PER_CLASS,
+  MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS,
+  MAX_TABLES_PER_ENTITY_CLASS,
   MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP,
-  MAX_TABLES_PER_NON_ELEMENT_CLASS,
   packPathsWithinBudget,
   partitionPathsByJoinBudget,
   resolveClassTableCounts,
@@ -22,25 +22,29 @@ type JoinInfo = Awaited<ReturnType<typeof ECSql.createRelationshipPathJoinInfo>>
 
 describe("QueryLimits", () => {
   describe("resolveClassTableCounts", () => {
-    it("uses the element maximum only for classes deriving from BisCore.Element", async () => {
+    it("estimates tables for every entity class kind", async () => {
+      const bases: Record<string, string> = {
+        "TestSchema.Element": "BisCore.Element",
+        "TestSchema.Aspect": "BisCore.ElementAspect",
+        "TestSchema.Model": "BisCore.Model",
+      };
       const classDerivesFrom = vi.fn(
-        (derived: EC.FullClassNameDotNotation, _candidate: EC.FullClassNameDotNotation) =>
-          derived === "TestSchema.ElementDerived",
+        (derived: EC.FullClassNameDotNotation, candidate: EC.FullClassNameDotNotation) => bases[derived] === candidate,
       );
       const classTableCounts = await resolveClassTableCounts({
         schemaProvider: { classDerivesFrom },
-        classNames: new Set(["TestSchema.ElementDerived", "TestSchema.Model", "TestSchema.Model"]),
+        // `TestSchema.Entity` has no BIS base, like a class in a plain ECDb file.
+        classNames: new Set(["TestSchema.Element", "TestSchema.Entity", "TestSchema.Aspect", "TestSchema.Model"]),
       });
 
       expect(classTableCounts).to.deep.equal(
         new Map([
-          ["TestSchema.ElementDerived", MAX_TABLES_PER_CLASS],
-          ["TestSchema.Model", MAX_TABLES_PER_NON_ELEMENT_CLASS],
+          ["TestSchema.Element", MAX_TABLES_PER_ENTITY_CLASS],
+          ["TestSchema.Entity", MAX_TABLES_PER_ENTITY_CLASS],
+          ["TestSchema.Aspect", MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS],
+          ["TestSchema.Model", MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS],
         ]),
       );
-      expect(classDerivesFrom).toHaveBeenCalledTimes(2);
-      expect(classDerivesFrom).toHaveBeenCalledWith("TestSchema.ElementDerived", "BisCore.Element");
-      expect(classDerivesFrom).toHaveBeenCalledWith("TestSchema.Model", "BisCore.Element");
     });
   });
 
@@ -135,29 +139,29 @@ describe("QueryLimits", () => {
     it("costOf returns the incremental tables an info would add, without mutating the budget", () => {
       const budget = createJoinBudget({ reservedTables: 0 });
       const a = path({ cost: 3, steps: [step("A", "AtoB", "B")] });
-      // Every joined class is counted at its worst case of MAX_TABLES_PER_CLASS tables.
-      expect(budget.costOf(a.joinInfo)).to.equal(3 * MAX_TABLES_PER_CLASS);
-      // Calling costOf did not mutate the budget, so the same info still costs its full 3 * MAX_TABLES_PER_CLASS tables.
-      expect(budget.costOf(a.joinInfo)).to.equal(3 * MAX_TABLES_PER_CLASS);
+      // Every joined class is counted at the default MAX_TABLES_PER_ENTITY_CLASS tables.
+      expect(budget.costOf(a.joinInfo)).to.equal(3 * MAX_TABLES_PER_ENTITY_CLASS);
+      // Calling costOf did not mutate the budget, so the same info still costs its full 3 * MAX_TABLES_PER_ENTITY_CLASS tables.
+      expect(budget.costOf(a.joinInfo)).to.equal(3 * MAX_TABLES_PER_ENTITY_CLASS);
       expect(budget.remaining()).to.equal(SQLITE_MAX_JOIN_TABLES);
     });
 
     it("tryAdd adds an info that fits and reduces remaining() by its cost", () => {
-      const budget = createJoinBudget({ reservedTables: 0, budget: 10 * MAX_TABLES_PER_CLASS });
+      const budget = createJoinBudget({ reservedTables: 0, budget: 10 * MAX_TABLES_PER_ENTITY_CLASS });
       const a = path({ cost: 3, steps: [step("A", "AtoB", "B")] });
       expect(budget.tryAdd(a.joinInfo)).to.equal(true);
-      expect(budget.remaining()).to.equal(7 * MAX_TABLES_PER_CLASS);
+      expect(budget.remaining()).to.equal(7 * MAX_TABLES_PER_ENTITY_CLASS);
     });
 
     it("tryAdd rejects an info that would exceed the budget and leaves it unchanged", () => {
-      const budget = createJoinBudget({ reservedTables: 0, budget: 2 * MAX_TABLES_PER_CLASS });
+      const budget = createJoinBudget({ reservedTables: 0, budget: 2 * MAX_TABLES_PER_ENTITY_CLASS });
       const a = path({ cost: 3, steps: [step("A", "AtoB", "B")] });
       expect(budget.tryAdd(a.joinInfo)).to.equal(false);
-      expect(budget.remaining()).to.equal(2 * MAX_TABLES_PER_CLASS);
+      expect(budget.remaining()).to.equal(2 * MAX_TABLES_PER_ENTITY_CLASS);
     });
 
     it("does not validate conflicting bindings for an info that exceeds the budget", () => {
-      const budget = createJoinBudget({ reservedTables: 0, budget: MAX_TABLES_PER_CLASS });
+      const budget = createJoinBudget({ reservedTables: 0, budget: MAX_TABLES_PER_ENTITY_CLASS });
       const a = path({ cost: 1, steps: [step("A", "AtoB", "B")] });
       const b = path({ cost: 1, steps: [step("A", "AtoC", "C")] });
       a.joinInfo.bindings = { p: { type: "int", value: 1 } };
@@ -168,7 +172,7 @@ describe("QueryLimits", () => {
     });
 
     it("rejects conflicting bindings when an info fits the budget", () => {
-      const budget = createJoinBudget({ reservedTables: 0, budget: 2 * MAX_TABLES_PER_CLASS });
+      const budget = createJoinBudget({ reservedTables: 0, budget: 2 * MAX_TABLES_PER_ENTITY_CLASS });
       const a = path({ cost: 1, steps: [step("A", "AtoB", "B")] });
       const b = path({ cost: 1, steps: [step("A", "AtoC", "C")] });
       a.joinInfo.bindings = { p: { type: "int", value: 1 } };
@@ -203,7 +207,7 @@ describe("QueryLimits", () => {
       const budget = createJoinBudget({ reservedTables: 0 });
       expect(budget.tryAdd(prefix.joinInfo)).to.equal(true);
       // `extension` nominally costs 4 classes (2 hops × 2), but its first hop is already merged in.
-      expect(budget.costOf(extension.joinInfo)).to.equal(2 * MAX_TABLES_PER_CLASS);
+      expect(budget.costOf(extension.joinInfo)).to.equal(2 * MAX_TABLES_PER_ENTITY_CLASS);
     });
   });
 
@@ -223,7 +227,7 @@ describe("QueryLimits", () => {
       const b = path({ cost: 2, steps: [step("A", "AtoC", "C")] });
       // Each path joins 2 classes; a budget of 2 classes leaves room for one path per group.
       expect(
-        partitionPathsByJoinBudget({ paths: [a, b], reservedTables: 0, budget: 2 * MAX_TABLES_PER_CLASS }),
+        partitionPathsByJoinBudget({ paths: [a, b], reservedTables: 0, budget: 2 * MAX_TABLES_PER_ENTITY_CLASS }),
       ).to.deep.equal([[a], [b]]);
     });
 
@@ -232,21 +236,21 @@ describe("QueryLimits", () => {
       const a = path({ cost: 1, steps: [step("A", "AtoB", "B")] });
       const b = path({ cost: 1, steps: [step("A", "AtoC", "C")] });
       expect(
-        partitionPathsByJoinBudget({ paths: [a, b], reservedTables: 0, budget: 2 * MAX_TABLES_PER_CLASS }),
+        partitionPathsByJoinBudget({ paths: [a, b], reservedTables: 0, budget: 2 * MAX_TABLES_PER_ENTITY_CLASS }),
       ).to.deep.equal([[a, b]]);
     });
 
-    it("counts element, non-element, and link-table relationship joins at their measured maxima", () => {
+    it("counts entity, aspect or model, and link-table relationship joins at their estimated table counts", () => {
       const classTableCounts = new Map([
-        ["TestSchema.Element", MAX_TABLES_PER_CLASS],
-        ["TestSchema.Model", MAX_TABLES_PER_NON_ELEMENT_CLASS],
-        ["TestSchema.Target", MAX_TABLES_PER_NON_ELEMENT_CLASS],
+        ["TestSchema.Element", MAX_TABLES_PER_ENTITY_CLASS],
+        ["TestSchema.Model", MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS],
+        ["TestSchema.Target", MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS],
       ]);
       const budget = createJoinBudget({ reservedTables: 0, classTableCounts });
       const element = path({ joins: [classJoin("TestSchema.Element")], steps: [step("A", "AtoB", "B")] });
       const model = path({ joins: [classJoin("TestSchema.Model")], steps: [step("A", "AtoC", "C")] });
-      expect(budget.costOf(element.joinInfo)).to.equal(MAX_TABLES_PER_CLASS);
-      expect(budget.costOf(model.joinInfo)).to.equal(MAX_TABLES_PER_NON_ELEMENT_CLASS);
+      expect(budget.costOf(element.joinInfo)).to.equal(MAX_TABLES_PER_ENTITY_CLASS);
+      expect(budget.costOf(model.joinInfo)).to.equal(MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS);
 
       // Inner link-table => the relationship plus the target entity class.
       const inner = path({
@@ -254,7 +258,7 @@ describe("QueryLimits", () => {
         steps: [step("A", "AtoD", "D")],
       });
       expect(budget.costOf(inner.joinInfo)).to.equal(
-        MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP + MAX_TABLES_PER_NON_ELEMENT_CLASS,
+        MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP + MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS,
       );
       // Outer link-table => relationship + inner target, and then the outer target again.
       const outer = path({
@@ -262,7 +266,7 @@ describe("QueryLimits", () => {
         steps: [step("A", "AtoE", "E")],
       });
       expect(budget.costOf(outer.joinInfo)).to.equal(
-        MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP + 2 * MAX_TABLES_PER_NON_ELEMENT_CLASS,
+        MAX_TABLES_PER_LINK_TABLE_RELATIONSHIP + 2 * MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS,
       );
     });
 
@@ -273,7 +277,7 @@ describe("QueryLimits", () => {
       expect(
         partitionPathsByJoinBudget({
           paths: [a, b],
-          reservedTables: SQLITE_MAX_JOIN_TABLES - 2 * MAX_TABLES_PER_CLASS,
+          reservedTables: SQLITE_MAX_JOIN_TABLES - 2 * MAX_TABLES_PER_ENTITY_CLASS,
         }),
       ).to.deep.equal([[a], [b]]);
     });
@@ -292,7 +296,11 @@ describe("QueryLimits", () => {
       const extension = multiStepPath(shared, hop("B", "BtoC", "C", 2));
       // Per-path sum: 2 + 4 = 6 > a budget of 4 classes. Merged (the shared hop counted once): 2 + 2 = 4, fits.
       expect(
-        partitionPathsByJoinBudget({ paths: [prefix, extension], reservedTables: 0, budget: 4 * MAX_TABLES_PER_CLASS }),
+        partitionPathsByJoinBudget({
+          paths: [prefix, extension],
+          reservedTables: 0,
+          budget: 4 * MAX_TABLES_PER_ENTITY_CLASS,
+        }),
       ).to.deep.equal([[prefix, extension]]);
     });
 
@@ -305,7 +313,7 @@ describe("QueryLimits", () => {
         partitionPathsByJoinBudget({
           paths: [siblingC, siblingD],
           reservedTables: 0,
-          budget: 6 * MAX_TABLES_PER_CLASS,
+          budget: 6 * MAX_TABLES_PER_ENTITY_CLASS,
         }),
       ).to.deep.equal([[siblingC, siblingD]]);
     });
@@ -324,7 +332,10 @@ describe("QueryLimits", () => {
         expect(
           packPathsWithinBudget({
             paths: [a, b],
-            budget: createJoinBudget({ reservedTables: MAX_TABLES_PER_CLASS, budget: 5 * MAX_TABLES_PER_CLASS }),
+            budget: createJoinBudget({
+              reservedTables: MAX_TABLES_PER_ENTITY_CLASS,
+              budget: 5 * MAX_TABLES_PER_ENTITY_CLASS,
+            }),
           }),
         ).to.deep.equal({ fitting: [a, b], overflow: [] });
       });
@@ -336,7 +347,7 @@ describe("QueryLimits", () => {
         expect(
           packPathsWithinBudget({
             paths: [a, big, small],
-            budget: createJoinBudget({ reservedTables: 0, budget: 4 * MAX_TABLES_PER_CLASS }),
+            budget: createJoinBudget({ reservedTables: 0, budget: 4 * MAX_TABLES_PER_ENTITY_CLASS }),
           }),
         ).to.deep.equal({ fitting: [a], overflow: [big, small] });
       });
@@ -364,7 +375,7 @@ describe("QueryLimits", () => {
         expect(
           packPathsWithinBudget({
             paths: [prefix, extension],
-            budget: createJoinBudget({ reservedTables: 0, budget: 4 * MAX_TABLES_PER_CLASS }),
+            budget: createJoinBudget({ reservedTables: 0, budget: 4 * MAX_TABLES_PER_ENTITY_CLASS }),
           }),
         ).to.deep.equal({ fitting: [prefix, extension], overflow: [] });
       });

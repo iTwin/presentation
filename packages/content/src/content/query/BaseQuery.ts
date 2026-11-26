@@ -1129,40 +1129,31 @@ export type PrimaryClassScope =
   | { kind: "restricted"; classNames: ReadonlyArray<EC.FullClassNameDotNotation> };
 
 /**
- * Builds a target-scoped, non-grouped query scaffold: outer-joins exactly the given related paths
- * (preserving rows whose related instance is missing) plus whatever the target filter and value
- * filters need, and returns the `FROM`/`JOIN`/`WHERE`/bindings shape plus the alias map a `SELECT`
- * builder needs.
+ * Builds a target-scoped, non-grouped query scaffold for selecting `field`: outer-joins the property
+ * field's related path (preserving rows whose related instance is missing) or the calculated field's
+ * source class, plus whatever the target filter needs, and returns the `FROM`/`JOIN`/`WHERE`/bindings
+ * shape plus the alias maps a `SELECT` builder needs.
  *
  * Pass `primaryClassScope` to keep rows restricted to an exact set of concrete classes. The
  * distinct-values query builder always does: a class outside a field's data-resolved
  * `primaryClassNames` — one a `forkField` carve or an `instanceIds`/`instanceFilter` scoping
  * excluded, say — must never contribute rows. Defaults to an ordinary polymorphic `FROM`.
  *
- * Used by the distinct-values query builder to reuse the existing target-filter and value-filter
+ * Used by the distinct-values query builder to reuse the existing target-filter
  * building blocks without the source-oriented anchor/additional grouping performed by `buildBaseQuery`.
  */
 export async function buildTargetScopedQuery(props: {
   schemaProvider: ECSchemaProvider;
   target: ContentTarget;
-  /**
-   * Related paths to JOIN — e.g. paths referenced by `filters`, plus (for distinct values) the
-   * selected field's own related path. De-duplicated internally by serialized join key.
-   */
-  paths: ReadonlyRelationshipPath[];
-  /** Value filters to translate into WHERE. */
-  filters: ContentValueFilter[];
-  /**
-   * Calculated fields the caller evaluates against the query. Together with the calculated fields of
-   * `filters`, they are resolved against the target's classes like a content source's (see
-   * `CalculatedFieldSources`).
-   */
-  calculatedFields?: ReadonlyArray<ReadonlyCalculatedField>;
+  /** The field the caller selects from the query. */
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
   /** How to keep rows scoped to exactly a set of concrete classes. See the function doc. */
   primaryClassScope?: PrimaryClassScope;
 }): Promise<BaseQueryParts> {
-  const { schemaProvider, target, filters, primaryClassScope } = props;
-  const paths = unionPaths([...props.paths, ...collectFilterPaths(filters)]);
+  const { schemaProvider, target, field, primaryClassScope } = props;
+  // Not using JOIN-table budget, as a single field's path rarely nears SQLite's 64-table limit; budget
+  // like `buildBaseQuery` if this ever joins more than one field.
+  const paths = field.kind === "property" ? [field.pathFromTarget] : [];
   const getPrefixKeys = createPrefixKeyResolver();
   const relatedClassAliases = assignPrefixAliases(paths, getPrefixKeys);
   const calculatedFieldSources = await resolveCalculatedFieldSources({
@@ -1171,9 +1162,7 @@ export async function buildTargetScopedQuery(props: {
       target,
       resolvedPrimaryClasses: primaryClassScope?.kind === "restricted" ? primaryClassScope.classNames : [],
     },
-    fields: [...filters.map(({ field }) => field), ...(props.calculatedFields ?? [])].filter(
-      (field): field is ReadonlyCalculatedField => field.kind === "calculated",
-    ),
+    fields: field.kind === "calculated" ? [field] : [],
   });
   const classRestriction =
     primaryClassScope?.kind === "restricted" && primaryClassScope.classNames.length > 0
@@ -1186,7 +1175,7 @@ export async function buildTargetScopedQuery(props: {
   return buildQueryParts({
     schemaProvider,
     targetQuery: buildTargetQueryParts(target, { polymorphic: primaryClassScope?.kind !== "exact" }),
-    filters,
+    filters: [],
     relatedClassAliases,
     getPrefixKeys,
     calculatedFieldSources,
@@ -1196,8 +1185,7 @@ export async function buildTargetScopedQuery(props: {
       relatedClassAliases,
       getPrefixKeys,
     }),
-    // Join all paths (the selected field's own path plus filter-referenced ones) with outer joins, and
-    // evaluate every filter with join-and-compare — no grouping, budgets, or existential subqueries.
+    // Join all paths with outer joins — no grouping or existential subqueries.
     paths,
     joinType: "outer",
     includePrimaryFilters: true,
