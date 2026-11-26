@@ -197,23 +197,36 @@ describe("createIModelHierarchyProvider", () => {
         },
       });
 
+    const slowReader = {
+      [Symbol.asyncIterator]: () => slowReader,
+      next: async () => new Promise<never>(() => {}), // never responds
+      return: vi.fn(async () => ({ done: true as const, value: undefined })),
+    };
+
     beforeEach(() => {
-      imodelAccess.createQueryReader.mockImplementation(async function* ({ ecsql }) {
-        if (ecsql.includes("SLOW")) {
-          await new Promise(() => {}); // never responds
-        }
-        yield { [0]: "a.b", [1]: "0x1", [2]: false, FullClassName: "a.b", ECInstanceId: "0x1", DisplayLabel: "x" };
-      });
+      imodelAccess.createQueryReader.mockImplementation(({ ecsql }) =>
+        ecsql.includes("SLOW")
+          ? slowReader
+          : createAsyncIterator([
+              { [0]: "a.b", [1]: "0x1", [2]: false, FullClassName: "a.b", ECInstanceId: "0x1", DisplayLabel: "x" },
+            ]),
+      );
     });
 
-    it("uses nodes of the query that responds first", async () => {
+    it("uses nodes of the query that responds first and cancels the other", async () => {
       using provider = createProvider([{ ecsql: "SLOW" }, { ecsql: "FAST" }]);
-      expect(await collect(provider.getNodes({ parentNode: undefined }))).toHaveLength(1);
+      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(nodes.map(({ key }) => key)).toEqual([
+        { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+      ]);
+      expect(slowReader.return).toHaveBeenCalledOnce();
     });
 
-    it("uses instance keys of the query that responds first", async () => {
+    it("uses instance keys of the query that responds first and cancels the other", async () => {
       using provider = createProvider([{ ecsql: "SLOW" }, { ecsql: "FAST" }]);
-      expect(await collect(provider.getNodeInstanceKeys({ parentNode: undefined }))).toHaveLength(1);
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys).toEqual([{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }]);
+      expect(slowReader.return).toHaveBeenCalledOnce();
     });
 
     it("returns no nodes when there are no queries", async () => {
