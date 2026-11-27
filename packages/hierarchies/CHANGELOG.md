@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 2.2.1
+
+### Patch Changes
+
+- [#1761](https://github.com/iTwin/presentation/pull/1761): iModel hierarchy provider: Cancelling an active query now frees its slot so the next queued query can start.
+- Updated dependencies:
+  - @itwin/presentation-shared@3.0.0
+
 ## 2.2.0
 
 ### Minor Changes

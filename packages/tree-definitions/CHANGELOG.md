@@ -1,5 +1,13 @@
 # @itwin/presentation-tree-definitions
 
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.2.1
+  - @itwin/presentation-shared@3.0.0
+
 ## 0.3.3
 
 ### Patch Changes

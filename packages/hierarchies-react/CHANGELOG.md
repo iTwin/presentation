@@ -1,5 +1,14 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.1.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.2.1
+  - @itwin/presentation-shared@3.0.0
+  - @itwin/unified-selection@2.0.4
+
 ## 2.1.0
 
 ### Minor Changes
