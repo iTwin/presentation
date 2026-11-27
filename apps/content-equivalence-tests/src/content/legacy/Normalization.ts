@@ -4,15 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PropertyValueFormat, Value } from "@itwin/presentation-common";
-import { getClass, normalizeFullClassName } from "@itwin/presentation-shared";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { getLegacyHiddenProperties } from "../../LegacyHiddenProperties.js";
 import {
   createCanonicalEnumeration,
   createCanonicalRelationshipPath,
   getRelationshipConstraints,
   isPointValue,
+  isUnsupportedLegacyTypeName,
   roundFloatingPointNoise,
-} from "../NormalizationCommon.js";
-import { stableStringify } from "../Persistence.js";
+} from "../../NormalizationCommon.js";
+import { stableStringify } from "../../Persistence.js";
 
 import type {
   CategoryDescriptionJSON,
@@ -25,6 +27,7 @@ import type {
   ValuesDictionary,
 } from "@itwin/presentation-common";
 import type { EC, ECSchemaProvider, PrimitiveValueType } from "@itwin/presentation-shared";
+import type { LegacyHiddenProperties } from "../../LegacyHiddenProperties.js";
 import type {
   CanonicalCapture,
   CanonicalDescriptor,
@@ -36,7 +39,7 @@ import type {
   CanonicalRelationshipStep,
   CanonicalValue,
   RelationshipConstraints,
-} from "../NormalizationCommon.js";
+} from "../../NormalizationCommon.js";
 import type { CapturedLegacyItem, LegacyCapture } from "./Adapter.js";
 
 interface LegacyFieldMapping {
@@ -161,14 +164,8 @@ function createCanonicalFieldType(
 }
 
 function isAllowedFieldType(type: CanonicalFieldType): boolean {
-  const disallowed = ["Bentley.Geometry.Common.IGeometry", "binary"];
-  if (type.kind === "primitive" && disallowed.includes(type.name)) {
-    return false;
-  }
-  if (type.kind === "array" && type.member.kind === "primitive" && disallowed.includes(type.member.name)) {
-    return false;
-  }
-  return true;
+  const primitiveType = type.kind === "array" ? type.member : type;
+  return primitiveType.kind !== "primitive" || !isUnsupportedLegacyTypeName(primitiveType.name);
 }
 
 /**
@@ -235,7 +232,7 @@ function createCanonicalField(props: {
 
 interface NormalizationContext {
   constraints: RelationshipConstraints;
-  hiddenProperties: Set<string>;
+  hiddenProperties: LegacyHiddenProperties;
 }
 
 function createCanonicalDescriptor({
@@ -268,8 +265,7 @@ function createCanonicalDescriptor({
       return;
     }
     const properties = field.properties.filter(
-      ({ property }) =>
-        !context.hiddenProperties.has(`${normalizeFullClassName(classes[property.classInfo].name)}.${property.name}`),
+      ({ property }) => !context.hiddenProperties.has(classes[property.classInfo].name, property.name),
     );
     if (properties.length === 0) {
       return;
@@ -492,51 +488,6 @@ function collectRelationshipNames(descriptors: DescriptorJSON[]): Set<EC.FullCla
   return names;
 }
 
-async function getHiddenProperties(
-  descriptors: DescriptorJSON[],
-  schemaProvider: ECSchemaProvider,
-): Promise<Set<string>> {
-  const propertiesByClass = new Map<EC.FullClassNameDotNotation, Set<string>>();
-  for (const descriptor of descriptors) {
-    const visit = (field: FieldJSON<string>) => {
-      if ("nestedFields" in field) {
-        field.nestedFields.forEach(visit);
-      } else if ("properties" in field) {
-        for (const { property } of field.properties) {
-          const className = normalizeFullClassName(descriptor.classesMap[property.classInfo].name);
-          let properties = propertiesByClass.get(className);
-          if (!properties) {
-            properties = new Set();
-            propertiesByClass.set(className, properties);
-          }
-          properties.add(property.name);
-        }
-      }
-    };
-    descriptor.fields.forEach(visit);
-  }
-  const hiddenProperties = new Set<string>();
-  for (const [className, propertyNames] of propertiesByClass) {
-    const propertyClass = await getClass(schemaProvider, className);
-    for (const propertyName of propertyNames) {
-      if (className === "BisCore.ExternalSourceAspect" && propertyName === "Identifier") {
-        continue;
-      }
-      let declaringClass: EC.Class | undefined = propertyClass.getProperty(propertyName)!.class;
-      while (declaringClass) {
-        if (declaringClass.isHidden !== undefined) {
-          if (declaringClass.isHidden) {
-            hiddenProperties.add(`${className}.${propertyName}`);
-          }
-          break;
-        }
-        declaringClass = declaringClass.baseClass;
-      }
-    }
-  }
-  return hiddenProperties;
-}
-
 export async function createCanonicalCapture(
   capture: LegacyCapture,
   schemaProvider: ECSchemaProvider,
@@ -544,7 +495,7 @@ export async function createCanonicalCapture(
   const descriptors = "descriptor" in capture ? [capture.descriptor] : capture.items.map((item) => item.descriptor);
   const context = {
     constraints: await getRelationshipConstraints(schemaProvider, collectRelationshipNames(descriptors)),
-    hiddenProperties: await getHiddenProperties(descriptors, schemaProvider),
+    hiddenProperties: await getLegacyHiddenProperties(descriptors, schemaProvider),
   };
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor({ descriptor: capture.descriptor, context });

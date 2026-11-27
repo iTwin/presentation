@@ -33,6 +33,17 @@ export type CanonicalFieldType =
   | { kind: "array"; member: CanonicalFieldType }
   | { kind: "struct"; members: Array<{ name: string; type: CanonicalFieldType }> };
 
+/** Legacy names of primitive types whose properties the new pipeline skips. */
+const UNSUPPORTED_PRIMITIVE_TYPE_NAMES = new Set(["Bentley.Geometry.Common.IGeometry", "binary"]);
+
+/**
+ * Whether a legacy type name is a primitive type, or an array of a primitive type, whose properties the new
+ * pipeline skips. Legacy still shows such properties as struct members.
+ */
+export function isUnsupportedLegacyTypeName(typeName: string): boolean {
+  return UNSUPPORTED_PRIMITIVE_TYPE_NAMES.has(typeName.endsWith("[]") ? typeName.slice(0, -2) : typeName);
+}
+
 /** Sorts enumerators by value so both implementations produce the same order regardless of declaration order. */
 export function createCanonicalEnumeration(
   isStrict: boolean,
@@ -184,7 +195,7 @@ export type CanonicalCapture =
   | { descriptor: CanonicalDescriptor; items?: never }
   | { descriptor?: never; items: CanonicalItem[] };
 
-interface Difference {
+export interface Difference {
   path: string;
   legacy: unknown;
   new: unknown;
@@ -226,7 +237,7 @@ export function isPointValue(value: object): value is CanonicalPointValue {
   );
 }
 
-function collectDifferences(legacy: unknown, current: unknown, path: string): Difference[] {
+export function collectDifferences(legacy: unknown, current: unknown, path: string): Difference[] {
   if (stableStringify(legacy) === stableStringify(current)) {
     return [];
   }

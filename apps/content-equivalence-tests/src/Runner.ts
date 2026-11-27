@@ -6,13 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SnapshotDb } from "@itwin/core-backend";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { getImplementationFingerprints, getSamplingImplementationFingerprint } from "./Fingerprints.js";
-import { captureLegacy } from "./legacy/Adapter.js";
-import { createCanonicalCapture as normalizeLegacyCapture } from "./legacy/Normalization.js";
-import { captureNew } from "./new/Adapter.js";
-import { createCanonicalCapture as normalizeNewCapture } from "./new/Normalization.js";
-import { compareContentItems, compareDescriptors } from "./NormalizationCommon.js";
 import {
   cachePath,
   CAPTURE_FORMAT_VERSION,
@@ -26,20 +20,49 @@ import {
 import { selectSample } from "./Sampling.js";
 
 import type { ResolvedIModelEntry, RuntimeConfiguration } from "./Configuration.js";
-import type { LegacyCapture } from "./legacy/Adapter.js";
-import type { NewCapture } from "./new/Adapter.js";
+import type { Fingerprints, ImplementationFingerprints } from "./Fingerprints.js";
+import type { ComparisonResult } from "./NormalizationCommon.js";
 import type {
   CaptureDiagnostics,
   CaptureEnvelope,
   CaptureMetadata,
   ImplementationName,
-  Scenario,
+  EquivalenceScenario,
 } from "./Persistence.js";
 import type { Sample } from "./Sampling.js";
 
+export interface ScenarioResult {
+  captures: Record<ImplementationName, { filePath: string; cacheHit: boolean }>;
+  normalized: Record<ImplementationName, unknown>;
+  differences: ComparisonResult;
+}
+
+export interface ScenarioProps<TScenario extends EquivalenceScenario = EquivalenceScenario> {
+  config: RuntimeConfiguration;
+  imodel: ResolvedIModelEntry;
+  imodelFingerprint: string;
+  fingerprints: ImplementationFingerprints;
+  scenario: TScenario;
+  signal: AbortSignal;
+  diagnostics: Map<ImplementationName, CaptureDiagnostics>;
+}
+
+/**
+ * A set of scenarios run by one Vitest project. Property grid scenarios need a DOM, so they run separately from content
+ * scenarios, and the runner doesn't import either of them.
+ */
+export interface EquivalenceSuite {
+  name: string;
+  /** Selects fingerprints of the implementations the suite's scenarios capture with. */
+  getFingerprints: (fingerprints: Fingerprints) => ImplementationFingerprints;
+  /** Returns the scenarios to run. `sample` is `undefined` when sampling fails. */
+  getScenarios: (sample: Sample | undefined) => EquivalenceScenario[];
+  runScenario: (props: ScenarioProps) => Promise<ScenarioResult>;
+}
+
 export interface RunScenarioSummary {
   imodel: string;
-  scenario: Scenario["id"];
+  scenario: EquivalenceScenario["id"];
   legacyCacheHit: boolean;
   newCacheHit: boolean;
   descriptorDifferences: number;
@@ -47,7 +70,7 @@ export interface RunScenarioSummary {
   reportDirectory: string;
 }
 
-function openIModel(filePath: string): SnapshotDb {
+export function openIModel(filePath: string): SnapshotDb {
   return SnapshotDb.openFile(filePath);
 }
 
@@ -62,7 +85,7 @@ function shouldRefresh(config: RuntimeConfiguration, implementation: Implementat
   return config.refresh === "all" || config.refresh === implementation;
 }
 
-function logProgress(context: string, message: string): void {
+export function logProgress(context: string, message: string): void {
   console.info(`[${new Date().toISOString()}] [${context}] ${message}`);
 }
 
@@ -142,13 +165,16 @@ async function loadOrCreateSample(props: {
   }
 }
 
-async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
+export async function loadOrCreateCapture<
+  TCapture extends CaptureEnvelope,
+  TScenario extends EquivalenceScenario = EquivalenceScenario,
+>(props: {
   config: RuntimeConfiguration;
   imodel: ResolvedIModelEntry;
   imodelFingerprint: string;
   implementation: TCapture["implementation"];
   implementationFingerprint: string;
-  scenario: Scenario;
+  scenario: TScenario;
   signal: AbortSignal;
   /** Collects diagnostics reported by `createCapture`, keyed by implementation. */
   diagnostics: Map<ImplementationName, CaptureDiagnostics>;
@@ -156,7 +182,7 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
     imodel: SnapshotDb;
     signal: AbortSignal;
     onDiagnostics?: (diagnostics: CaptureDiagnostics) => void;
-    scenario: Scenario;
+    scenario: TScenario;
     implementationFingerprint: string;
     imodelFingerprint: string;
   }) => Promise<TCapture>;
@@ -203,18 +229,19 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
   }
 }
 
-export function createEquivalenceRun(config: RuntimeConfiguration) {
+export function createEquivalenceRun(config: RuntimeConfiguration, suite: EquivalenceSuite) {
   const timestamp = new Date().toISOString().replaceAll(":", "-");
-  const runDirectory = path.join(config.outputDirectory, "runs", `${timestamp}-${process.pid}`);
+  const runDirectory = path.join(config.outputDirectory, "runs", `${timestamp}-${process.pid}-${suite.name}`);
   fs.mkdirSync(runDirectory, { recursive: true });
-  const fingerprints = getImplementationFingerprints();
+  const fingerprints = suite.getFingerprints(getImplementationFingerprints());
   writeJson(path.join(runDirectory, "run.json"), {
+    suite: suite.name,
     manifestPath: config.manifestPath,
     manifest: config.manifest,
     refresh: config.refresh,
     implementationFingerprints: fingerprints,
   });
-  return { runDirectory, fingerprints, summaries: [] as RunScenarioSummary[], errors: [] as string[] };
+  return { suite, runDirectory, fingerprints, summaries: [] as RunScenarioSummary[], errors: [] as string[] };
 }
 
 export async function runEquivalence(
@@ -233,7 +260,7 @@ export async function runEquivalence(
     logProgress(imodel.name, "Hashing iModel file.");
     const imodelFingerprint = await hashFile(imodel.path);
 
-    // Sampling failure only rules out the "sampled-elements" scenario; the descriptor scenario needs no sample.
+    // Sampling failure only rules out the sampled scenarios; the descriptor scenario needs no sample.
     let sample: Sample | undefined;
     try {
       sample = await loadOrCreateSample({ config, imodel, imodelFingerprint });
@@ -247,10 +274,7 @@ export async function runEquivalence(
       writeJson(path.join(imodelDirectory, "sampling-error.json"), { message });
     }
 
-    const scenarios: Scenario[] = [
-      { id: "all-elements-descriptor" },
-      ...(sample ? [{ id: "sampled-elements", keys: sample.keys } satisfies Scenario] : []),
-    ];
+    const scenarios = run.suite.getScenarios(sample);
 
     for (const scenario of scenarios) {
       const scenarioContext = `${imodel.name}/${scenario.id}`;
@@ -266,62 +290,22 @@ export async function runEquivalence(
           : undefined;
       const diagnostics = new Map<ImplementationName, CaptureDiagnostics>();
       try {
-        const legacy = await loadOrCreateCapture<LegacyCapture>({
+        const { captures, normalized, differences } = await run.suite.runScenario({
           config,
           imodel,
           imodelFingerprint,
-          implementation: "legacy",
-          implementationFingerprint: fingerprints.legacy,
+          fingerprints,
           scenario,
           signal: controller.signal,
           diagnostics,
-          createCapture: captureLegacy,
         });
-        const current = await loadOrCreateCapture<NewCapture>({
-          config,
-          imodel,
-          imodelFingerprint,
-          implementation: "new",
-          implementationFingerprint: fingerprints.new,
-          scenario,
-          signal: controller.signal,
-          diagnostics,
-          createCapture: captureNew,
-        });
-        controller.signal.throwIfAborted();
-        logProgress(scenarioContext, "Normalizing legacy and new captures.");
-        const imodelDb = openIModel(imodel.path);
-        let normalizedLegacy, normalizedNew;
-        try {
-          const imodelAccess = { ...createECSchemaProvider(imodelDb), ...createECSqlQueryExecutor(imodelDb) };
-          normalizedLegacy = await normalizeLegacyCapture(legacy.capture, imodelAccess);
-          controller.signal.throwIfAborted();
-          normalizedNew = await normalizeNewCapture(current.capture, imodelAccess, imodelDb.schemaContext);
-          controller.signal.throwIfAborted();
-        } finally {
-          imodelDb.close();
-        }
 
-        logProgress(scenarioContext, "Comparing normalized content.");
-        let differences;
-        if (scenario.id === "all-elements-descriptor") {
-          if (normalizedLegacy.descriptor === undefined || normalizedNew.descriptor === undefined) {
-            throw new Error("Expected descriptor-only canonical captures.");
-          }
-          differences = compareDescriptors(normalizedLegacy.descriptor, normalizedNew.descriptor);
-        } else {
-          if (normalizedLegacy.items === undefined || normalizedNew.items === undefined) {
-            throw new Error("Expected canonical content items.");
-          }
-          differences = compareContentItems(normalizedLegacy.items, normalizedNew.items, scenario.keys);
-        }
-
-        writeJson(path.join(scenarioDirectory, "legacy.normalized.json"), normalizedLegacy);
-        writeJson(path.join(scenarioDirectory, "new.normalized.json"), normalizedNew);
+        writeJson(path.join(scenarioDirectory, "legacy.normalized.json"), normalized.legacy);
+        writeJson(path.join(scenarioDirectory, "new.normalized.json"), normalized.new);
         writeJson(path.join(scenarioDirectory, "differences.json"), differences);
         writeJson(path.join(scenarioDirectory, "captures.json"), {
-          legacy: { path: legacy.filePath, cacheHit: legacy.cacheHit },
-          new: { path: current.filePath, cacheHit: current.cacheHit },
+          legacy: { path: captures.legacy.filePath, cacheHit: captures.legacy.cacheHit },
+          new: { path: captures.new.filePath, cacheHit: captures.new.cacheHit },
         });
 
         logProgress(
@@ -331,8 +315,8 @@ export async function runEquivalence(
         summaries.push({
           imodel: imodel.name,
           scenario: scenario.id,
-          legacyCacheHit: legacy.cacheHit,
-          newCacheHit: current.cacheHit,
+          legacyCacheHit: captures.legacy.cacheHit,
+          newCacheHit: captures.new.cacheHit,
           descriptorDifferences: differences.descriptorDifferences.length,
           valueDifferences: differences.valueDifferences.length,
           reportDirectory: scenarioDirectory,

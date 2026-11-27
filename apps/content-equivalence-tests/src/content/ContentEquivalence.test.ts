@@ -6,8 +6,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { IModelHost } from "@itwin/core-backend";
 import { Presentation } from "@itwin/presentation-backend";
-import { loadRuntimeConfiguration } from "./Configuration.js";
-import { createEquivalenceRun, runEquivalence } from "./Runner.js";
+import { loadRuntimeConfiguration } from "../Configuration.js";
+import { createEquivalenceRun, runEquivalence } from "../Runner.js";
+import { contentSuite } from "./Suite.js";
 
 const config = loadRuntimeConfiguration();
 
@@ -16,7 +17,7 @@ describe("content equivalence", { concurrent: false }, () => {
   beforeAll(async () => {
     await IModelHost.startup({ profileName: "presentation-content-equivalence-tests" });
     Presentation.initialize();
-    run = createEquivalenceRun(config);
+    run = createEquivalenceRun(config, contentSuite);
   });
 
   afterAll(async () => {

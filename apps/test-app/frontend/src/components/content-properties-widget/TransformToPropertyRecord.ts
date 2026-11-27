@@ -9,8 +9,13 @@ import { createDefaultValueFormatter, formatConcatenatedValue, parseFullClassNam
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
-import type { CategoryDefinition, Field, PropertyGridEntry } from "@itwin/presentation-content";
-import type { Content } from "@itwin/presentation-content-react";
+import type {
+  CategoryDefinition,
+  ContentItem,
+  Field,
+  PropertyGridEntry,
+  ReadonlyContentDescriptor,
+} from "@itwin/presentation-content";
 import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescriptor } from "@itwin/presentation-shared";
 
 /** The category of the content target's own properties. */
@@ -21,7 +26,10 @@ const navigationLabelFormatter = createDefaultValueFormatter();
 const labelCollator = new Intl.Collator(undefined, { sensitivity: "base" });
 
 /** Maps content of the selected instances to `PropertyData` for the `PropertyGrid` component. */
-export async function createPropertyData(content: Content): Promise<PropertyData> {
+export async function createPropertyData(content: {
+  descriptor: ReadonlyContentDescriptor;
+  items: ContentItem[];
+}): Promise<PropertyData> {
   const { categories } = content.descriptor;
   const { entries } = transformContent({ ...content, config: { type: "propertyGrid" } });
   const tree = createCategoryTree(categories);
@@ -59,7 +67,7 @@ interface RecordProps {
   structTypeName?: string;
 }
 
-type CategoryDefinitions = Content["descriptor"]["categories"];
+type CategoryDefinitions = ReadonlyContentDescriptor["categories"];
 
 /** Entries take their category from their field. All fields of a related instances entry share the same category. */
 function getCategory(entry: PropertyGridEntry): DeepReadonly<Field["category"]> {
@@ -130,14 +138,19 @@ async function createValue({
   isMemberReadonly,
   structTypeName,
 }: RecordProps): Promise<PropertyValue> {
+  // Like the legacy property grid, show missing struct and array values as empty primitive values, rather than structs
+  // with empty members or empty arrays.
+  if (value === undefined && (type.kind === "struct" || type.kind === "array")) {
+    return { valueFormat: PropertyValueFormat.Primitive, value: undefined };
+  }
   switch (type.kind) {
     case "struct": {
-      const struct = value as DeepReadonly<Record<string, Value>> | undefined;
+      const struct = value as DeepReadonly<Record<string, Value>>;
       const members = await Promise.all(
         type.members.map(async (member) => {
           const record = await createRecord({
             ...member,
-            value: struct?.[member.name],
+            value: struct[member.name],
             isReadonly: isMemberReadonly?.(member.name) ?? isReadonly,
           });
           return [member.name, record] as const;
@@ -146,7 +159,7 @@ async function createValue({
       return { valueFormat: PropertyValueFormat.Struct, members: Object.fromEntries(members) };
     }
     case "array": {
-      const elements = (value ?? []) as Array<DeepReadonly<Value>>;
+      const elements = value as Array<DeepReadonly<Value>>;
       const items = await Promise.all(
         elements.map(async (element, index) =>
           createRecord({

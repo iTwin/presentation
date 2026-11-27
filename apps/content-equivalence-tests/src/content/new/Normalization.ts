@@ -11,8 +11,8 @@ import {
   getRelationshipConstraints,
   isPointValue,
   roundFloatingPointNoise,
-} from "../NormalizationCommon.js";
-import { stableStringify } from "../Persistence.js";
+} from "../../NormalizationCommon.js";
+import { stableStringify } from "../../Persistence.js";
 import { createRelationshipNamesResolver } from "./DeclaredRelationships.js";
 
 import type { SchemaContext } from "@itwin/ecschema-metadata";
@@ -28,7 +28,7 @@ import type {
   CanonicalRelationshipStep,
   CanonicalValue,
   RelationshipConstraints,
-} from "../NormalizationCommon.js";
+} from "../../NormalizationCommon.js";
 import type { CapturedNewItem, CapturedNewValue, NewCapture } from "./Adapter.js";
 
 const valueFormatter = createDefaultValueFormatter();
