@@ -155,8 +155,8 @@ export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps<
    * A token, previously returned by `ContinuableAsyncIterableIterator.getContinuationToken` for the same iModel,
    * parent node, instance filter and hierarchy search. When specified, the provider continues streaming nodes from the
    * one that follows the node, the token belongs to.
-   * Continuing from the last node in the hierarchy level returns no nodes. Tokens created before an iModel change can't
-   * be used after it.
+   * Continuing from the last node in the hierarchy level returns no nodes. Tokens created before a hierarchy change
+   * (iModel, formatter or hierarchy search change) can't be used after it.
    */
   continuationToken?: string;
 }
@@ -170,8 +170,8 @@ export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps<
 export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonGroupingHierarchyNode>, Disposable {
   /**
    * An event that provider raises due to a hierarchy change that requires a reload. In-flight `getNodes` requests fail
-   * with `HierarchyRequestInterruptedError` when the event is raised. Continuation tokens of nodes returned before an
-   * iModel change can't be used after it.
+   * with `HierarchyRequestInterruptedError` when the event is raised. Continuation tokens of nodes returned before the
+   * event can't be used after it.
    */
   readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
 
@@ -187,7 +187,7 @@ export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonG
    * processing param are omitted if they have no children.
    *
    * @throws `InvalidContinuationTokenError` if the given `continuationToken` can't be used: it's malformed, was created
-   * for a different iModel, parent node, instance filter or hierarchy search, or was created before an iModel change
+   * for a different iModel, parent node, instance filter or hierarchy search, or was created before a hierarchy change
    * or it points to a hierarchy level definition that doesn't exist.
    * @throws `HierarchyRequestInterruptedError` from the iterator, if the hierarchy changes or the provider is disposed
    * after `getNodes` is called and before all nodes are streamed, or if the provider was already disposed when
@@ -199,8 +199,8 @@ export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonG
    * Overrides the property value formatter used to format node labels. Setting to `undefined` resets the formatter
    * to the result of `createDefaultValueFormatter` called with default parameters.
    *
-   * @note Changing formatter fails in-flight `getNodes` requests with `HierarchyRequestInterruptedError` and triggers
-   * the `hierarchyChanged` event with `formatterChange` arg.
+   * @note Changing formatter fails in-flight `getNodes` requests with `HierarchyRequestInterruptedError`, invalidates
+   * previously returned continuation tokens and triggers the `hierarchyChanged` event with `formatterChange` arg.
    */
   setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 
@@ -220,9 +220,8 @@ export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonG
    * Sets the hierarchy search, which limits the hierarchy to paths leading to the search targets. Setting to
    * `undefined` removes the search.
    *
-   * @note Changing the search fails in-flight requests with `HierarchyRequestInterruptedError` and triggers the
-   * `hierarchyChanged` event with `searchChange` arg. Continuation tokens are only accepted with the search they were
-   * created with.
+   * @note Changing the search fails in-flight requests with `HierarchyRequestInterruptedError`, invalidates previously
+   * returned continuation tokens and triggers the `hierarchyChanged` event with `searchChange` arg.
    */
   setHierarchySearch(props: StreamingIModelHierarchyProviderProps["search"]): void;
 }
@@ -296,10 +295,8 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   readonly #sourceName: string;
   readonly #pageSize: number;
   readonly #queryScheduler: SubscriptionScheduler;
-  // incremented on any hierarchy change or disposal - requests started before that fail
-  readonly #interruptGeneration = new BehaviorSubject(0);
-  // incremented on iModel change - older continuation tokens become invalid
-  #hierarchyGeneration = 0;
+  // incremented on any hierarchy change or disposal - requests and continuation tokens created before that fail
+  readonly #generation = new BehaviorSubject(0);
   #disposed = false;
   #nodesQueryClauseFactory: NodesQueryClauseFactory;
   #valuesFormatter: IPrimitiveValueFormatter;
@@ -333,7 +330,6 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
           message: () => `Data source changed: "${this.#imodelAccess.imodelKey}"`,
         });
         this.#interrupt();
-        ++this.#hierarchyGeneration;
         // the iModel's schemas may have changed, so re-create the query factory to drop its schema-derived caches
         this.#nodesQueryClauseFactory = this.#createNodesQueryClauseFactory();
         this.#hierarchyChanged.raiseEvent({});
@@ -344,7 +340,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   }
 
   #interrupt() {
-    this.#interruptGeneration.next(this.#interruptGeneration.value + 1);
+    this.#generation.next(this.#generation.value + 1);
   }
 
   public [Symbol.dispose]() {
@@ -384,14 +380,14 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
 
   /** Emits on any hierarchy change after this call or if the provider is disposed. */
   #createInterrupt(): Observable<unknown> {
-    const generation = this.#interruptGeneration.value;
-    return this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
+    const generation = this.#generation.value;
+    return this.#generation.pipe(filter((value) => this.#disposed || value !== generation));
   }
 
   #createContinuationTokenContext(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">) {
     return new ContinuationTokenContext({
       continuationToken: props.continuationToken,
-      generation: this.#hierarchyGeneration,
+      generation: this.#generation.value,
       imodelKey: this.#imodelAccess.imodelKey,
       parentNode: props.parentNode,
       instanceFilter: props.instanceFilter,

@@ -1248,7 +1248,7 @@ describe("createStreamingIModelHierarchyProvider", () => {
       expect(defineHierarchyLevel).not.toHaveBeenCalled();
     });
 
-    it("throws when the token was created before an iModel change", async () => {
+    it("throws when the token was created before a hierarchy change", async () => {
       const imodelChanged = new BeEvent<() => void>();
       setupQueries({ Q: createRows(2) });
       const props = {
@@ -1257,21 +1257,27 @@ describe("createStreamingIModelHierarchyProvider", () => {
         hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
       };
       using provider = createStreamingIModelHierarchyProvider(props);
-      const [{ continuationToken }] = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
+      const getToken = async () =>
+        (await collectWithTokens(provider.getNodes({ parentNode: undefined })))[0].continuationToken;
+      const expectInvalid = (token: string | undefined) =>
+        expect(() => provider.getNodes({ parentNode: undefined, continuationToken: token })).toThrow(
+          new InvalidContinuationTokenError(
+            `Continuation token "${token}" was created before a hierarchy change and can't be used anymore.`,
+          ),
+        );
 
-      provider.setFormatter(undefined);
-      expect(await collectLabels(provider.getNodes({ parentNode: undefined, continuationToken }))).toEqual(["0x2"]);
+      const continuationToken = await getToken();
       using otherProvider = createStreamingIModelHierarchyProvider(props);
       expect(await collectLabels(otherProvider.getNodes({ parentNode: undefined, continuationToken }))).toEqual([
         "0x2",
       ]);
 
+      provider.setFormatter(undefined);
+      expectInvalid(continuationToken);
+
+      const tokenBeforeIModelChange = await getToken();
       imodelChanged.raiseEvent();
-      expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
-        new InvalidContinuationTokenError(
-          `Continuation token "${continuationToken}" was created before a hierarchy change and can't be used anymore.`,
-        ),
-      );
+      expectInvalid(tokenBeforeIModelChange);
     });
 
     it("unsubscribes from iModel changes and fails in-flight requests on dispose", async () => {
@@ -1486,15 +1492,24 @@ describe("createStreamingIModelHierarchyProvider", () => {
       });
       const [{ continuationToken }] = await collectWithTokens(provider.getNodes({ parentNode: undefined }));
 
-      provider.setHierarchySearch(search);
-      expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
+      using searchProvider = createStreamingIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel },
+        search,
+      });
+      expect(() => searchProvider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
         new InvalidContinuationTokenError(
           `Continuation token "${continuationToken}" was created for a different iModel, parent node, instance filter or hierarchy search.`,
         ),
       );
 
+      provider.setHierarchySearch(search);
       provider.setHierarchySearch(undefined);
-      expect(await collectLabels(provider.getNodes({ parentNode: undefined, continuationToken }))).toEqual(["b"]);
+      expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
+        new InvalidContinuationTokenError(
+          `Continuation token "${continuationToken}" was created before a hierarchy change and can't be used anymore.`,
+        ),
+      );
     });
   });
 });
