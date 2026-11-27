@@ -10,7 +10,7 @@ import {
   formatConcatenatedValue,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
-import { abortable } from "./Utils.js";
+import { abortableIterable } from "./Utils.js";
 
 import type { ReadonlyCalculatedField, ReadonlyField, ReadonlyPropertyField } from "@itwin/presentation-content";
 import type {
@@ -105,7 +105,7 @@ export async function loadUniqueFieldRawValues(props: {
     throw new Error(`Getting unique values for ${field.type.kind} fields is not supported.`);
   }
   const values: Value[] = [];
-  for await (const value of abortable(getDistinctFieldValues({ imodelAccess, field }), abortSignal)) {
+  for await (const value of abortableIterable(getDistinctFieldValues({ imodelAccess, field }), abortSignal)) {
     values.push(value);
   }
   return values;

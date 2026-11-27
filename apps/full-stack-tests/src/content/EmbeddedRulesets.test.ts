@@ -8,7 +8,7 @@ import { createIModelContentConfiguration } from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
-import { validateCategoryChain } from "./DescriptorValidation.js";
+import { getCategoryChainBase, validateCategoryChain } from "./DescriptorValidation.js";
 import {
   buildDescriptor,
   createContentIModelAccess,
@@ -671,6 +671,107 @@ describe("Content", () => {
         validateCategoryChain(descriptor, propC!, expectedCategories);
       },
     );
+
+    it.each([
+      {
+        meanings: ["RelatedInstance", "SameInstance", "RelatedInstance"],
+        expected: {
+          B_Cat: ["topLevel", "Class B", "Geometry"],
+          B_Plain: ["topLevel", "Class B"],
+          C_Cat: ["topLevel", "Class B", "Geometry"],
+          C_Plain: ["topLevel", "Class B", "Class C"],
+          D_Cat: ["topLevel", "Class B", "Class C", "Class D", "Geometry"],
+          D_Plain: ["topLevel", "Class B", "Class C", "Class D"],
+        },
+      },
+      {
+        meanings: ["SameInstance", "RelatedInstance", "SameInstance"],
+        expected: {
+          B_Cat: ["target", "Geometry"],
+          B_Plain: ["target", "Class B"],
+          C_Cat: ["target", "Class B", "Class C", "Geometry"],
+          C_Plain: ["target", "Class B", "Class C"],
+          D_Cat: ["target", "Class B", "Class C", "Geometry"],
+          D_Plain: ["target", "Class B", "Class C", "Class D"],
+        },
+      },
+    ] as const)("categorizes nested related properties with $meanings meanings", async ({ meanings, expected }) => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const classes = ["B", "C", "D"];
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <PropertyCategory typeName="Geometry" displayLabel="Geometry" priority="0" />
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="A_Plain" typeName="string" />
+            </ECEntityClass>
+            ${classes
+              .map(
+                (c) => `
+                  <ECEntityClass typeName="${c}" displayLabel="Class ${c}">
+                    <ECProperty propertyName="${c}_Cat" typeName="string" category="Geometry" />
+                    <ECProperty propertyName="${c}_Plain" typeName="string" />
+                  </ECEntityClass>`,
+              )
+              .join("")}
+            ${["A", "B", "C"]
+              .map(
+                (source, i) => `
+                  <ECRelationshipClass typeName="To${classes[i]}" strength="referencing" modifier="None">
+                    <Source multiplicity="(0..*)" roleLabel="source" polymorphic="true">
+                      <Class class="${source}" />
+                    </Source>
+                    <Target multiplicity="(0..1)" roleLabel="target" polymorphic="true">
+                      <Class class="${classes[i]}" />
+                    </Target>
+                  </ECRelationshipClass>`,
+              )
+              .join("")}
+          `,
+        );
+        const createSpec = (index: number): object => ({
+          propertiesSource: {
+            relationship: { schemaName: s.schemaName, className: `To${classes[index]}` },
+            direction: "Forward",
+          },
+          relationshipMeaning: meanings[index],
+          ...(index + 1 < meanings.length ? { nestedRelatedProperties: [createSpec(index + 1)] } : undefined),
+        });
+        await insertEmbeddedRuleset(builder, {
+          id: "test",
+          supplementationInfo: { supplementationPurpose: "test" },
+          rules: [
+            {
+              ruleType: "ContentModifier",
+              class: { schemaName: s.schemaName, className: "A" },
+              relatedProperties: [createSpec(0)],
+            },
+          ],
+        });
+        const instances = ["A", ...classes].map((c) =>
+          builder.insertInstance(`${s.schemaName}.${c}`, { [`${c}_Plain`]: c }),
+        );
+        classes.forEach((c, i) =>
+          builder.insertRelationship(`${s.schemaName}.To${c}`, instances[i].id, instances[i + 1].id),
+        );
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config,
+      });
+
+      const relatedFields = getRelatedPropertyFields(descriptor);
+      for (const [propertyName, [base, ...labels]] of Object.entries(expected)) {
+        const field = relatedFields.find((f) => f.propertyName === propertyName)!;
+        expect(getCategoryChainBase(descriptor, field)).toBe(base);
+        validateCategoryChain(descriptor, field, labels);
+      }
+    });
 
     it("ignores a non-supplemental ruleset", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {

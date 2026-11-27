@@ -42,14 +42,15 @@
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/presentation-shared": "workspace:^",
+    "fast-deep-equal": "^3.1.3",
     "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

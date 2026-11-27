@@ -18,7 +18,7 @@
 
 **Decision:** Flatten. The descriptor holds `fields: Record<Field["id"], Field>` keyed by field ID; `RelatedFieldGroup` is removed.
 
-Category nesting for related fields is handled by the existing `CategoryDefinition` mechanism (`categories` registry + `categoryId` on fields + `parentId` for nesting). Providers that resolve related fields know the path split points and create categories accordingly.
+Category nesting for related fields is handled by the existing `CategoryDefinition` mechanism (`categories` registry + `category` on fields + `parent` for nesting). Both `category` and `parent` are references: a defined category (`{ type: "category", id }`) or the content target's own category (`{ type: "target" }`, which has no definition). A category without a `parent` is at the top level, next to the content target's category. Providers that resolve related fields know the path split points and create categories accordingly.
 
 `CategoryDefinition.computeId({ path })` produces a deterministic ID from a relationship path, ensuring multiple providers reaching the same path converge on the same category without coordination. `CategoryDefinition.create(...)` is a convenience that builds the full definition.
 
@@ -44,6 +44,8 @@ Naively encoding the full path (e.g., `SourceClass.Prop/Rel1/Class2/Rel2/Class3/
 - This means index-based or order-dependent schemes are viable as long as the ordering algorithm is deterministic for the same inputs.
 
 **Decision:** Use full non-encoded field IDs with format `{PropertyClassName}.{PropertyName}({serialized path from content target to property class})`. For direct (non-related) properties, the path portion is omitted. Memory impact is negligible at expected scale (~1K fields, average 2-step paths ≈ ~260 KB total).
+
+Related property paths start at their first relationship's constraint class (e.g. `BisCore.UrlLink.Url(BisCore.Element-[BisCore.ElementHasLinks]->BisCore.RepositoryLink)`), so a related property reached over the same relationships from different content targets is one field with one ID. A path declared for a subclass of the target's class keeps starting at it, unless the constraint class derives from it: it applies only to that class's instances, so it's a separate field.
 
 Field IDs remain consumer-facing value keys only. Query requirements and field-to-query bindings are derived and retained privately by the content provider; they are not properties of `ContentDescriptor`, `PropertyField`, or `CalculatedField`.
 

@@ -27,6 +27,7 @@ import type { CalculatedField, PropertyField } from "../content/model/Field.js";
 
 function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "propertyName">): PropertyField {
   return {
+    category: { type: "target" },
     kind: "property",
     id: props.id ?? `field-${props.propertyName}`,
     label: props.propertyName,
@@ -172,6 +173,7 @@ describe("getDistinctFieldValues", () => {
     // A calculated field's selector is an arbitrary scalar expression, so its declared type doesn't
     // constrain the row shape — the raw scalar must not be reinterpreted as a point.
     const field: CalculatedField = {
+      category: { type: "target" },
       kind: "calculated",
       id: "calc",
       label: "Calc",
@@ -240,7 +242,7 @@ describe("getDistinctFieldValues", () => {
     );
 
     const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
-    expect(query.ecsql).to.include("JOIN IdSet(");
+    expect(query.ecsql).to.include("FROM IdSet(");
     expect(query.ecsql).to.include("WHERE [this].Area > 5");
   });
 
@@ -510,6 +512,7 @@ describe("getDistinctFieldValues", () => {
       // derives from, so one query anchored there covers them all.
       const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -529,6 +532,7 @@ describe("getDistinctFieldValues", () => {
     it("queries a calculated field's single resolved class exactly", async () => {
       const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -545,6 +549,7 @@ describe("getDistinctFieldValues", () => {
     it("queries nothing for a calculated field resolved for no classes", async () => {
       const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -562,6 +567,7 @@ describe("getDistinctFieldValues", () => {
       // calculated field keeps both in the restriction: `ONLY` excludes unlisted subclasses of `Derived`.
       const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
       const field: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         id: "calc",
         label: "Calc",
@@ -793,6 +799,7 @@ describe("buildDistinctValuesQuery", () => {
 
   it("builds a SELECT DISTINCT for a calculated field, substituting the target alias and merging bindings", async () => {
     const field: CalculatedField = {
+      category: { type: "target" },
       kind: "calculated",
       id: "calc",
       label: "Calc",
@@ -920,7 +927,7 @@ describe("buildDistinctValuesQuery", () => {
 
   it.each<{ type: ValueDescriptor; expectedKind: string }>([
     { type: { kind: "array", elementType: { kind: "primitive", type: "String" } }, expectedKind: "array" },
-    { type: { kind: "struct", members: [] }, expectedKind: "struct" },
+    { type: { kind: "struct", className: "TestSchema.TestStruct", members: [] }, expectedKind: "struct" },
   ])("rejects $expectedKind fields with a distinct-values-specific error", async ({ type, expectedKind }) => {
     const field = makePropertyField({ propertyName: "Composite", type });
 
@@ -943,8 +950,8 @@ describe("buildDistinctValuesQuery", () => {
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
         SELECT DISTINCT [this].[Name]
-        FROM ONLY [TestSchema].[Primary] [this]
-        JOIN IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds] ON [${ECSQL_PREFIX}TargetInstanceIds].[id] = [this].[ECInstanceId]
+        FROM IdSet(:${ECSQL_PREFIX}TargetInstanceIds) [${ECSQL_PREFIX}TargetInstanceIds]
+        CROSS JOIN ONLY [TestSchema].[Primary] [this] ON [this].[ECInstanceId] = [${ECSQL_PREFIX}TargetInstanceIds].[id]
         WHERE [this].Area > 5
       `),
     );

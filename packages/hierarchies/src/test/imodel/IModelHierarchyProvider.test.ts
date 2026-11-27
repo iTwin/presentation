@@ -7,7 +7,7 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
-import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
+import { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import {
   createMergedIModelHierarchyProvider,
@@ -1432,7 +1432,7 @@ describe("createIModelHierarchyProvider", () => {
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
-          throw new RowsLimitExceededError(123);
+          throw new RowsLimitExceededError({ limit: 123, rows: [] });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1453,6 +1453,439 @@ describe("createIModelHierarchyProvider", () => {
       ]);
 
       await expect(provider.getNodes({ parentNode: rootNodes[0] }).next()).rejects.toThrow(RowsLimitExceededError);
+    });
+
+    it("throws `NodesQueryRowsLimitExceededError` with processed nodes created from rows read before the limit was exceeded", async () => {
+      const rows: RowDef[] = [
+        {
+          [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+          [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+          [NodeSelectClauseColumnNames.DisplayLabel]: "b",
+        },
+        {
+          [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+          [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+          [NodeSelectClauseColumnNames.DisplayLabel]: "a",
+        },
+      ];
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError({ limit: 2, rows });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+            }
+            return [];
+          },
+          async postProcessNode({ node }) {
+            return { ...node, extendedData: { postProcessed: true } };
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+      expect(error).toBeInstanceOf(RowsLimitExceededError);
+      expect(error.limit).toBe(2);
+      expect(error.rows).toEqual([]);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "a",
+          extendedData: { postProcessed: true },
+          children: false,
+        },
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x2", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "b",
+          extendedData: { postProcessed: true },
+          children: false,
+        },
+      ]);
+    });
+
+    it("throws `NodesQueryRowsLimitExceededError` with nodes of all hierarchy level's definitions, when one of its queries exceeds the limit", async () => {
+      const genericNode = createTestSourceGenericNode({ key: "generic", label: "generic node" });
+      const exceedingQueryRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "exceeding query node",
+      };
+      imodelAccess.createQueryReader.mockImplementation((query) =>
+        (async function* () {
+          if (query.ecsql === "EXCEEDING_QUERY") {
+            throw new RowsLimitExceededError({ limit: 1, rows: [exceedingQueryRow] });
+          }
+          // make sure the other query's rows are read after the limit is exceeded
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          yield {
+            [NodeSelectClauseColumnNames.FullClassName]: "c.d",
+            [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+            [NodeSelectClauseColumnNames.DisplayLabel]: "other query node",
+          } satisfies RowDef;
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                { node: genericNode },
+                { fullClassName: "c.d", query: { ecsql: "OTHER_QUERY" } },
+                { fullClassName: "a.b", query: { ecsql: "EXCEEDING_QUERY" } },
+              ];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "exceeding query node",
+          children: false,
+        },
+        {
+          ...genericNode,
+          key: createTestGenericNodeKey({ id: "generic", source: sourceName }),
+          parentKeys: [],
+          children: false,
+        },
+        {
+          key: { type: "instances", instanceKeys: [{ className: "c.d", id: "0x2", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "other query node",
+          children: false,
+        },
+      ]);
+    });
+
+    it("throws `NodesQueryRowsLimitExceededError` with nodes of all queries that exceeded the limit, when multiple queries exceed it", async () => {
+      const createRow = (id: string): RowDef => ({
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: id,
+        [NodeSelectClauseColumnNames.DisplayLabel]: id,
+      });
+      imodelAccess.createQueryReader.mockImplementation((query) =>
+        (async function* () {
+          throw new RowsLimitExceededError({ limit: 1, rows: [createRow(query.ecsql)] });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                { fullClassName: "a.b", query: { ecsql: "0x1" } },
+                { fullClassName: "a.b", query: { ecsql: "0x2" } },
+              ];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+      expect(error.limit).toBe(1);
+      expect(error.nodes.map((node: HierarchyNode) => node.label)).toEqual(["0x1", "0x2"]);
+    });
+
+    it("throws `NodesQueryRowsLimitExceededError` with grouped nodes when hierarchy level exceeds the limit", async () => {
+      const groupingKey: GroupingNodeKey = { type: "label-grouping", label: "x", groupId: undefined };
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError({
+            limit: 2,
+            rows: ["0x1", "0x2"].map((id) => ({
+              [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+              [NodeSelectClauseColumnNames.ECInstanceId]: id,
+              [NodeSelectClauseColumnNames.DisplayLabel]: "x",
+              [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({ byLabel: true }),
+            })),
+          });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+      const expectedInstanceKeys: IModelInstanceKey[] = [
+        { className: "a.b", id: "0x1", imodelKey: "test-imodel" },
+        { className: "a.b", id: "0x2", imodelKey: "test-imodel" },
+      ];
+      expect(error.nodes).toEqual([
+        {
+          key: groupingKey,
+          parentKeys: [],
+          label: "x",
+          groupedInstanceKeys: expectedInstanceKeys,
+          children: true,
+        } satisfies GroupingHierarchyNode,
+      ]);
+
+      // grouping node's children are taken from cache, created while handling the limit error
+      const groupedNodes = await collect(provider.getNodes({ parentNode: error.nodes[0] }));
+      expect(groupedNodes).toHaveLength(2);
+      expect(groupedNodes).toEqual(
+        expect.arrayContaining(
+          expectedInstanceKeys.map((key) => ({
+            key: { type: "instances", instanceKeys: [key] },
+            parentKeys: [groupingKey],
+            label: "x",
+            children: false,
+          })),
+        ),
+      );
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
+    });
+
+    it("throws `NodesQueryRowsLimitExceededError` with hidden node's siblings and nodes of its child hierarchy level, when the child hierarchy level exceeds the limit", async () => {
+      const hiddenNode = createTestSourceGenericNode({ key: "hidden", processingParams: { hideInHierarchy: true } });
+      const siblingNode = createTestSourceGenericNode({ key: "sibling", label: "sibling" });
+      const childRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "child",
+      };
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError({ limit: 1, rows: [childRow] });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ node: hiddenNode }, { node: siblingNode }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "hidden") {
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [createTestGenericNodeKey({ id: "hidden", source: sourceName })],
+          label: "child",
+          children: false,
+        },
+        {
+          ...siblingNode,
+          key: createTestGenericNodeKey({ id: "sibling", source: sourceName }),
+          parentKeys: [],
+          children: false,
+        },
+      ]);
+    });
+
+    it("throws `NodesQueryRowsLimitExceededError` with hierarchy level's nodes and nodes of hidden node's child hierarchy level, when both - hierarchy level and the child hierarchy level exceed the limit", async () => {
+      const hiddenRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "hidden",
+        [NodeSelectClauseColumnNames.HideNodeInHierarchy]: true,
+      };
+      const visibleRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x3",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "visible",
+      };
+      const childRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "c.d",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "child",
+      };
+      imodelAccess.createQueryReader.mockImplementation((query) =>
+        (async function* () {
+          throw query.ecsql === "ROOT_QUERY"
+            ? new RowsLimitExceededError({ limit: 2, rows: [hiddenRow, visibleRow] })
+            : new RowsLimitExceededError({ limit: 2, rows: [childRow] });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ fullClassName: "a.b", query: { ecsql: "ROOT_QUERY" } }];
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys[0].id === "0x1") {
+              return [{ fullClassName: "c.d", query: { ecsql: "CHILD_QUERY" } }];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+      expect(error.limit).toBe(2);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "c.d", id: "0x2", imodelKey: "test-imodel" }] },
+          parentKeys: [
+            { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          ],
+          label: "child",
+          children: false,
+        },
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x3", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "visible",
+          children: false,
+        },
+      ]);
+    });
+
+    it("rethrows errors thrown while creating nodes of hidden node's child hierarchy level, when hierarchy level exceeds the limit", async () => {
+      const hiddenRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "hidden",
+        [NodeSelectClauseColumnNames.HideNodeInHierarchy]: true,
+      };
+      imodelAccess.createQueryReader.mockImplementation((query) =>
+        (async function* () {
+          throw query.ecsql === "ROOT_QUERY"
+            ? new RowsLimitExceededError({ limit: 1, rows: [hiddenRow] })
+            : new Error("test error");
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ fullClassName: "a.b", query: { ecsql: "ROOT_QUERY" } }];
+            }
+            return [{ fullClassName: "c.d", query: { ecsql: "CHILD_QUERY" } }];
+          },
+        },
+      });
+
+      await expect(collect(provider.getNodes({ parentNode: undefined }))).rejects.toThrow("test error");
+    });
+
+    it("creates nodes from rows read before the limit was exceeded only once", async () => {
+      const childNode: SourceInstanceHierarchyNode = {
+        key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1" }] },
+        label: "child",
+        children: false,
+      };
+      const parseNode = vi.fn<NodeParser>().mockReturnValue(childNode);
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError({ limit: 1, rows: [{}] });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          parseNode,
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ node: createTestSourceGenericNode({ key: "root" }) }];
+            }
+            return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+          },
+        },
+        queryCacheSize: 10,
+      });
+
+      // determining root node's children reads the child hierarchy level
+      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(rootNodes).toEqual([
+        createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: sourceName }), children: true }),
+      ]);
+      expect(parseNode).toHaveBeenCalledOnce();
+
+      // getting child nodes reuses the cached child hierarchy level
+      const expectedNodes = [
+        {
+          ...childNode,
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [rootNodes[0].key],
+        },
+      ];
+      for (let i = 0; i < 2; ++i) {
+        const error = await collect(provider.getNodes({ parentNode: rootNodes[0] })).catch((e) => e);
+        expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+        expect(error.nodes).toEqual(expectedNodes);
+      }
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
+      expect(parseNode).toHaveBeenCalledOnce();
+    });
+
+    it("sets children flag on parent node to `true` when hidden child node's child hierarchy level exceeds the limit", async () => {
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError({
+            limit: 1,
+            rows: [
+              {
+                [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+                [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+                [NodeSelectClauseColumnNames.DisplayLabel]: "child",
+              } satisfies RowDef,
+            ],
+          });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ node: createTestSourceGenericNode({ key: "root" }) }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [
+                { node: createTestSourceGenericNode({ key: "hidden", processingParams: { hideInHierarchy: true } }) },
+              ];
+            }
+            return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+          },
+        },
+      });
+
+      // the child hierarchy level exceeding the limit while determining children must not fail the root nodes request
+      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(rootNodes).toEqual([
+        createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: sourceName }), children: true }),
+      ]);
     });
   });
 
@@ -1887,6 +2320,47 @@ describe("createMergedIModelHierarchyProvider", () => {
         getHierarchyDefinition: () => ({ defineHierarchyLevel: async () => [] }),
       }),
     ).toThrow("requires at least one iModel");
+  });
+
+  it("throws `NodesQueryRowsLimitExceededError` with nodes of all iModels, when query of one of them exceeds the limit", async () => {
+    const imodelAccess1 = { ...createIModelAccessStub(), imodelKey: "imodel 1" };
+    const imodelAccess2 = { ...createIModelAccessStub(), imodelKey: "imodel 2" };
+    const createRow = (id: string): RowDef => ({
+      [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+      [NodeSelectClauseColumnNames.ECInstanceId]: id,
+      [NodeSelectClauseColumnNames.DisplayLabel]: id,
+    });
+    imodelAccess1.createQueryReader.mockImplementation(() => createAsyncIterator([createRow("0x1")]));
+    imodelAccess2.createQueryReader.mockImplementation(() =>
+      (async function* () {
+        throw new RowsLimitExceededError({ limit: 1, rows: [createRow("0x2")] });
+      })(),
+    );
+    using provider = createMergedIModelHierarchyProvider({
+      imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
+      getHierarchyDefinition: () => ({
+        async defineHierarchyLevel({ parentNode }) {
+          return parentNode ? [] : [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+        },
+      }),
+    });
+
+    const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+    expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+    expect(error.nodes).toEqual([
+      {
+        key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "imodel 1" }] },
+        parentKeys: [],
+        label: "0x1",
+        children: false,
+      },
+      {
+        key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x2", imodelKey: "imodel 2" }] },
+        parentKeys: [],
+        label: "0x2",
+        children: false,
+      },
+    ]);
   });
 
   it("creates and reuses a hierarchy definition for each iModel", async () => {

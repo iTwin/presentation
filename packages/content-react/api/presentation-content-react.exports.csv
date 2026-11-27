@@ -1,9 +1,13 @@
 sep=;
 Release Tag;API Item Type;API Item Name
+public;interface;Content
 public;function;createInstanceFilterProperties
+public;function;getContent
 public;function;getUniqueFieldValues
 public;interface;InstanceFilterClass
 public;interface;InstanceFilterPropertiesInfo
 public;interface;UniqueFieldValue
+public;function;useContent
 public;function;useInstanceFilterPropertiesInfo
+public;function;useUnifiedSelectionContent
 public;function;useUniqueFieldValues

@@ -15,6 +15,11 @@ export type {
 } from "./hierarchies/imodel/IModelHierarchyDefinition.js";
 export { HierarchyNodesDefinition } from "./hierarchies/imodel/IModelHierarchyDefinition.js";
 export type {
+  HierarchyLevelPathProps,
+  PathBasedDefineHierarchyLevelProps,
+  PathBasedHierarchyDefinition,
+} from "./hierarchies/imodel/PathBasedHierarchyDefinition.js";
+export type {
   DefineGenericNodeChildHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
@@ -29,10 +34,11 @@ export {
 export type { SourceHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 export { ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 
-export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors.js";
+export { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "./hierarchies/HierarchyErrors.js";
 export type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode.js";
 export { HierarchyNode } from "./hierarchies/HierarchyNode.js";
 export type { HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier.js";
+export { createIModelHierarchyNodePaths } from "./hierarchies/imodel/HierarchyNodePaths.js";
 export { HierarchyNodeIdentifier } from "./hierarchies/HierarchyNodeIdentifier.js";
 export type {
   GenericNodeKey,

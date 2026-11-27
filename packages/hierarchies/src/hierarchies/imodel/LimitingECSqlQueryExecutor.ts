@@ -27,7 +27,8 @@ export interface LimitingECSqlQueryExecutor {
   /**
    * Creates a query reader for given query, but makes sure it doesn't return more than the configured
    * limit of rows.
-   * @throws `RowsLimitExceededError` when the query returns more than configured limit of rows.
+   * @throws `RowsLimitExceededError` when the query returns more than configured limit of rows. The error
+   * contains the rows that were read before the limit was exceeded.
    */
   createQueryReader(
     query: ECSqlQueryDef,
@@ -76,7 +77,7 @@ export function createLimitingECSqlQueryExecutor(
           queryLogger.onStep();
           buffer.push(row);
           if (buffer.length > limit) {
-            throw new RowsLimitExceededError(limit);
+            throw new RowsLimitExceededError({ limit, rows: buffer.slice(0, limit) });
           }
         }
       } finally {

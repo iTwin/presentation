@@ -1,0 +1,25 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.ContentPropertiesWidget {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.ContentPropertiesWidget > .ContentContainer {
+  flex: 1;
+  min-height: 0;
+}
+
+.ContentPropertiesWidget-message {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+}

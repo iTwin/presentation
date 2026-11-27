@@ -163,7 +163,12 @@ function PropertyGrid(props: PropertyGridProps) {
   const [dataProvider, setDataProvider] = useState<AutoExpandingPropertyDataProvider>();
 
   useEffect(() => {
-    const provider = new AutoExpandingPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
+    const provider = new AutoExpandingPropertyDataProvider({
+      imodel,
+      ruleset: rulesetId,
+      propertiesMergeMode: "intersection",
+      ...diagnostics,
+    });
     provider.isNestedPropertyCategoryGroupingEnabled = true;
     // oxlint-disable-next-line react-hooks/set-state-in-effect
     setDataProvider(provider);

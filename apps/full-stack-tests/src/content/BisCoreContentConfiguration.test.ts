@@ -30,7 +30,12 @@ import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { PropertyFieldValidator, validateVisibleFieldsAtPath } from "./DescriptorValidation.js";
-import { buildDescriptor, createContentIModelAccess, getPropertyFieldsByPath } from "./Utils.js";
+import {
+  buildDescriptor,
+  createContentIModelAccess,
+  getPropertyFieldsByName,
+  getPropertyFieldsByPath,
+} from "./Utils.js";
 
 import type { ElementAspectProps, ExternalSourceProps } from "@itwin/core-common";
 import type { RelationshipPath } from "@itwin/presentation-shared";
@@ -233,7 +238,7 @@ describe("Content", () => {
 
       const uniqueAspectPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: uniqueAspectClassName,
           relationshipName: "BisCore.ElementOwnsUniqueAspect",
         },
@@ -253,7 +258,7 @@ describe("Content", () => {
 
       const multiAspectPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: multiAspectClassName,
           relationshipName: "BisCore.ElementOwnsMultiAspects",
           instanceFilter: { expression: "this.ECClassId IS NOT (BisCore.ExternalSourceAspect)" },
@@ -274,7 +279,7 @@ describe("Content", () => {
 
       const linkPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.RepositoryLink",
           relationshipName: "BisCore.ElementHasLinks",
         },
@@ -287,7 +292,7 @@ describe("Content", () => {
 
       const modelSourcePath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.PhysicalModel",
           relationshipName: "BisCore.ModelContainsElements",
           relationshipReverse: true,
@@ -360,7 +365,7 @@ describe("Content", () => {
 
       const groupLinkPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: "Generic.Group",
           relationshipName: "BisCore.ElementGroupsMembers",
           relationshipReverse: true,
@@ -496,7 +501,7 @@ describe("Content", () => {
 
       const externalSourceAspectPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.ExternalSourceAspect",
           relationshipName: "BisCore.ElementOwnsMultiAspects",
           instanceFilter: { expression: "this.Kind <> 'Relationship'" },
@@ -565,6 +570,120 @@ describe("Content", () => {
       });
     });
 
+    it("filters by type label when related columns exceed the join budget", async () => {
+      const { imodelConnection, matching, different, untyped, nullLabel } = await buildTestIModel(
+        "TypeFilterWithManyAspects",
+        async (imodel, testName) => {
+          const schema = await importSchema(
+            testName,
+            imodel,
+            `
+              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+              <ECEntityClass typeName="MyElement"><BaseClass>bis:PhysicalElement</BaseClass></ECEntityClass>
+              ${Array.from(
+                { length: 70 },
+                (_, index) => `
+                <ECEntityClass typeName="Aspect${index}">
+                  <BaseClass>bis:ElementUniqueAspect</BaseClass>
+                  <ECProperty propertyName="Value" typeName="int" />
+                </ECEntityClass>
+              `,
+              ).join("")}
+            `,
+          );
+          return withEditTxn(imodel, (txn) => {
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "Category" });
+            const partitionKey = insertPhysicalPartition({ txn, codeValue: "Model", parentId: IModel.rootSubjectId });
+            const modelKey = insertPhysicalSubModel({ txn, modeledElementId: partitionKey.id });
+            const matchingType = insertPhysicalType({ txn, userLabel: "Matching" });
+            const differentType = insertPhysicalType({ txn, userLabel: "Different" });
+            const nullLabelType = insertPhysicalType({ txn });
+            const elementProps = {
+              txn,
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              classFullName: schema.items.MyElement.fullName,
+            };
+            const matchingElement = insertPhysicalElement({
+              ...elementProps,
+              userLabel: "First",
+              typeDefinitionId: matchingType.id,
+            });
+            const differentElement = insertPhysicalElement({ ...elementProps, typeDefinitionId: differentType.id });
+            const untypedElement = insertPhysicalElement(elementProps);
+            const nullLabelElement = insertPhysicalElement({ ...elementProps, typeDefinitionId: nullLabelType.id });
+            for (let index = 0; index < 70; ++index) {
+              for (const id of [matchingElement.id, matchingType.id]) {
+                txn.insertAspect({
+                  classFullName: schema.items[`Aspect${index}`].fullName,
+                  element: { id },
+                  value: index,
+                } as ElementAspectProps);
+              }
+            }
+            return {
+              matching: matchingElement,
+              different: differentElement,
+              untyped: untypedElement,
+              nullLabel: nullLabelElement,
+            };
+          });
+        },
+      );
+
+      const imodelAccess = createContentIModelAccess(imodelConnection);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: matching.className }],
+        config,
+      });
+      const provider = createContentProvider({ imodelAccess, sources, config });
+      const labelFields = getPropertyFieldsByName(await provider.getContentDescriptor(), "UserLabel");
+      const typeLabelFields = labelFields.filter(
+        (candidate) => candidate.pathFromTarget[0]?.relationshipName === "BisCore.PhysicalElementIsOfType",
+      );
+      expect(typeLabelFields).toHaveLength(1);
+      const [typeLabelField] = typeLabelFields;
+
+      const directField = labelFields.find((candidate) => candidate.pathFromTarget.length === 0);
+      expect(directField).toBeDefined();
+      if (!directField) {
+        throw new Error("Missing element label field");
+      }
+
+      const scenarios: Array<{
+        filters: NonNullable<Parameters<typeof provider.getSize>[0]>["filters"];
+        ids: string[];
+      }> = [
+        { filters: [{ field: typeLabelField, operator: "is-equal", value: "Matching" }], ids: [matching.id] },
+        { filters: [{ field: typeLabelField, operator: "is-not-equal", value: "Matching" }], ids: [different.id] },
+        { filters: [{ field: typeLabelField, operator: "is-null" }], ids: [untyped.id, nullLabel.id] },
+        { filters: [{ field: typeLabelField, operator: "is-not-null" }], ids: [matching.id, different.id] },
+        { filters: [{ field: typeLabelField, operator: "is-equal", value: "Missing" }], ids: [] },
+        {
+          filters: [
+            { field: typeLabelField, operator: "is-equal", value: "Matching" },
+            { field: directField, operator: "is-equal", value: "First" },
+          ],
+          ids: [matching.id],
+        },
+      ];
+      for (const { filters, ids } of scenarios) {
+        expect(await provider.getSize({ filters })).toBe(ids.length);
+        expect((await collect(provider.getInstanceKeys({ filters }))).map((key) => key.id)).toEqual(ids);
+        expect((await collect(provider.getItems({ filters }))).map((item) => item.primaryKey.id)).toEqual(ids);
+      }
+
+      const sortedItems = await collect(
+        provider.getItems({
+          filters: [{ field: typeLabelField, operator: "is-equal" as const, value: "Matching" }],
+          sorting: [{ field: typeLabelField, direction: "asc" }],
+        }),
+      );
+      expect(sortedItems.map((item) => item.primaryKey.id)).toEqual([matching.id]);
+    });
+
     it("adds 3d type-definition fields, keeps the schema-provided PhysicalMaterial label, and hides internal DefinitionElement/TypeDefinitionElement properties", async () => {
       const { imodelConnection, elementClassName } = await buildTestIModel(async (imodel) => {
         return withEditTxn(imodel, (txn) => {
@@ -598,12 +717,62 @@ describe("Content", () => {
 
       const typeDefinitionPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.PhysicalElement",
           targetClassName: "Generic.PhysicalType",
           relationshipName: "BisCore.PhysicalElementIsOfType",
         },
       ];
       validateVisibleFieldsAtPath({ descriptor, path: typeDefinitionPath, expect: physicalTypeFieldValidators() });
+    });
+
+    it("creates one type-definition field for targets narrower and broader than the declared class", async () => {
+      const { imodelConnection, elementKey } = await buildTestIModel(async (imodel) => {
+        return withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "Category" });
+          const partitionKey = insertPhysicalPartition({ txn, codeValue: "Model", parentId: IModel.rootSubjectId });
+          const modelKey = insertPhysicalSubModel({ txn, modeledElementId: partitionKey.id });
+          const typeKey = insertPhysicalType({ txn, userLabel: "Type" });
+          // Two typed elements, so that each target reaches a type definition.
+          const [firstElementKey] = ["First", "Second"].map((userLabel) =>
+            insertPhysicalElement({
+              txn,
+              userLabel,
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              typeDefinitionId: typeKey.id,
+            }),
+          );
+          return { elementKey: firstElementKey };
+        });
+      });
+
+      const imodelAccess = createContentIModelAccess(imodelConnection);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      // The type definition is declared from `GeometricElement3d`: the first target is its subclass, the
+      // second one its base.
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [
+          { primaryClass: elementKey.className, instanceIds: [elementKey.id] },
+          { primaryClass: "BisCore.Element", instanceFilter: { expression: `this.ECInstanceId <> ${elementKey.id}` } },
+        ],
+        config,
+      });
+      const descriptor = await createContentProvider({ imodelAccess, sources, config }).getContentDescriptor();
+
+      const userLabelFields = getPropertyFieldsByName(descriptor, "UserLabel").filter(
+        (field) => field.pathFromTarget[0]?.relationshipName === "BisCore.PhysicalElementIsOfType",
+      );
+      expect(userLabelFields).toHaveLength(1);
+      expect(userLabelFields[0].pathFromTarget[0].sourceClassName).toBe("BisCore.PhysicalElement");
+      // Both targets reach the type definition and share the field.
+      expect(
+        sources.map((source) =>
+          source.resolvedDeclarations
+            .flatMap((group) => group.paths)
+            .some(({ path }) => path[0].relationshipName === "BisCore.PhysicalElementIsOfType"),
+        ),
+      ).toEqual([true, true]);
     });
 
     it("adds owned aspect fields on nested content", async () => {
@@ -660,7 +829,7 @@ describe("Content", () => {
 
       const nestedAspectPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.PhysicalElement",
           targetClassName: "Generic.PhysicalType",
           relationshipName: "BisCore.PhysicalElementIsOfType",
         },
@@ -769,7 +938,7 @@ describe("Content", () => {
       ];
       const uniquePath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: uniqueAspectClassName,
           relationshipName: "BisCore.ElementOwnsUniqueAspect",
         },
@@ -781,7 +950,7 @@ describe("Content", () => {
       });
       const multiPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.Element",
           targetClassName: multiAspectClassName,
           relationshipName: "BisCore.ElementOwnsMultiAspects",
           instanceFilter: { expression: "this.ECClassId IS NOT (BisCore.ExternalSourceAspect)" },
@@ -795,7 +964,7 @@ describe("Content", () => {
       // On the element's type definition (reached recursively), the owning context is its class category.
       const nestedPath: RelationshipPath = [
         {
-          sourceClassName: elementClassName,
+          sourceClassName: "BisCore.PhysicalElement",
           targetClassName: "Generic.PhysicalType",
           relationshipName: "BisCore.PhysicalElementIsOfType",
         },
@@ -867,7 +1036,7 @@ describe("Content", () => {
 
       const typeDefinitionPath: RelationshipPath = [
         {
-          sourceClassName: drawingGraphicClassName,
+          sourceClassName: "BisCore.GeometricElement2d",
           targetClassName: "Generic.PhysicalType",
           relationshipName: "BisCore.GeometricElement2dHasTypeDefinition",
         },
@@ -876,7 +1045,7 @@ describe("Content", () => {
 
       const representedElementPath: RelationshipPath = [
         {
-          sourceClassName: drawingGraphicClassName,
+          sourceClassName: "BisCore.DrawingGraphic",
           targetClassName: "Generic.PhysicalObject",
           relationshipName: "BisCore.DrawingGraphicRepresentsElement",
         },

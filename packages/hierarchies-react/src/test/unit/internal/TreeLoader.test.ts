@@ -108,7 +108,7 @@ describe("TreeLoader", () => {
     it("loads info node when `RowsLimitExceededError` is thrown", async () => {
       const loader = createLoader();
       hierarchyProvider.getNodes.mockImplementation(() => {
-        return throwingAsyncIterator(new RowsLimitExceededError(10));
+        return throwingAsyncIterator(new RowsLimitExceededError({ limit: 10, rows: [] }));
       });
 
       const nodes = await collectNodes(
@@ -240,7 +240,7 @@ describe("TreeLoader", () => {
     it("reports when `RowsLimitExceededError` is thrown", async () => {
       const loader = createLoader();
       hierarchyProvider.getNodes.mockImplementation(() => {
-        return throwingAsyncIterator(new RowsLimitExceededError(10));
+        return throwingAsyncIterator(new RowsLimitExceededError({ limit: 10, rows: [] }));
       });
 
       const filter = {} as GenericInstanceFilter;

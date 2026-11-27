@@ -1,5 +1,45 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.1.0
+
+### Minor Changes
+
+- [#1750](https://github.com/iTwin/presentation/pull/1750): `StrataKitTreeRenderer`: Added `scrollToNode` method to the renderer ref (`StrataKitTreeRendererAttributes`). It accepts a `nodePredicate` to identify an already loaded target node and scrolls the node into view. If the node is under a collapsed parent or deep in the hierarchy, all its collapsed ancestors are expanded first. An optional `onComplete` callback is called with the target node once it's scrolled into view. Returns `"node-not-found"` if no node matches the predicate, `"success"` otherwise.
+  
+  ```tsx
+  const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+  // ...
+  treeRef.current?.scrollToNode({ nodePredicate: (node) => node.id === newNodeId });
+  ```
+
+### Patch Changes
+
+- [#1741](https://github.com/iTwin/presentation/pull/1741): Preserve keyboard focus when a loading placeholder is replaced by its loaded child.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.2.0
+
+## 2.0.3
+
+### Patch Changes
+
+- [#1712](https://github.com/iTwin/presentation/pull/1712): `StrataKitTreeRenderer`: Nodes are now scrolled to the center of the viewport when navigating to a node from the errors list or via `renameNode`. Previously, the node could end up at the top edge of the tree and be hidden behind the expanded errors region.
+- [#1719](https://github.com/iTwin/presentation/pull/1719): Bump iTwin.js Core dependencies to `5.15.1`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.1.1
+  - @itwin/presentation-shared@2.2.1
+  - @itwin/unified-selection@2.0.3
+
+## 2.0.2
+
+### Patch Changes
+
+- [#1709](https://github.com/iTwin/presentation/pull/1709): Update iTwin.js Core dependencies to `5.14.5`.
+- [#1709](https://github.com/iTwin/presentation/pull/1709): Update StrataKit & `@tanstack/react-virtual` dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.1.0
+  - @itwin/presentation-shared@2.2.0
+  - @itwin/unified-selection@2.0.2
+
 ## 2.0.1
 
 ### Patch Changes

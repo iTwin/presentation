@@ -19,6 +19,22 @@ import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider
 export type CardinalityHint = "one" | "many";
 
 /**
+ * Whether the properties of related instances reached over a relationship path step are shown as properties of a
+ * separate related instance, or as part of the instance they're related to (e.g. element aspects).
+ *
+ * - `"relatedInstance"`: property categories of the step's properties are nested under the step's class category.
+ *   On the outermost step of a category chain, the chain starts at the top level.
+ * - `"sameInstance"`: property categories of the step's properties attach to the enclosing category, or to the
+ *   content target's category without one. On the outermost step of a category chain, the chain is placed in the
+ *   content target's category.
+ *
+ * See `RelatedPropertiesDeclaration.relationshipMeaning` for details.
+ *
+ * @public
+ */
+export type RelationshipMeaning = "relatedInstance" | "sameInstance";
+
+/**
  * The starting point for a content request, scoped to a single EC class.
  *
  * Answers the question: "what am I getting properties for?"
@@ -174,12 +190,18 @@ interface ResolvedExternalInputGroup {
  */
 export interface ResolvedPath {
   /**
-   * The concrete relationship path from the content target to the related property source.
+   * The relationship path from the content target to the related property source.
    *
-   * Every class on each step is concrete — the step's `sourceClassName`, `targetClassName` and
-   * `relationshipName` are all resolved from the scanned data, never a polymorphically-selected base.
-   * For a polymorphic relationship this means the concrete relationship subclass(es) actually present
-   * in the data; distinct subclasses are reported as separate `ResolvedPath` entries.
+   * The path starts at its first relationship's constraint class, so a relationship path resolved for
+   * different targets gets the same description. A path declared for a subclass of the target's class, or
+   * returned by a custom `resolve` starting at one, keeps starting at that subclass, which restricts the
+   * primary instances the path applies to — unless the constraint class derives from it.
+   *
+   * The rest of the path is concrete: each step's `relationshipName` and `targetClassName`, and the
+   * `sourceClassName` of every step after the first, are resolved from the scanned data, never a
+   * polymorphically-selected base. For a polymorphic relationship this means the concrete relationship
+   * subclass(es) actually present in the data; distinct subclasses are reported as separate `ResolvedPath`
+   * entries.
    */
   path: RelationshipPath;
 
@@ -195,12 +217,18 @@ export interface ResolvedPath {
 
 /**
  * Ordered class categories enclosing a related-properties declaration, from root to leaf.
- * Each entry identifies a class at a zero-based step of the resolved relationship path.
+ * Each entry identifies a class at a zero-based step of the resolved relationship path, along with the
+ * `relationshipMeaning` in effect for that step. The outermost entry's meaning decides where the categories are
+ * placed: in the content target's category for `"sameInstance"`, at the top level otherwise.
  * An empty context places categories at the root.
  *
  * @public
  */
-export type CategoryContext = { stepIndex: number; kind: "targetClass" | "relationshipClass" }[];
+export type CategoryContext = {
+  stepIndex: number;
+  kind: "targetClass" | "relationshipClass";
+  relationshipMeaning: RelationshipMeaning;
+}[];
 
 /**
  * A group of concrete relationship paths resolved from a single provider declaration.
@@ -223,11 +251,11 @@ interface ResolvedDeclarationGroup {
   declarationIndex: number;
 
   /**
-   * Concrete relationship paths resolved from the declaration's generic path, each with the
-   * concrete content-target classes it applies to. All path classes are concrete — no base classes.
+   * Relationship paths resolved from the declaration's generic path, each with the concrete
+   * content-target classes it applies to (see `ResolvedPath`).
    *
-   * For a `nested` group, every path is the *full* concrete path from this source's target — the
-   * concrete prefix up to and including the anchor step, followed by the nested declaration's own
+   * For a `nested` group, every path is the *full* path from this source's target — the
+   * prefix up to and including the anchor step, followed by the nested declaration's own
    * (now concrete) suffix steps — not just the nested declaration's suffix. `targetClassNames`
    * remains the near-end (true primary) classes throughout, so `PropertyField.primaryClassNames`
    * semantics are unchanged for nested fields.
@@ -258,7 +286,11 @@ interface ResolvedDeclarationGroup {
      */
     prefixStepCount: number;
 
-    /** Resolved category ancestry inherited from the enclosing declaration. */
+    /**
+     * Resolved category ancestry inherited from the enclosing declaration. When several enclosing declarations place
+     * categories the same way, this is the first one's context: all of them share its entries' steps and kinds and the
+     * outermost entry's `relationshipMeaning`, but inner entries' meanings may differ.
+     */
     categoryContext: CategoryContext;
 
     /**

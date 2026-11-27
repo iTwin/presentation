@@ -4,7 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResolvablePromise } from "presentation-test-utilities";
-import { asapScheduler, asyncScheduler, defer, from, queueScheduler, scheduled, throwError } from "rxjs";
+import {
+  asapScheduler,
+  asyncScheduler,
+  defer,
+  finalize,
+  from,
+  NEVER,
+  of,
+  queueScheduler,
+  scheduled,
+  throwError,
+} from "rxjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SubscriptionScheduler } from "../../hierarchies/internal/SubscriptionScheduler.js";
 
@@ -19,6 +30,25 @@ describe("SubscriptionScheduler", () => {
   });
 
   describe("scheduleSubscription", () => {
+    it("tears down a cancelled active source and starts the next queued source", async () => {
+      const scheduler = new SubscriptionScheduler(1);
+      const onTeardown = vi.fn();
+      const activeSource = NEVER.pipe(finalize(onTeardown));
+      const onSubscribe = vi.spyOn(activeSource, "subscribe");
+      const active = scheduler.scheduleSubscription(activeSource).subscribe();
+      const onNext = vi.fn();
+      const queued = scheduler.scheduleSubscription(of(1)).subscribe(onNext);
+
+      await Promise.resolve();
+      expect(onSubscribe).toHaveBeenCalledOnce();
+      expect(onNext).not.toHaveBeenCalled();
+
+      active.unsubscribe();
+      expect(onTeardown).toHaveBeenCalledOnce();
+      await waitForUnsubscription(queued);
+      expect(onNext).toHaveBeenCalledExactlyOnceWith(1);
+    });
+
     // Affects when input observables emit values to `SubscriptionScheduler`.
     const schedulers: Array<[string, undefined | SchedulerLike]> = [
       ["no", undefined],

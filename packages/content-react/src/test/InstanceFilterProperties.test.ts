@@ -20,6 +20,7 @@ describe("createInstanceFilterProperties", () => {
       label: "external",
       type: { kind: "primitive", type: "String" },
       providerId: "test",
+      category: { type: "target" },
     };
 
     const result = createInstanceFilterProperties({

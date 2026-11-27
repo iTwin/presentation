@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
+import { isErrorBlockingExpansion, isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
 import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { TreeNodeLabelEditorOverlay } from "./LabelEditor.js";
@@ -75,6 +75,21 @@ export interface StrataKitTreeRendererAttributes {
    * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
    */
   renameNode: (nodePredicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
+  /**
+   * Scrolls the first node that matches the given predicate into view. Node must be already loaded in the tree.
+   * If the node is under a collapsed parent or deep in the hierarchy, all its collapsed ancestors are expanded
+   * to make it visible before scrolling to it.
+   *
+   * The optional `onComplete` callback is called with the target node after it's scrolled into view. A newer call
+   * supersedes a pending one, whose `onComplete` is then never called.
+   *
+   * Returns "node-not-found" if no node matches the predicate or the matching node can't be displayed (e.g. one of its
+   * ancestors has an error that blocks expansion), "success" if scrolling was initiated.
+   */
+  scrollToNode: (props: {
+    nodePredicate: (node: TreeNode) => boolean;
+    onComplete?: (node: TreeNode) => void;
+  }) => "node-not-found" | "success";
 }
 
 /** @alpha */
@@ -117,8 +132,8 @@ export const StrataKitTreeRenderer: FC<
     });
     const flatItems = useFlatTreeItems(rootNodes);
     const errorNodes = useErrorNodes(rootNodes);
-
     const parentRef = useRef<HTMLDivElement>(null);
+    const { onPlaceholderFocus, onPlaceholderBlur } = usePlaceholderFocus(flatItems, parentRef);
 
     // oxlint-disable-next-line react-hooks/incompatible-library
     const virtualizer = useVirtualizer({
@@ -134,13 +149,8 @@ export const StrataKitTreeRenderer: FC<
     const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
     useImperativeHandle(forwardedRef, () => ({
       renameNode: (nodePredicate) =>
-        expandAndScrollToNode({
-          nodePredicate,
-          onComplete: (targetNode) => {
-            // give time to scroll node into view before starting rename
-            requestAnimationFrame(() => renameContext.startRename(targetNode));
-          },
-        }),
+        expandAndScrollToNode({ nodePredicate, onComplete: (targetNode) => renameContext.startRename(targetNode) }),
+      scrollToNode: expandAndScrollToNode,
     }));
 
     const cancelRename = renameContext.cancelRename;
@@ -207,6 +217,7 @@ export const StrataKitTreeRenderer: FC<
                     data-index={virtualizedItem.index}
                     start={virtualizedItem.start}
                     item={item}
+                    placeholderProps={{ onFocus: onPlaceholderFocus, onBlur: onPlaceholderBlur }}
                     selected={selected}
                     expandNode={expandNode}
                     reloadTree={reloadTree}
@@ -296,9 +307,12 @@ function useExpandAndScrollToNode({
     if (index === -1) {
       return;
     }
-    virtualizer.scrollToIndex(index, { align: "auto" });
-    scrollToNode.current.onScrollComplete?.();
+    virtualizer.scrollToIndex(index, { align: "center" });
+    const { onScrollComplete } = scrollToNode.current;
     scrollToNode.current = undefined;
+    if (onScrollComplete) {
+      requestAnimationFrame(onScrollComplete);
+    }
   }, [flatItems, virtualizer]);
 
   return ({
@@ -320,9 +334,14 @@ function useExpandAndScrollToNode({
         onScrollComplete: onComplete ? () => onComplete(targetNode) : undefined,
       };
     } else {
+      // supersede any request still waiting for expansion
+      scrollToNode.current = undefined;
       const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
-      virtualizer.scrollToIndex(index, { align: "auto" });
-      onComplete?.(targetNode);
+      virtualizer.scrollToIndex(index, { align: "center" });
+      if (onComplete) {
+        // give the virtualizer a frame to render the node before notifying
+        requestAnimationFrame(() => onComplete(targetNode));
+      }
     }
     return "success";
   };
@@ -333,7 +352,8 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
     if (nodePredicate(parent)) {
       return [parent];
     }
-    if (parent.children !== true) {
+    // children of nodes with expansion-blocking errors are never rendered
+    if (parent.children !== true && !parent.errors.some(isErrorBlockingExpansion)) {
       const childPath = findPathToNode(parent.children, nodePredicate);
       if (childPath) {
         return [parent, ...childPath];
@@ -343,14 +363,59 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
   return undefined;
 }
 
+function usePlaceholderFocus(flatItems: FlatTreeItem[], parentRef: { current: HTMLDivElement | null }) {
+  const focusedParentId = useRef<string | undefined>(undefined);
+  const onPlaceholderFocus = useCallback(
+    (event: Parameters<NonNullable<StrataKitTreeItemProps["onFocus"]>>[0]) => {
+      const index = Number(event.currentTarget.dataset.index);
+      focusedParentId.current = flatItems[index - 1]?.id;
+    },
+    [flatItems],
+  );
+  const onPlaceholderBlur = useCallback(() => {
+    focusedParentId.current = undefined;
+  }, []);
+
+  useLayoutEffect(() => {
+    const parentId = focusedParentId.current;
+    if (parentId === undefined) {
+      return;
+    }
+
+    const parentIndex = flatItems.findIndex((item) => item.id === parentId);
+    if (parentIndex === -1) {
+      focusedParentId.current = undefined;
+      return;
+    }
+
+    const parent = flatItems[parentIndex];
+    const nextItem: FlatTreeItem | undefined = flatItems[parentIndex + 1];
+    // oxlint-disable-next-line typescript/no-unnecessary-condition
+    if (nextItem && isPlaceholderItem(nextItem)) {
+      return;
+    }
+    // If loading produces no direct child, keep focus on the parent.
+    // oxlint-disable-next-line typescript/no-unnecessary-condition
+    const focusIndex = nextItem && nextItem.level === parent.level + 1 ? parentIndex + 1 : parentIndex;
+    parentRef.current?.querySelector<HTMLElement>(`[data-index="${focusIndex}"]`)?.focus();
+    focusedParentId.current = undefined;
+  }, [flatItems, parentRef]);
+
+  return { onPlaceholderFocus, onPlaceholderBlur };
+}
+
 type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;
   "data-index": number;
   item: FlatTreeItem;
+  placeholderProps: Pick<StrataKitTreeItemProps, "onFocus" | "onBlur">;
 };
 
 const VirtualTreeItem = memo(
-  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, ...props }, forwardedRef) {
+  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
+    { start, item, placeholderProps, ...props },
+    forwardedRef,
+  ) {
     const style: CSSProperties = useMemo(
       () => ({
         position: "absolute",
@@ -372,6 +437,7 @@ const VirtualTreeItem = memo(
           aria-level={item.level}
           aria-posinset={1}
           aria-setsize={1}
+          {...placeholderProps}
         />
       );
     }

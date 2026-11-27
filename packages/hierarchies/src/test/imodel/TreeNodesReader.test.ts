@@ -7,7 +7,7 @@ import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { defaultNodesParser, readNodes } from "../../hierarchies/imodel/TreeNodesReader.js";
+import { defaultNodesParser, parseNodes, readNodes } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createTestSourceInstanceNode } from "../Utils.js";
 
 import type { ConcatenatedValue } from "@itwin/presentation-shared";
@@ -50,6 +50,27 @@ describe("readNodes", () => {
       query,
       expect.objectContaining({ rowFormat: "ECSqlPropertyNames", limit: 123, restartToken: expect.any(String) }),
     );
+  });
+});
+
+describe("parseNodes", () => {
+  it("parses rows using given parser", async () => {
+    const node = createTestSourceInstanceNode();
+    const parser = vi.fn().mockReturnValue(of(node));
+    const row = { id: 1 };
+    const result = await collect(parseNodes({ rows: [row], parser }));
+    expect(parser).toHaveBeenCalledExactlyOnceWith({ row });
+    expect(result).toEqual([node]);
+  });
+
+  it("parses rows using `defaultNodesParser` when parser isn't provided", async () => {
+    const row: RowDef = {
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
+    };
+    const result = await collect(parseNodes({ rows: [row] }));
+    expect(result).toEqual([defaultNodesParser({ row })]);
   });
 });
 

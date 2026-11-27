@@ -8,14 +8,16 @@ import { ECSql, getClass } from "@itwin/presentation-shared";
 import {
   buildCategoryContext,
   ECSQL_PREFIX,
+  getCategoryContextKey,
   getOrCreate,
+  getStepSourceConstraintClassName,
   PRIMARY_CLASS_ALIAS,
   resolveEffectiveSourceClass,
 } from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
 import { namespaceBindings } from "./query/NamespaceBindings.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
-import { buildTargetFilter } from "./query/TargetFilter.js";
+import { buildTargetQueryParts } from "./query/TargetQuery.js";
 import { validateExternalInputs } from "./ValidateExternalInputs.js";
 
 import type { Observable } from "rxjs";
@@ -110,16 +112,16 @@ async function resolveJoin(
 // have instances in scope (honoring the target's instance IDs / filter). A plain class
 // selector is polymorphic, so this naturally spans the selected base and all its subclasses.
 function buildPrimaryEnumerationQuery(target: ContentTarget): ECSqlQueryDef {
-  const targetFilter = buildTargetFilter(target);
-  const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+  const targetQuery = buildTargetQueryParts(target);
+  const whereClause = targetQuery.where ? `WHERE ${targetQuery.where}` : "";
   const ecsql = `
     SELECT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')
-    FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-    ${targetFilter.joins?.join("\n") ?? ""}
+    ${targetQuery.from}
+    ${targetQuery.joins.join("\n")}
     ${whereClause}
     GROUP BY [${PRIMARY_CLASS_ALIAS}].[ECClassId]
   `;
-  return { ecsql, ...(targetFilter.bindings ? { bindings: targetFilter.bindings } : {}) };
+  return { ecsql, ...(targetQuery.bindings ? { bindings: targetQuery.bindings } : {}) };
 }
 
 // --- Strategies ---
@@ -136,13 +138,14 @@ const originalStrategy: ResolutionQueryStrategy = {
     const { target, primaryClassName, joinPath, schemaProvider, joinTargetInstanceFilter } = ctx;
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
-    const targetFilter = buildTargetFilter(target);
-    const whereClause = buildWhereClause(targetFilter.where ?? "", joinTargetInstanceFilter);
-    const allBindings = { ...joinBindings, ...targetFilter.bindings };
+    const targetQuery = buildTargetQueryParts(target, { primaryClassName });
+    const whereClause = buildWhereClause(targetQuery.where ?? "", joinTargetInstanceFilter);
+    const allBindings = { ...joinBindings, ...targetQuery.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
-      ${joins} ${targetFilter.joins?.join("\n") ?? ""}
+      ${targetQuery.from}
+      ${targetQuery.joins.join("\n")}
+      ${joins}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
     `;
@@ -161,7 +164,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
   },
   async buildQuery(ctx) {
     const { target, primaryClassName, joinPath, schemaProvider, joinTargetInstanceFilter } = ctx;
-    const targetFilter = buildTargetFilter(target);
+    const targetQuery = buildTargetQueryParts(target, { primaryClassName });
 
     const [
       { joins: firstStepJoins, bindings: firstStepBindings, selectors: firstStepSelectors },
@@ -184,7 +187,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       ...firstStepSelectors.map((s) => s.targetClassId),
       ...remainingSelectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]),
     ];
-    const instanceFilterClauses = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+    const instanceFilterClauses = targetQuery.where ? `WHERE ${targetQuery.where}` : "";
 
     // The inner scan is anchored at the (large) source, but only ever yields a small set of
     // DISTINCT (first-hop class, near-end class) id pairs. Joining that derived table keeps the
@@ -195,8 +198,9 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       ${remainingJoins}
       INNER JOIN (
         SELECT [${firstHopAlias}].[ECInstanceId] [FirstHopInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
-        FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
-        ${firstStepJoins} ${targetFilter.joins?.join("\n") ?? ""}
+        ${targetQuery.from}
+        ${targetQuery.joins.join("\n")}
+        ${firstStepJoins}
         ${instanceFilterClauses}
         GROUP BY [${firstHopAlias}].[ECInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
       ) [reachable] ON [reachable].[FirstHopInstanceId] = [${firstHopAlias}].[ECInstanceId]
@@ -204,7 +208,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       GROUP BY  [reachable].[FirstStepRelClassId], ${buildClassIdColumns(classSelectors)}
     `;
 
-    const allBindings = { ...firstStepBindings, ...remainingBindings, ...targetFilter.bindings };
+    const allBindings = { ...firstStepBindings, ...remainingBindings, ...targetQuery.bindings };
     return { ecsql, ...(Object.keys(allBindings).length > 0 ? { bindings: allBindings } : {}) };
   },
 };
@@ -222,13 +226,14 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
     const crossJoins = joins.replaceAll(/\bINNER\s+JOIN\b/gi, "CROSS JOIN");
-    const targetFilter = buildTargetFilter(target);
-    const whereClause = buildWhereClause(targetFilter.where ?? "", joinTargetInstanceFilter);
-    const allBindings = { ...joinBindings, ...targetFilter.bindings };
+    const targetQuery = buildTargetQueryParts(target, { primaryClassName });
+    const whereClause = buildWhereClause(targetQuery.where ?? "", joinTargetInstanceFilter);
+    const allBindings = { ...joinBindings, ...targetQuery.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
-      ${crossJoins} ${targetFilter.joins?.join("\n") ?? ""}
+      ${targetQuery.from}
+      ${targetQuery.joins.join("\n")}
+      ${crossJoins}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
     `;
@@ -643,15 +648,13 @@ function createNestedCategoryContext(props: {
   inheritedContext: CategoryContext;
 }): CategoryContext {
   const { declaration, stepIndexOffset, anchorStepIndex, inheritedContext } = props;
-  if (declaration.propertyCategoryScope === "parent") {
-    return inheritedContext;
-  }
   const selections = declaration.properties ?? [
     { stepIndex: anchorStepIndex - stepIndexOffset, target: { select: "all" } },
   ];
   return buildCategoryContext({
     inheritedContext,
     properties: selections,
+    relationshipMeaning: declaration.relationshipMeaning ?? "relatedInstance",
     stepIndexOffset,
     include: (entry) => entry.stepIndex <= anchorStepIndex,
   });
@@ -758,7 +761,8 @@ async function resolveNestedGroups({
   // Merged discoveries across all expansion levels, keyed by `(providerId, declarationIndex,
   // anchorClassName, prefixStepCount, categoryContext)` in deterministic (breadth-first, then provider order, then
   // declaration order) first-discovery order. Distinct branches reaching the same anchor class at the
-  // same prefix depth merge into one group, de-duplicated by serialized path.
+  // same prefix depth merge into one group, de-duplicated by serialized path. Contexts that only differ in meanings
+  // that don't affect placement (see `getCategoryContextKey`) share a group, which keeps the first one's context.
   interface MergedNestedGroup {
     providerId: IModelFieldsProvider["id"];
     declarationIndex: number;
@@ -842,7 +846,7 @@ async function resolveNestedGroups({
         declarationIndex,
         entry.anchorClassName,
         entry.prefixSteps.length,
-        entry.categoryContext,
+        getCategoryContextKey(entry.categoryContext),
       ]);
       let merged = groupsByKey.get(groupKey);
       if (!merged) {
@@ -926,19 +930,67 @@ function resolveTarget({
 }): Observable<ContentSource> {
   const resolvedPrimaryClasses = from(resolvePrimaryClasses({ imodelAccess, target }));
   const nestedProviders = providers.filter((provider) => provider.applyRecursively === true);
+  const startPathsAtConstraints = createPathStartNormalizer(imodelAccess, target);
   const resolvedDeclarations = resolveBaseGroups({ imodelAccess, providers, target }).pipe(
     mergeMap(async (baseGroups): Promise<ResolvedDeclarationGroupOutput[]> => {
       const nestedGroups = await resolveNestedGroups({ imodelAccess, target, nestedProviders, baseGroups });
       // Base groups first (provider then declaration order), followed by nested groups in their
       // breadth-first discovery order (shallower anchors first) — see `ContentSource.resolvedDeclarations`.
-      return [
-        ...baseGroups.map(({ providerId, declarationIndex, paths }) => ({ providerId, declarationIndex, paths })),
-        ...nestedGroups,
-      ];
+      // Nested paths are resolved from their prefixes' declared source classes, so paths are moved to
+      // constraint classes only after nested expansion.
+      return Promise.all(
+        [
+          ...baseGroups.map(({ providerId, declarationIndex, paths }) => ({ providerId, declarationIndex, paths })),
+          ...nestedGroups,
+        ].map(async (group) => ({ ...group, paths: await startPathsAtConstraints(group.paths) })),
+      );
     }),
   );
-  const resolvedExternalInputs = resolveExternalInputs({ imodelAccess, target, externalFieldsProviders });
+  const resolvedExternalInputs = resolveExternalInputs({ imodelAccess, target, externalFieldsProviders }).pipe(
+    mergeMap(async (groups) =>
+      Promise.all(groups.map(async (group) => ({ ...group, paths: await startPathsAtConstraints(group.paths) }))),
+    ),
+  );
   return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations, resolvedExternalInputs });
+}
+
+/**
+ * Creates a function that starts resolved paths at their first relationship's constraint class (see
+ * `getStepSourceConstraintClassName`), so a relationship path resolved for different targets gets the same
+ * description.
+ *
+ * Returns new objects rather than modifying `paths`, which may be shared through the resolution cache.
+ */
+function createPathStartNormalizer(
+  schemaProvider: ECSchemaProvider,
+  target: ContentTarget,
+): (paths: ResolvedPath[]) => Promise<ResolvedPath[]> {
+  const constraintClasses = new Map<string, Promise<EC.FullClassNameDotNotation | undefined>>();
+  return async (paths) =>
+    Promise.all(
+      paths.map(async (resolved): Promise<ResolvedPath> => {
+        const [firstStep, ...otherSteps] = resolved.path;
+        const constraintClassName = await getOrCreate({
+          map: constraintClasses,
+          key: JSON.stringify([firstStep.relationshipName, !!firstStep.relationshipReverse]),
+          createFunc: async () => getStepSourceConstraintClassName(schemaProvider, firstStep),
+        });
+        if (!constraintClassName || constraintClassName === firstStep.sourceClassName) {
+          return resolved;
+        }
+        // A path that doesn't start at the target's class starts at its subclass: one it was declared for (see
+        // `resolveEffectiveSourceClass`) or a custom `resolve` returned. That class restricts the primary
+        // instances the path applies to, so it's only replaced by a constraint class deriving from it, which
+        // restricts them further.
+        if (
+          firstStep.sourceClassName !== target.primaryClass &&
+          !(await schemaProvider.classDerivesFrom(constraintClassName, firstStep.sourceClassName))
+        ) {
+          return resolved;
+        }
+        return { ...resolved, path: [{ ...firstStep, sourceClassName: constraintClassName }, ...otherSteps] };
+      }),
+    );
 }
 
 // --- Overlap detection ---
@@ -981,41 +1033,39 @@ function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
   /** The distinct alias used for the "other" target's scope in an overlap-check query's inner subquery. */
   const OVERLAP_OTHER_ALIAS = `${ECSQL_PREFIX}other`;
 
-  const outerFilter = buildTargetFilter(a);
-  const innerFilter = buildTargetFilter(b, OVERLAP_OTHER_ALIAS);
-  const outerJoins = namespaceBindings({
-    sql: outerFilter.joins?.join("\n") ?? "",
-    bindings: outerFilter.bindings ?? {},
+  const outerQuery = buildTargetQueryParts(a);
+  const innerQuery = buildTargetQueryParts(b, { primaryAlias: OVERLAP_OTHER_ALIAS });
+  const outerSource = namespaceBindings({
+    sql: [outerQuery.from, ...outerQuery.joins].join("\n"),
+    bindings: outerQuery.bindings ?? {},
     prefix: "outer_",
   });
   const outerWhere = namespaceBindings({
-    sql: outerFilter.where ?? "",
-    bindings: outerFilter.bindings ?? {},
+    sql: outerQuery.where ?? "",
+    bindings: outerQuery.bindings ?? {},
     prefix: "outer_",
   });
-  const innerJoins = namespaceBindings({
-    sql: innerFilter.joins?.join("\n") ?? "",
-    bindings: innerFilter.bindings ?? {},
+  const innerSource = namespaceBindings({
+    sql: [innerQuery.from, ...innerQuery.joins].join("\n"),
+    bindings: innerQuery.bindings ?? {},
     prefix: "inner_",
   });
   const innerWhere = namespaceBindings({
-    sql: innerFilter.where ?? "",
-    bindings: innerFilter.bindings ?? {},
+    sql: innerQuery.where ?? "",
+    bindings: innerQuery.bindings ?? {},
     prefix: "inner_",
   });
   const ecsql = `
     SELECT [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]
-    FROM ${ECSql.createClassSelector(a.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-    ${outerJoins.sql}
+    ${outerSource.sql}
     WHERE ${outerWhere.sql ? `(${outerWhere.sql}) AND ` : ""}[${PRIMARY_CLASS_ALIAS}].[ECInstanceId] IN (
       SELECT [${OVERLAP_OTHER_ALIAS}].[ECInstanceId]
-      FROM ${ECSql.createClassSelector(b.primaryClass)} [${OVERLAP_OTHER_ALIAS}]
-      ${innerJoins.sql}
+      ${innerSource.sql}
       ${innerWhere.sql ? `WHERE ${innerWhere.sql}` : ""}
     )
     LIMIT 1
   `;
-  const bindings = { ...outerJoins.bindings, ...innerJoins.bindings };
+  const bindings = { ...outerSource.bindings, ...innerSource.bindings };
   Object.assign(bindings, outerWhere.bindings, innerWhere.bindings);
   return { ecsql, ...(Object.keys(bindings).length > 0 ? { bindings } : {}) };
 }

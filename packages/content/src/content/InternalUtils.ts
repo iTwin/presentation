@@ -5,28 +5,32 @@
 
 import { getClass } from "@itwin/presentation-shared";
 
-import type { DeepReadonly, EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
-import type { CategoryContext } from "./ContentTarget.js";
+import type { DeepReadonly, EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
+import type { CategoryContext, RelationshipMeaning } from "./ContentTarget.js";
 import type { StepPropertySpec } from "./model/PropertySpec.js";
 
 /**
  * Appends the classes named by step specs to inherited ancestry. Every `target` and `relationship` spec
  * counts, whether or not it selects properties, if `include` accepts it. Classes are ordered by path
  * step with relationship classes first, deduplicated, and offset by `stepIndexOffset` into full-path
- * indexes. Inputs are not modified.
+ * indexes. Each entry records its step's relationship meaning: the spec's own, else `relationshipMeaning`. Inputs
+ * are not modified.
  */
 export function buildCategoryContext(props: {
   inheritedContext: Readonly<CategoryContext>;
   properties: DeepReadonly<StepPropertySpec[]>;
+  /** The declaration's relationship meaning, used for steps that don't set their own. */
+  relationshipMeaning: RelationshipMeaning;
   stepIndexOffset: number;
   include: (entry: CategoryContext[number]) => boolean;
 }): CategoryContext {
   const entries = props.properties
     .flatMap((spec): CategoryContext => {
       const stepIndex = props.stepIndexOffset + spec.stepIndex;
+      const relationshipMeaning = spec.relationshipMeaning ?? props.relationshipMeaning;
       return [
-        ...(spec.relationship ? [{ stepIndex, kind: "relationshipClass" as const }] : []),
-        ...(spec.target ? [{ stepIndex, kind: "targetClass" as const }] : []),
+        ...(spec.relationship ? [{ stepIndex, kind: "relationshipClass" as const, relationshipMeaning }] : []),
+        ...(spec.target ? [{ stepIndex, kind: "targetClass" as const, relationshipMeaning }] : []),
       ];
     })
     .filter(props.include)
@@ -37,6 +41,18 @@ export function buildCategoryContext(props: {
     );
   const uniqueEntries = new Map(entries.map((entry) => [`${entry.stepIndex}:${entry.kind}`, entry]));
   return [...props.inheritedContext, ...uniqueEntries.values()];
+}
+
+/**
+ * Serializes a category context into a key that is equal for contexts producing the same category placement. Only
+ * the outermost entry's relationship meaning affects placement, so other entries' meanings are left out.
+ */
+export function getCategoryContextKey(context: Readonly<CategoryContext>): string {
+  return JSON.stringify(
+    context.map(({ stepIndex, kind, relationshipMeaning }, index) =>
+      index === 0 ? [stepIndex, kind, relationshipMeaning] : [stepIndex, kind],
+    ),
+  );
 }
 
 /**
@@ -107,6 +123,28 @@ export async function resolveEffectiveSourceClass(
     return requestedClass;
   }
   return (await schemaProvider.classDerivesFrom(declaredClass, requestedClass)) ? declaredClass : undefined;
+}
+
+/**
+ * Returns the class the step's relationship allows at the step's starting end — from the source constraint for
+ * a forward step, the target constraint for a reversed one: its abstract class, or its only class. Returns
+ * `undefined` when there's no such single class.
+ *
+ * @throws if the step's relationship isn't a relationship class.
+ */
+export async function getStepSourceConstraintClassName(
+  schemaProvider: ECSchemaProvider,
+  step: Pick<RelationshipPath[number], "relationshipName" | "relationshipReverse">,
+): Promise<EC.FullClassNameDotNotation | undefined> {
+  const relationship = await getClass(schemaProvider, step.relationshipName);
+  if (!relationship.isRelationshipClass()) {
+    throw new Error(`Class "${step.relationshipName}" is not a relationship class.`);
+  }
+  const constraint = step.relationshipReverse ? relationship.target : relationship.source;
+  if (constraint.abstractConstraint) {
+    return constraint.abstractConstraint.fullName;
+  }
+  return constraint.constraintClasses.length === 1 ? constraint.constraintClasses[0].fullName : undefined;
 }
 
 /**

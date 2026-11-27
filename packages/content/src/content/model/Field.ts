@@ -7,6 +7,7 @@ import { serializeRelationshipPath } from "./Utils.js";
 
 import type { DeepReadonly, EC, ECSqlBinding, RelationshipPath, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../ContentTarget.js";
+import type { CategoryReference } from "./Category.js";
 
 /**
  * Base attributes shared by all field kinds.
@@ -29,8 +30,8 @@ interface BaseField {
    * its stored value is an array of this shape — see {@link (PropertyField:interface).pathCardinality}.
    */
   type: ValueDescriptor;
-  /** The category this field belongs to (by ID). */
-  categoryId?: string;
+  /** Where the field is placed: a category defined in the descriptor, or the content target's own category. */
+  category: CategoryReference;
   /** If true, the field is queried but not displayed in UI. */
   hidden?: boolean;
   /**
@@ -64,6 +65,10 @@ export interface PropertyField extends BaseField {
   /**
    * Relationship path from the content target to this field's property class.
    * Empty array means the field belongs to the target class directly.
+   *
+   * A related property's path starts at its first relationship's constraint class, so the property reached
+   * from different content targets is one field. A path declared for a subclass of the target's class keeps
+   * starting at it, and applies only to its instances — unless the constraint class derives from it.
    */
   pathFromTarget: RelationshipPath;
   /**
@@ -111,9 +116,10 @@ export interface PropertyField extends BaseField {
    * are the classes at the path's terminal (related) end.
    *
    * For example, given primary classes `A1`/`A2` both related to `B` over the same relationship,
-   * a property declared on `B` has `valueClassNames: ["B"]` but `primaryClassNames: ["A1", "A2"]`. If
-   * instead `A1` and `A2` relate to distinct concrete classes `B1`/`B2`, separate fields are
-   * created: one with `valueClassNames: ["B1"]`/`primaryClassNames: ["A1"]`, the other with
+   * a property declared on `B` has `valueClassNames: ["B"]` but `primaryClassNames: ["A1", "A2"]` —
+   * also when `A1` and `A2` are requested as separate content targets. If instead `A1` and `A2` relate
+   * to distinct concrete classes `B1`/`B2`, separate fields are created: one with
+   * `valueClassNames: ["B1"]`/`primaryClassNames: ["A1"]`, the other with
    * `valueClassNames: ["B2"]`/`primaryClassNames: ["A2"]`.
    *
    * Always non-empty, de-duplicated, and sorted by full name.

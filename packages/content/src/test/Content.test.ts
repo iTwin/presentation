@@ -5,8 +5,9 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import { resolveContentSources } from "../content/Content.js";
-import { TARGET_FILTER_JOIN_ALIAS } from "../content/query/TargetFilter.js";
+import { TARGET_FILTER_JOIN_ALIAS } from "../content/query/TargetQuery.js";
 
 import type {
   EC,
@@ -62,7 +63,13 @@ function createMockGetSchema(derivedClasses: Record<string, string[]> = {}) {
         getClass: (className: string) => {
           const fullName = `${schemaName}.${className}`;
           const derived = derivedClasses[fullName] ?? [];
-          return { fullName, getDerivedClassNames: () => derived };
+          const isRelationship = className.includes("Rel");
+          return {
+            fullName,
+            getDerivedClassNames: () => derived,
+            isRelationshipClass: () => isRelationship,
+            ...(isRelationship ? { source: { constraintClasses: [] }, target: { constraintClasses: [] } } : {}),
+          };
         },
       }) as unknown as EC.Schema,
   );
@@ -914,8 +921,11 @@ describe("resolveContentSources", () => {
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
-      expect(query.ecsql).to.include(
-        `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [this].[ECInstanceId]`,
+      expect(trimWhitespace(query.ecsql)).to.include(
+        trimWhitespace(`
+          FROM IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}]
+          CROSS JOIN [TestSchema].[ClassA] [this] ON [this].[ECInstanceId] = [${TARGET_FILTER_JOIN_ALIAS}].[id]
+        `),
       );
       expect(query.bindings).to.deep.equal({ [TARGET_FILTER_JOIN_ALIAS]: { type: "idset", value: ["0x1", "0x2"] } });
     });
@@ -1449,7 +1459,8 @@ describe("resolveContentSources", () => {
         createQueryReader: vi.fn((_query: ECSqlQueryDef) => {
           callCount++;
           // First declaration gets no results, second gets results
-          const rows = callCount <= 1 ? [] : [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteC" }];
+          const rows =
+            callCount <= 1 ? [] : [{ 0: "TestSchema.ClassA", 1: "TestSchema.RelAC", 2: "TestSchema.ConcreteC" }];
           return (async function* () {
             for (const row of rows) {
               yield row;
@@ -1732,8 +1743,10 @@ describe("resolveContentSources", () => {
               anchorClassName: "TestSchema.ClassB",
               prefixStepCount: 1,
               categoryContext: [
-                ...(includeRelationshipCategory ? [{ stepIndex: 0, kind: "relationshipClass" }] : []),
-                { stepIndex: 0, kind: "targetClass" },
+                ...(includeRelationshipCategory
+                  ? [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }]
+                  : []),
+                { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
               ],
             },
           },
@@ -1802,8 +1815,10 @@ describe("resolveContentSources", () => {
           anchorClassName: "TestSchema.ClassC",
           prefixStepCount: 2,
           categoryContext: [
-            ...(relationship ? [{ stepIndex: 0, kind: "relationshipClass" }] : []),
-            { stepIndex: 1, kind: "targetClass" },
+            ...(relationship
+              ? [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }]
+              : []),
+            { stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" },
           ],
         },
       ]);
@@ -2014,7 +2029,7 @@ describe("resolveContentSources", () => {
           nested: {
             anchorClassName: "TestSchema.ClassB",
             prefixStepCount: 1,
-            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
           },
         },
         {
@@ -2025,8 +2040,8 @@ describe("resolveContentSources", () => {
             anchorClassName: "TestSchema.ClassC",
             prefixStepCount: 2,
             categoryContext: [
-              { stepIndex: 0, kind: "targetClass" },
-              { stepIndex: 1, kind: "targetClass" },
+              { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+              { stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" },
             ],
           },
         },
@@ -2078,7 +2093,7 @@ describe("resolveContentSources", () => {
           nested: {
             anchorClassName: "TestSchema.ClassX",
             prefixStepCount: 1,
-            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
           },
         },
       ]);
@@ -2129,7 +2144,7 @@ describe("resolveContentSources", () => {
         nested: {
           anchorClassName: "TestSchema.ClassB",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       });
     });
@@ -2283,7 +2298,7 @@ describe("resolveContentSources", () => {
           nested: {
             anchorClassName: "TestSchema.ClassC",
             prefixStepCount: 1,
-            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
           },
         },
         {
@@ -2293,7 +2308,7 @@ describe("resolveContentSources", () => {
           nested: {
             anchorClassName: "TestSchema.ClassC",
             prefixStepCount: 2,
-            categoryContext: [{ stepIndex: 1, kind: "targetClass" }],
+            categoryContext: [{ stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
           },
         },
       ]);
@@ -2349,7 +2364,7 @@ describe("resolveContentSources", () => {
           nested: {
             anchorClassName: "TestSchema.ClassB",
             prefixStepCount: 1,
-            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
           },
         },
       ]);
@@ -2407,61 +2422,141 @@ describe("resolveContentSources", () => {
           nested: {
             anchorClassName: "TestSchema.ClassB",
             prefixStepCount: 1,
-            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
           },
         },
       ]);
     });
 
     it.each([
-      { scopes: ["relatedClass", "parent"], expectedContexts: [[{ stepIndex: 0, kind: "targetClass" }], []] },
-      { scopes: ["parent", "relatedClass"], expectedContexts: [[], [{ stepIndex: 0, kind: "targetClass" }]] },
-    ] as const)(
-      "preserves nested groups with different ancestor scopes in $scopes order",
-      async ({ scopes, expectedContexts }) => {
-        const providerA = createMockIModelFieldsProvider("providerA_v1", {
-          relatedProperties: scopes.map((propertyCategoryScope) => ({ path: [aToB], propertyCategoryScope })),
-        });
-        const providerB: IModelFieldsProvider = {
-          id: "providerB_v1",
-          applyRecursively: true,
-          async getContribution({ target }) {
-            return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
-          },
-        };
-        const imodelAccess = createRoutedIModelAccess({
-          routeRows: routeByStepCount({
-            1: [
-              [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
-              [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
-            ],
-            2: [
-              [
-                row(
-                  "TestSchema.ClassA",
-                  "TestSchema.RelAB",
-                  "TestSchema.ClassB",
-                  "TestSchema.RelBC",
-                  "TestSchema.ClassC",
-                ),
-              ],
-            ],
-          }),
-        });
-
-        const [result] = await resolveContentSources({
-          imodelAccess,
-          targets: [targetA],
-          config: { imodelFieldsProviders: [providerA, providerB] },
-        });
-
-        const nestedGroups = result.resolvedDeclarations.filter((group) => group.nested);
-        expect(nestedGroups.map((group) => group.nested?.categoryContext)).to.deep.equal(expectedContexts);
-        for (const group of nestedGroups) {
-          expect(group.paths).to.deep.equal([{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }]);
-        }
+      {
+        name: "keeps separate nested groups for related and same instance ancestors",
+        meanings: ["relatedInstance", "sameInstance"],
+        expectedContexts: [
+          [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
+          [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "sameInstance" }],
+        ],
       },
-    );
+      {
+        name: "keeps separate nested groups for same and related instance ancestors",
+        meanings: ["sameInstance", "relatedInstance"],
+        expectedContexts: [
+          [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "sameInstance" }],
+          [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
+        ],
+      },
+      {
+        name: "merges nested groups of ancestors with implicit and explicit related instance meanings",
+        meanings: [undefined, "relatedInstance"],
+        expectedContexts: [[{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }]],
+      },
+    ] as const)("$name", async ({ meanings, expectedContexts }) => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: meanings.map((relationshipMeaning) => ({
+          path: [aToB],
+          ...(relationshipMeaning ? { relationshipMeaning } : undefined),
+        })),
+      });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [
+            [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+            [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          ],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      const nestedGroups = result.resolvedDeclarations.filter((group) => group.nested);
+      expect(nestedGroups.map((group) => group.nested?.categoryContext)).to.deep.equal(expectedContexts);
+      for (const group of nestedGroups) {
+        expect(group.paths).to.deep.equal([{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }]);
+      }
+    });
+
+    it("merges nested groups of ancestors that only differ in an inner step's meaning", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: (["relatedInstance", "sameInstance"] as const).map((relationshipMeaning) => ({
+          path: [aToB, bToC],
+          properties: [
+            { stepIndex: 0, target: { select: "none" } },
+            { stepIndex: 1, target: { select: "all" }, relationshipMeaning },
+          ],
+        })),
+      });
+      const providerC: IModelFieldsProvider = {
+        id: "providerC_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassC" ? { relatedProperties: [{ path: [cToD] }] } : undefined;
+        },
+      };
+      const abc = row(
+        "TestSchema.ClassA",
+        "TestSchema.RelAB",
+        "TestSchema.ClassB",
+        "TestSchema.RelBC",
+        "TestSchema.ClassC",
+      );
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          2: [[abc], [abc]],
+          3: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerC] },
+      });
+
+      const nestedGroups = result.resolvedDeclarations.filter((group) => group.nested);
+      expect(nestedGroups.map((group) => [group.nested?.categoryContext, group.paths])).to.deep.equal([
+        [
+          [
+            { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+            { stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+          ],
+          [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+        ],
+      ]);
+    });
 
     it("computes the nested group's effective cardinality hint by combining the parent and nested hints", async () => {
       const providerA = createMockIModelFieldsProvider("providerA_v1", {
@@ -2614,7 +2709,7 @@ describe("resolveContentSources", () => {
         nested: {
           anchorClassName: "TestSchema.ClassC",
           prefixStepCount: 2,
-          categoryContext: [{ stepIndex: 1, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       });
     });
@@ -2723,7 +2818,7 @@ describe("resolveContentSources", () => {
             nested: {
               anchorClassName: "TestSchema.ClassB",
               prefixStepCount: 1,
-              categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
             },
           },
         ]);
@@ -3693,6 +3788,319 @@ describe("resolveContentSources", () => {
 
       expect(result).to.have.length(2);
       expect(countOverlapQueries(imodelAccess)).toBe(1);
+    });
+  });
+  describe("first step source class", () => {
+    /** Routes `getClass` for the given relationship names to relationship class stubs with the given constraints. */
+    function withRelationships(
+      imodelAccess: ECSqlQueryExecutor & ECSchemaProvider,
+      relationships: Partial<
+        Record<string, { source: Partial<EC.RelationshipConstraint>; target?: Partial<EC.RelationshipConstraint> }>
+      >,
+    ): ECSqlQueryExecutor & ECSchemaProvider {
+      const getSchema = imodelAccess.getSchema;
+      return {
+        ...imodelAccess,
+        getSchema: async (schemaName: string) => {
+          const schema = await getSchema(schemaName);
+          return {
+            ...schema,
+            getClass: (className: string) => {
+              const relationship = relationships[`${schemaName}.${className}`];
+              if (!relationship) {
+                return schema!.getClass(className);
+              }
+              const constraint = (props?: Partial<EC.RelationshipConstraint>) => ({ constraintClasses: [], ...props });
+              return {
+                fullName: `${schemaName}.${className}`,
+                getDerivedClassNames: () => [],
+                isRelationshipClass: () => true,
+                source: constraint(relationship.source),
+                target: constraint(relationship.target),
+              };
+            },
+          } as unknown as EC.Schema;
+        },
+      };
+    }
+    const constraintClass = (fullName: string) => ({ fullName }) as unknown as EC.EntityClass;
+
+    it("starts a resolved path at the source constraint's abstract class", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const imodelAccess = withRelationships(
+        createMockIModelAccess({
+          resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+        }),
+        {
+          "TestSchema.RelAB": {
+            source: {
+              constraintClasses: [constraintClass("TestSchema.ClassA"), constraintClass("TestSchema.Other")],
+              abstractConstraint: constraintClass("TestSchema.Base"),
+            },
+          },
+        },
+      );
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths).to.deep.equal([
+        { path: [{ ...path[0], sourceClassName: "TestSchema.Base" }], targetClassNames: ["TestSchema.ClassA"] },
+      ]);
+    });
+
+    it("starts a resolved reversed path at the target constraint's single class", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelBA",
+          relationshipReverse: true,
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const imodelAccess = withRelationships(
+        createMockIModelAccess({
+          resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.RelBA", 2: "TestSchema.ClassB" }],
+        }),
+        {
+          "TestSchema.RelBA": {
+            source: { constraintClasses: [constraintClass("TestSchema.ClassB")] },
+            target: { constraintClasses: [constraintClass("TestSchema.Base")] },
+          },
+        },
+      );
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths[0].path[0].sourceClassName).to.equal("TestSchema.Base");
+    });
+
+    it("keeps the declared source class when the constraint names several classes", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const imodelAccess = withRelationships(
+        createMockIModelAccess({
+          resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+        }),
+        {
+          "TestSchema.RelAB": {
+            source: { constraintClasses: [constraintClass("TestSchema.ClassA"), constraintClass("TestSchema.Other")] },
+          },
+        },
+      );
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths[0].path[0].sourceClassName).to.equal("TestSchema.ClassA");
+    });
+
+    it("keeps the source class of a path declared from a class narrower than the target's", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA1",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const baseAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA1", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+      });
+      vi.mocked(baseAccess.classDerivesFrom).mockImplementation(
+        async (derived, base) =>
+          derived === "TestSchema.ClassA1" && (base === "TestSchema.ClassA" || base === "TestSchema.Base"),
+      );
+      const imodelAccess = withRelationships(baseAccess, {
+        "TestSchema.RelAB": { source: { constraintClasses: [constraintClass("TestSchema.Base")] } },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      // The narrower class restricts which primaries the path applies to.
+      expect(source.resolvedDeclarations[0].paths).to.deep.equal([{ path, targetClassNames: ["TestSchema.ClassA1"] }]);
+    });
+
+    it("starts a path declared from a class narrower than the target's at a narrower constraint class", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA1",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const baseAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA11", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+      });
+      vi.mocked(baseAccess.classDerivesFrom).mockImplementation(
+        async (derived, base) =>
+          (derived === "TestSchema.ClassA1" && base === "TestSchema.ClassA") ||
+          (derived === "TestSchema.ClassA11" && base === "TestSchema.ClassA1"),
+      );
+      // Only instances of `ClassA11`, a subclass of the declared `ClassA1`, can have the relationship.
+      const imodelAccess = withRelationships(baseAccess, {
+        "TestSchema.RelAB": { source: { constraintClasses: [constraintClass("TestSchema.ClassA11")] } },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths).to.deep.equal([
+        { path: [{ ...path[0], sourceClassName: "TestSchema.ClassA11" }], targetClassNames: ["TestSchema.ClassA11"] },
+      ]);
+    });
+
+    it("keeps the source class of a path declared from a class narrower than the target's when the constraint is unrelated to it", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA1",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const baseAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA11", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+      });
+      vi.mocked(baseAccess.classDerivesFrom).mockImplementation(
+        async (derived, base) =>
+          (derived === "TestSchema.ClassA1" && base === "TestSchema.ClassA") ||
+          (derived === "TestSchema.ClassA11" && ["TestSchema.ClassA1", "TestSchema.Mixin"].includes(base)),
+      );
+      // E.g. a mixin implemented by a subclass of the declared class, but not by the declared class itself.
+      const imodelAccess = withRelationships(baseAccess, {
+        "TestSchema.RelAB": { source: { constraintClasses: [constraintClass("TestSchema.Mixin")] } },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths).to.deep.equal([{ path, targetClassNames: ["TestSchema.ClassA11"] }]);
+    });
+
+    it("throws when a resolved path's first step isn't a relationship class", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.EntityClass",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const imodelAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.EntityClass", 2: "TestSchema.ClassB" }],
+      });
+
+      await expect(
+        resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } }),
+      ).rejects.toThrow('Class "TestSchema.EntityClass" is not a relationship class.');
+    });
+
+    it("keeps custom resolver paths starting at subclasses of the target's class", async () => {
+      const step = (sourceClassName: EC.FullClassNameDotNotation): RelationshipPath[number] => ({
+        sourceClassName,
+        targetClassName: "TestSchema.ClassB",
+        relationshipName: "TestSchema.RelAB",
+      });
+      const provider = createMockIModelFieldsProvider("test_v1", {
+        relatedProperties: [
+          {
+            path: [step("TestSchema.ClassA")],
+            resolve: async () => [
+              { path: [step("TestSchema.ClassA1")], targetClassNames: ["TestSchema.ClassA1"] },
+              { path: [step("TestSchema.ClassA2")], targetClassNames: ["TestSchema.ClassA2"] },
+            ],
+          },
+        ],
+      });
+      const baseAccess = createMockIModelAccess({});
+      vi.mocked(baseAccess.classDerivesFrom).mockImplementation(
+        async (derived, base) =>
+          ["TestSchema.ClassA1", "TestSchema.ClassA2"].includes(derived) &&
+          (base === "TestSchema.ClassA" || base === "TestSchema.Base"),
+      );
+      const imodelAccess = withRelationships(baseAccess, {
+        "TestSchema.RelAB": { source: { constraintClasses: [constraintClass("TestSchema.Base")] } },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      // The resolver scopes each path to its start class's instances, so siblings don't get its values.
+      expect(source.resolvedDeclarations[0].paths).to.deep.equal([
+        { path: [step("TestSchema.ClassA1")], targetClassNames: ["TestSchema.ClassA1"] },
+        { path: [step("TestSchema.ClassA2")], targetClassNames: ["TestSchema.ClassA2"] },
+      ]);
+    });
+
+    it("starts resolved external input paths at the constraint class", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const externalProvider: ExternalFieldsProvider = {
+        id: "external_v1",
+        fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
+        inputs: { related: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", related: { path } } },
+        async getValues() {
+          return [];
+        },
+      };
+      const imodelAccess = withRelationships(
+        createMockIModelAccess({
+          resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+        }),
+        { "TestSchema.RelAB": { source: { constraintClasses: [constraintClass("TestSchema.Base")] } } },
+      );
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { externalFieldsProviders: [externalProvider] },
+      });
+
+      expect(source.resolvedExternalInputs[0].paths[0].path[0].sourceClassName).to.equal("TestSchema.Base");
     });
   });
 });

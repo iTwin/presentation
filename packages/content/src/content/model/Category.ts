@@ -8,6 +8,35 @@ import { serializeRelationshipPath } from "./Utils.js";
 import type { RelationshipPath } from "@itwin/presentation-shared";
 
 /**
+ * Places a field or category in a category defined in the descriptor's `categories`.
+ *
+ * @public
+ */
+export interface DefinedCategoryReference {
+  type: "category";
+  /** ID of the category definition. */
+  id: CategoryDefinition["id"];
+}
+
+/**
+ * Places a field or category in the category of the content target's own properties: direct properties and
+ * properties of related classes shown as if they belonged to the target. It has no definition in the descriptor's
+ * `categories`, so its label is up to the UI (e.g. "Selected Item(s)").
+ *
+ * @public
+ */
+export interface TargetCategoryReference {
+  type: "target";
+}
+
+/**
+ * Where a field or category is placed.
+ *
+ * @public
+ */
+export type CategoryReference = DefinedCategoryReference | TargetCategoryReference;
+
+/**
  * A lightweight category definition used by providers to logically group fields for display.
  * Categories form a tree via parent references.
  *
@@ -22,8 +51,11 @@ export interface CategoryDefinition {
   id: string;
   /** Display label shown to the user. */
   label: string;
-  /** Optional parent category ID, forming a tree. */
-  parentId?: string;
+  /**
+   * Where the category is placed: in another category, or in the content target's category. Omitted for a category
+   * at the top level, next to the content target's category.
+   */
+  parent?: CategoryReference;
   /** Optional description for the category. */
   description?: string;
 }
@@ -59,7 +91,7 @@ export namespace CategoryDefinition {
    * producing fields via the same path will share the same category.
    */
   export function create(
-    props: { path: RelationshipPath } & Pick<CategoryDefinition, "label" | "description" | "parentId">,
+    props: { path: RelationshipPath } & Pick<CategoryDefinition, "label" | "description" | "parent">,
   ): CategoryDefinition {
     const { path, ...rest } = props;
     return { ...rest, id: computeId({ path }) };

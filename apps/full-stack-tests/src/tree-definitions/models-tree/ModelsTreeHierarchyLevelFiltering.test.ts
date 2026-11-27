@@ -10,6 +10,7 @@ import {
   insertPhysicalPartition,
   insertPhysicalSubModel,
   insertSpatialCategory,
+  insertSubCategory,
   insertSubject,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -341,6 +342,69 @@ describe("Models tree", () => {
           }),
         ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category2] })],
+      });
+    });
+
+    describe.each(["cold", "warm"] as const)("filters Model children level (%s cache)", (cacheState) => {
+      it("by related instances with to-many relationship", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) =>
+          withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            insertSubCategory({ txn, codeValue: "sub-category 1", parentCategoryId: category.id });
+            insertSubCategory({ txn, codeValue: "sub-category 2", parentCategoryId: category.id });
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: `model`,
+              partitionParentId: rootSubject.id,
+            });
+            insertPhysicalElement({ txn, userLabel: `element`, modelId: model.id, categoryId: category.id });
+            return { rootSubject, model, category };
+          }),
+        );
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = await createModelsTreeProvider({
+          imodelConnection,
+          cacheState,
+          hierarchyConfig: { categories: { labelMerging: "disable" } },
+        });
+        const parentNode = createModelHierarchyNode({
+          modelId: keys.model.id,
+          hasChildren: true,
+          className: keys.model.className,
+          parentKeys: [keys.rootSubject],
+        });
+
+        validateHierarchyLevel({
+          nodes: await collect(
+            provider.getNodes({
+              parentNode,
+              instanceFilter: {
+                propertyClassNames: [keys.category.className],
+                relatedInstances: [
+                  {
+                    path: [
+                      {
+                        sourceClassName: CLASS_NAMES.SpatialCategory,
+                        relationshipClassName: "BisCore.CategoryOwnsSubCategories",
+                        targetClassName: "BisCore.SubCategory",
+                        isForwardRelationship: true,
+                      },
+                    ],
+                    alias: "sub-category",
+                  },
+                ],
+                rules: {
+                  sourceAlias: "sub-category",
+                  propertyName: "CodeValue",
+                  propertyTypeName: "string",
+                  operator: "is-not-null",
+                },
+              },
+            }),
+          ),
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
+        });
       });
     });
 

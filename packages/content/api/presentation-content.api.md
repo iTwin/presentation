@@ -21,7 +21,7 @@ import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
 interface BaseField {
-    categoryId?: string;
+    category: CategoryReference;
     hidden?: boolean;
     id: string;
     label: string;
@@ -73,6 +73,7 @@ type CardinalityHint = "one" | "many";
 type CategoryContext = {
     stepIndex: number;
     kind: "targetClass" | "relationshipClass";
+    relationshipMeaning: RelationshipMeaning;
 }[];
 
 // @public
@@ -80,7 +81,7 @@ export interface CategoryDefinition {
     description?: string;
     id: string;
     label: string;
-    parentId?: string;
+    parent?: CategoryReference;
 }
 
 // @public (undocumented)
@@ -91,8 +92,11 @@ export namespace CategoryDefinition {
     }): CategoryDefinition["id"];
     export function create(props: {
         path: RelationshipPath;
-    } & Pick<CategoryDefinition, "label" | "description" | "parentId">): CategoryDefinition;
+    } & Pick<CategoryDefinition, "label" | "description" | "parent">): CategoryDefinition;
 }
+
+// @public
+type CategoryReference = DefinedCategoryReference | TargetCategoryReference;
 
 // @public
 interface ClassPropertySpec {
@@ -174,6 +178,17 @@ export interface ContentTarget {
 }
 
 // @public
+interface ContentTransformations {
+    propertyGrid: {
+        config: PropertyGridTransformConfig;
+        result: PropertyGridEntries;
+    };
+}
+
+// @public
+type ContentTransformType = keyof ContentTransformations;
+
+// @public
 type ContentValueFilter = (ContentValueFilterTarget & {
     operator: ScalarValueFilterOperator;
     value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
@@ -214,6 +229,13 @@ export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
 
 // @public
 export const DEFAULT_FIELDS_PROVIDER_PRIORITY = 1000;
+
+// @public
+interface DefinedCategoryReference {
+    id: CategoryDefinition["id"];
+    // (undocumented)
+    type: "category";
+}
 
 // @public
 export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer;
@@ -330,7 +352,7 @@ interface InstanceFilterExpression {
 export function mapItems<TIn, TOut>(items: AsyncIterable<TIn>, transform: (item: TIn) => TOut | Promise<TOut>): AsyncIterable<TOut>;
 
 // @public
-type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
+type MutableFieldMetadata = "label" | "category" | "hidden" | "readOnly";
 
 // @public
 export interface PropertyField extends BaseField {
@@ -353,6 +375,39 @@ export namespace PropertyField {
         pathFromTarget?: RelationshipPath;
         forkKey?: string;
     }): Field["id"];
+}
+
+// @public
+interface PropertyGridEntries {
+    entries: PropertyGridEntry[];
+}
+
+// @public
+export type PropertyGridEntry = PropertyGridFieldEntry | PropertyGridRelatedInstancesEntry;
+
+// @public
+interface PropertyGridEntryBase {
+    varies: boolean;
+}
+
+// @public
+interface PropertyGridFieldEntry extends PropertyGridEntryBase {
+    field: ReadonlyField;
+    kind: "field";
+    values: Array<DeepReadonly<Value>>;
+}
+
+// @public
+interface PropertyGridRelatedInstancesEntry extends PropertyGridEntryBase {
+    fields: ReadonlyPropertyField[];
+    kind: "related-instances";
+    values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
+}
+
+// @public
+interface PropertyGridTransformConfig {
+    fields?: "common" | "all";
+    type: "propertyGrid";
 }
 
 // @public
@@ -397,12 +452,15 @@ interface RelatedPropertiesDeclaration {
     cardinalityHint?: CardinalityHint;
     path: RelationshipPath;
     properties?: StepPropertySpec[];
-    propertyCategoryScope?: "relatedClass" | "parent";
+    relationshipMeaning?: RelationshipMeaning;
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
     }): Promise<ResolvedPath[]>;
 }
+
+// @public
+type RelationshipMeaning = "relatedInstance" | "sameInstance";
 
 // @public
 export function resolveContentSources(props: ResolveContentSourcesProps): Promise<ContentSource[]>;
@@ -446,8 +504,15 @@ type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-no
 // @public
 interface StepPropertySpec {
     relationship?: ClassPropertySpec;
+    relationshipMeaning?: RelationshipMeaning;
     stepIndex: number;
     target?: ClassPropertySpec;
+}
+
+// @public
+interface TargetCategoryReference {
+    // (undocumented)
+    type: "target";
 }
 
 // @public
@@ -465,6 +530,18 @@ interface TransformableDescriptor {
 
 // @public
 type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
+
+// @public
+export function transformContent<TType extends ContentTransformType>(props: TransformContentProps<TType>): ContentTransformations[TType]["result"];
+
+// @public
+interface TransformContentProps<TType extends ContentTransformType> {
+    config: ContentTransformations[TType]["config"] & {
+        type: TType;
+    };
+    descriptor: ReadonlyContentDescriptor;
+    items: ContentItem[];
+}
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in" | "is-not-in";
