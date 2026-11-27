@@ -381,6 +381,20 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   /** Emits on any hierarchy change after this call or if the provider is disposed. */
   #createInterrupt(): Observable<unknown> {
     const generation = this.#generation.value;
+    // Requests must fail on hierarchy changes that happen after this call. This includes changes made before anyone
+    // subscribes, because the interrupt is created when `getNodes` is called but only subscribed to when the consumer
+    // requests the first value.
+    //
+    // `#generation` is a `BehaviorSubject`, which, unlike a plain `Subject`, emits its *current* value immediately
+    // to every new subscriber. So the first value the subscriber receives is either:
+    // - `generation`, if nothing changed since this call. That's not a change, so it's filtered out; without the
+    //   filter, every request would be interrupted right away.
+    // - a larger number, if the hierarchy changed in between. That's a change, so it passes. `skip(1)` would drop
+    //   this case, which is why the value is compared instead.
+    // After that, the subject only emits on changes, and all of them pass.
+    //
+    // `#disposed` covers requests created after disposal: the generation was already bumped when they captured it, so
+    // no further change would ever come, and they must fail immediately instead.
     return this.#generation.pipe(filter((value) => this.#disposed || value !== generation));
   }
 
