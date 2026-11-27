@@ -186,6 +186,66 @@ describe("createIModelHierarchyProvider", () => {
     expect(nodes).toEqual([expectedChild]);
   });
 
+  describe("Query alternatives", () => {
+    const createProvider = (queries: ECSqlQueryDef[], queryConcurrency?: number) =>
+      createIModelHierarchyProvider({
+        imodelAccess,
+        queryConcurrency,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            return parentNode ? [] : [{ fullClassName: "a.b", query: { race: queries } }];
+          },
+        },
+      });
+
+    const slowReader = {
+      [Symbol.asyncIterator]: () => slowReader,
+      next: async () => new Promise<never>(() => {}), // never responds
+      return: vi.fn(async () => ({ done: true as const, value: undefined })),
+    };
+
+    beforeEach(() => {
+      imodelAccess.createQueryReader.mockImplementation(({ ecsql }) =>
+        ecsql.includes("SLOW")
+          ? slowReader
+          : createAsyncIterator([
+              { [0]: "a.b", [1]: "0x1", [2]: false, FullClassName: "a.b", ECInstanceId: "0x1", DisplayLabel: "x" },
+            ]),
+      );
+    });
+
+    it("uses nodes of the query that responds first and cancels the other", async () => {
+      using provider = createProvider([{ ecsql: "SLOW" }, { ecsql: "FAST" }]);
+      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(nodes.map(({ key }) => key)).toEqual([
+        { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+      ]);
+      expect(slowReader.return).toHaveBeenCalledOnce();
+    });
+
+    it("uses instance keys of the query that responds first and cancels the other", async () => {
+      using provider = createProvider([{ ecsql: "SLOW" }, { ecsql: "FAST" }]);
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys).toEqual([{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }]);
+      expect(slowReader.return).toHaveBeenCalledOnce();
+    });
+
+    it("counts each query towards `queryConcurrency` and doesn't start queued ones after one responds", async () => {
+      using provider = createProvider([{ ecsql: "FAST" }, { ecsql: "SLOW" }], 1);
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toHaveLength(1);
+      expect(await collect(provider.getNodeInstanceKeys({ parentNode: undefined }))).toHaveLength(1);
+      expect(imodelAccess.createQueryReader.mock.calls.map(([query]) => query.ecsql)).toEqual([
+        expect.stringContaining("FAST"),
+        expect.stringContaining("FAST"),
+      ]);
+    });
+
+    it("returns no nodes when there are no queries", async () => {
+      using provider = createProvider([]);
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toEqual([]);
+    });
+  });
+
   [
     {
       parentNode: createTestGenericNode({

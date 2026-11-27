@@ -22,7 +22,7 @@ import {
   createTestProcessedInstanceNode,
 } from "../Utils.js";
 
-import type { ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
 import type { HierarchyNodeIdentifier } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import type { HierarchySearchTree } from "../../hierarchies/HierarchySearch.js";
 import type {
@@ -468,7 +468,9 @@ describe("SearchHierarchyDefinition", () => {
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty("query.ecsql");
-      expect(trimWhitespace((result[0] as InstanceNodesQueryDefinition).query.ecsql)).toContain("SearchInfo");
+      expect(trimWhitespace(((result[0] as InstanceNodesQueryDefinition).query as ECSqlQueryDef).ecsql)).toContain(
+        "SearchInfo",
+      );
     });
 
     it("skips instance definitions with non-matching class", async () => {
@@ -543,7 +545,7 @@ describe("SearchHierarchyDefinition", () => {
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
       // The search CTE should contain only one ECInstanceId, not duplicated
-      const searchCte = (result[0] as InstanceNodesQueryDefinition).query.ctes!.find((cte) =>
+      const searchCte = ((result[0] as InstanceNodesQueryDefinition).query as ECSqlQueryDef).ctes!.find((cte) =>
         cte.includes("SearchInfo"),
       );
       expect(searchCte).toBeDefined();
@@ -590,7 +592,7 @@ describe("SearchHierarchyDefinition", () => {
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, ...constProps }));
       expect(result).toHaveLength(1);
       // Should use selector (IdToHex + FullClassName) instead of search CTE
-      const ecsql = trimWhitespace((result[0] as InstanceNodesQueryDefinition).query.ecsql);
+      const ecsql = trimWhitespace(((result[0] as InstanceNodesQueryDefinition).query as ECSqlQueryDef).ecsql);
       expect(ecsql).toContain(NodeSelectClauseColumnNames.FullClassName);
     });
 
@@ -628,7 +630,7 @@ describe("SearchHierarchyDefinition", () => {
         undefined,
       ]);
       // instances are filtered using the search CTE
-      const searchCte = (result[1] as InstanceNodesQueryDefinition).query.ctes!.find((cte) =>
+      const searchCte = ((result[1] as InstanceNodesQueryDefinition).query as ECSqlQueryDef).ctes!.find((cte) =>
         cte.includes("SearchInfo"),
       );
       expect(trimWhitespace(searchCte!)).toContain("0x1");
@@ -662,8 +664,9 @@ describe("applyECInstanceIdsSearch", () => {
         { className: "test.class", id: "0x5" },
       ],
     );
+    const query = result.query as ECSqlQueryDef;
     expect(result.fullClassName).toBe("SchemaName.ClassName");
-    expect(result.query.ctes?.map(trimWhitespace)).toEqual([
+    expect(query.ctes?.map(trimWhitespace)).toEqual([
       "source cte",
       trimWhitespace(`
           SearchInfo(ECInstanceId, SearchClassName) AS (
@@ -677,7 +680,7 @@ describe("applyECInstanceIdsSearch", () => {
           )
         `),
     ]);
-    expect(trimWhitespace(result.query.ecsql)).toEqual(
+    expect(trimWhitespace(query.ecsql)).toEqual(
       trimWhitespace(`
           SELECT
             [q].*,
@@ -689,7 +692,19 @@ describe("applyECInstanceIdsSearch", () => {
           JOIN SearchInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
         `),
     );
-    expect(result.query.bindings).toEqual([{ type: "string", value: "source binding" }]);
+    expect(query.bindings).toEqual([{ type: "string", value: "source binding" }]);
+  });
+
+  it("applies search to each query alternative", () => {
+    const result = applyECInstanceIdsSearch(
+      { fullClassName: "SchemaName.ClassName", query: { race: [{ ecsql: "query 1" }, { ecsql: "query 2" }] } },
+      [{ className: "test.class", id: "0x1" }],
+    );
+    const queries = (result.query as { race: ECSqlQueryDef[] }).race;
+    expect(queries).toHaveLength(2);
+    expect(trimWhitespace(queries[0].ecsql)).toContain("FROM (query 1) [q] JOIN SearchInfo");
+    expect(trimWhitespace(queries[1].ecsql)).toContain("FROM (query 2) [q] JOIN SearchInfo");
+    queries.forEach((q) => expect(q.ctes).toHaveLength(1));
   });
 });
 
@@ -699,9 +714,10 @@ describe("applyECInstanceIdsSelector", () => {
       fullClassName: "SchemaName.ClassName",
       query: { ctes: ["source cte"], ecsql: "source query", bindings: [{ type: "string", value: "source binding" }] },
     });
+    const query = result.query as ECSqlQueryDef;
     expect(result.fullClassName).toBe("SchemaName.ClassName");
-    expect(result.query.ctes).toEqual(["source cte"]);
-    expect(trimWhitespace(result.query.ecsql)).toEqual(
+    expect(query.ctes).toEqual(["source cte"]);
+    expect(trimWhitespace(query.ecsql)).toEqual(
       trimWhitespace(`
         SELECT
           [q].*,
@@ -710,6 +726,17 @@ describe("applyECInstanceIdsSelector", () => {
         FROM (source query) [q]
       `),
     );
-    expect(result.query.bindings).toEqual([{ type: "string", value: "source binding" }]);
+    expect(query.bindings).toEqual([{ type: "string", value: "source binding" }]);
+  });
+
+  it("wraps each query alternative", () => {
+    const result = applyECInstanceIdsSelector({
+      fullClassName: "SchemaName.ClassName",
+      query: { race: [{ ecsql: "query 1" }, { ecsql: "query 2" }] },
+    });
+    const queries = (result.query as { race: ECSqlQueryDef[] }).race;
+    expect(queries).toHaveLength(2);
+    expect(trimWhitespace(queries[0].ecsql)).toContain("FROM (query 1) [q]");
+    expect(trimWhitespace(queries[1].ecsql)).toContain("FROM (query 2) [q]");
   });
 });
