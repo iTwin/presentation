@@ -20,7 +20,6 @@ import {
   take,
   takeUntil,
   tap,
-  throwError,
 } from "rxjs";
 import { BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
 import { createDefaultValueFormatter } from "@itwin/presentation-shared";
@@ -60,11 +59,7 @@ import type { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProv
 import type { HierarchySearchTree } from "../HierarchySearch.js";
 import type { RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
 import type { ProviderSourceNode } from "./HierarchyProviderUtils.js";
-import type {
-  GenericHierarchyNodeDefinition,
-  HierarchyDefinition,
-  InstanceNodesQueryDefinition,
-} from "./IModelHierarchyDefinition.js";
+import type { HierarchyDefinition, InstanceNodesQueryDefinition } from "./IModelHierarchyDefinition.js";
 import type { ProcessedGenericHierarchyNode, ProcessedInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
@@ -246,37 +241,24 @@ export function createStreamingIModelHierarchyProvider(
 type StreamingParentNode = ParentHierarchyNode<NonGroupingHierarchyNode>;
 type StreamingProcessedNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode;
 
-interface ResumeProps {
-  offset: number;
-  /**
-   * Set when resuming inside the hidden node at `offset` - the resume path, relative to its child hierarchy level.
-   * Otherwise that node is skipped.
-   */
-  childResume?: ContinuationToken;
-}
-
 interface LevelNode {
   node: StreamingProcessedNode;
   position: LevelPosition;
-  /** Set if reading should resume inside this (hidden) node's child hierarchy level - relative to that level. */
-  childResume?: ContinuationToken;
 }
 
-interface ReadLevelProps<TResult> {
+interface LevelProps {
   parentNode: StreamingParentNode | undefined;
   instanceFilter?: GenericInstanceFilter;
-  /** Path to resume reading from, relative to this hierarchy level. */
-  resume?: ContinuationToken;
+  cursor: LevelCursor;
   /** Awaited before requesting each query page and processing each node. */
   demand: Observable<unknown>;
+}
+
+interface ReadLevelProps<TResult> extends LevelProps {
   processNode: (node: LevelNode) => Observable<TResult>;
 }
 
-interface ReadLevelWithCursorProps extends Omit<ReadLevelProps<never>, "processNode" | "resume"> {
-  cursor: LevelCursor;
-}
-
-interface StreamLevelProps extends ReadLevelWithCursorProps {
+interface StreamLevelProps extends LevelProps {
   /** Differs from `parentNode` when that one is hidden. */
   requestedParentNode: StreamingParentNode | undefined;
 }
@@ -284,7 +266,6 @@ interface StreamLevelProps extends ReadLevelWithCursorProps {
 interface ReadSourceNode {
   sourceNode: ProviderSourceNode;
   offset: number;
-  childResume?: ContinuationToken;
 }
 
 class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyProvider {
@@ -417,7 +398,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     const tokenContext = this.#createContinuationTokenContext(props);
     return this.#createIterator({
       tokenContext,
-      createSource: (demand) => this.#getNodesObservable({ ...props, cursor: tokenContext.createRootCursor(), demand }),
+      createSource: (demand) => this.#getNodesObservable({ ...props, cursor: LevelCursor.root(tokenContext), demand }),
     });
   }
 
@@ -431,7 +412,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
         this.#readInstanceKeys({
           parentNode: props.parentNode,
           instanceFilter: props.instanceFilter,
-          cursor: tokenContext.createRootCursor(),
+          cursor: LevelCursor.root(tokenContext),
           demand,
         }),
     });
@@ -465,22 +446,17 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   }
 
   /** Reads instance keys of the hierarchy level, replacing hidden nodes with their children's keys. */
-  #readInstanceKeys({ parentNode, instanceFilter, cursor, demand }: ReadLevelWithCursorProps): Observable<InstanceKey> {
+  #readInstanceKeys({ parentNode, instanceFilter, cursor, demand }: LevelProps): Observable<InstanceKey> {
     return this.#readLevel({
       parentNode,
       instanceFilter,
-      resume: cursor.resume,
+      cursor,
       demand,
-      processNode: ({ node, position, childResume }) => {
+      processNode: ({ node, position }) => {
         if (node.processingParams?.hideInHierarchy) {
           return node.children === false
             ? EMPTY
-            : this.#readInstanceKeys({
-                parentNode: node,
-                instanceFilter,
-                cursor: cursor.createChildCursor(position, childResume),
-                demand,
-              });
+            : this.#readInstanceKeys({ parentNode: node, instanceFilter, cursor: cursor.child(position), demand });
         }
         if (!HierarchyNodeKey.isInstances(node.key)) {
           return EMPTY;
@@ -533,9 +509,9 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     return this.#readLevel({
       parentNode,
       instanceFilter,
-      resume: cursor.resume,
+      cursor,
       demand,
-      processNode: ({ node, position, childResume }) => {
+      processNode: ({ node, position }) => {
         if (!node.processingParams?.hideInHierarchy) {
           return this.#finalizeNode({ node, parentNode: requestedParentNode }).pipe(
             tap(() => cursor.advance(position)),
@@ -548,7 +524,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
           parentNode: node,
           requestedParentNode,
           instanceFilter,
-          cursor: cursor.createChildCursor(position, childResume),
+          cursor: cursor.child(position),
           demand,
         });
       },
@@ -556,8 +532,13 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   }
 
   /** Reads pre-processed nodes of the hierarchy level and processes them one by one, each after `demand` emits. */
-  #readLevel<TResult>(props: ReadLevelProps<TResult>): Observable<TResult> {
-    const { parentNode, instanceFilter, demand, processNode } = props;
+  #readLevel<TResult>({
+    parentNode,
+    instanceFilter,
+    cursor,
+    demand,
+    processNode,
+  }: ReadLevelProps<TResult>): Observable<TResult> {
     const ownParentNode = parentNode
       ? getOwnParentNode(parentNode, { sourceName: this.#sourceName, imodelKey: this.#imodelAccess.imodelKey })
       : undefined;
@@ -565,9 +546,6 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
     if (isParentNodeFromOtherSource) {
       return EMPTY;
     }
-    const resumePosition: LevelPosition | undefined = props.resume?.[0];
-    const childResume = props.resume?.slice(1) ?? [];
-    const startDefinitionIndex = resumePosition?.definitionIndex ?? 0;
     return defineHierarchyLevel({
       hierarchyDefinition: this.#hierarchyDefinition,
       nodesQueryClauseFactory: this.#nodesQueryClauseFactory,
@@ -575,78 +553,47 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
       ...(instanceFilter ? { instanceFilter } : undefined),
     }).pipe(
       concatMap((definitions) => {
-        if (startDefinitionIndex >= definitions.length && resumePosition) {
-          return throwError(
-            () =>
-              new InvalidContinuationTokenError(
-                "Continuation token points to a hierarchy level definition that doesn't exist.",
-              ),
-          );
-        }
+        const startDefinitionIndex = cursor.getStartDefinitionIndex(definitions.length);
         return from(definitions.slice(startDefinitionIndex)).pipe(
           concatMap((definition, index) => {
             const definitionIndex = startDefinitionIndex + index;
-            const resume: ResumeProps | undefined =
-              resumePosition?.definitionIndex === definitionIndex
-                ? { offset: resumePosition.offset, ...(childResume.length ? { childResume } : undefined) }
-                : undefined;
-            const processSourceNode = (processProps: ReadSourceNode) =>
-              this.#preProcessNode({ sourceNode: processProps.sourceNode, parentNode }).pipe(
-                concatMap((node) =>
-                  processNode({
-                    node,
-                    position: { definitionIndex, offset: processProps.offset },
-                    ...(processProps.childResume ? { childResume: processProps.childResume } : undefined),
-                  }),
-                ),
+            const startOffset = cursor.startOffset(definitionIndex);
+            const processSourceNode = ({ sourceNode, offset }: ReadSourceNode) =>
+              this.#preProcessNode({ sourceNode, parentNode }).pipe(
+                concatMap((node) => processNode({ node, position: { definitionIndex, offset } })),
               );
-            return HierarchyNodesDefinition.isGenericNode(definition)
-              ? from(this.#readGenericNode({ definition, resume })).pipe(
-                  concatMap((sourceNode) => onDemand(demand, () => processSourceNode(sourceNode))),
-                )
-              : this.#readInstanceNodes({ definition, parentNode, resume, demand, processSourceNode });
+            if (!HierarchyNodesDefinition.isGenericNode(definition)) {
+              return this.#readInstanceNodes({ definition, parentNode, startOffset, demand, processSourceNode });
+            }
+            // a generic node is always at offset `0`
+            return startOffset > 0
+              ? EMPTY
+              : onDemand(demand, () =>
+                  processSourceNode({ sourceNode: createGenericSourceNode(definition, this.#sourceName), offset: 0 }),
+                );
           }),
         );
       }),
     );
   }
 
-  #readGenericNode({
-    definition,
-    resume,
-  }: {
-    definition: GenericHierarchyNodeDefinition;
-    resume: ResumeProps | undefined;
-  }): ReadSourceNode[] {
-    if (resume && !resume.childResume) {
-      return [];
-    }
-    return [
-      {
-        sourceNode: createGenericSourceNode(definition, this.#sourceName),
-        offset: 0,
-        ...(resume ? { childResume: resume.childResume } : undefined),
-      },
-    ];
-  }
-
-  /** Reads query results in pages. Each page and each row is processed only after `demand` emits. */
+  /**
+   * Reads query results in pages, starting at `startOffset`. Each page and each row is processed only after `demand`
+   * emits.
+   */
   #readInstanceNodes<TResult>({
     definition,
     parentNode,
-    resume,
+    startOffset,
     demand,
     processSourceNode,
   }: {
     definition: InstanceNodesQueryDefinition;
     parentNode: StreamingParentNode | undefined;
-    resume: ResumeProps | undefined;
+    startOffset: number;
     demand: Observable<unknown>;
     processSourceNode: (sourceNode: ReadSourceNode) => Observable<TResult>;
   }): Observable<TResult> {
-    // when resuming after a visible node, start at the row that follows it; when resuming inside a hidden
-    // node's children, start at the hidden node's row to re-create it
-    const startOffset = resume ? (resume.childResume ? resume.offset : resume.offset + 1) : 0;
     return defer(() => {
       let pagesCount = 0;
       let pageRowsCount = 0;
@@ -674,17 +621,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
                   parentNode,
                   imodelKey: this.#imodelAccess.imodelKey,
                   parseNode: this.#hierarchyDefinition.parseNode,
-                }).pipe(
-                  concatMap((sourceNode) =>
-                    processSourceNode({
-                      sourceNode,
-                      offset,
-                      ...(resume?.childResume && offset === resume.offset
-                        ? { childResume: resume.childResume }
-                        : undefined),
-                    }),
-                  ),
-                );
+                }).pipe(concatMap((sourceNode) => processSourceNode({ sourceNode, offset })));
               }),
             ),
           );
@@ -739,6 +676,7 @@ class StreamingIModelHierarchyProviderImpl implements StreamingIModelHierarchyPr
   #hasChildren(node: StreamingProcessedNode): Observable<boolean> {
     return this.#readLevel({
       parentNode: node,
+      cursor: LevelCursor.untracked,
       // determining children isn't limited by what the consumer has requested - it stops at the first child instead
       demand: of(undefined),
       // hidden and `hideIfNoChildren` children only count if they have children themselves
@@ -900,7 +838,8 @@ class ContinuationTokenContext {
   #currentParentToken: ContinuationToken = [];
   #currentPosition: LevelPosition | undefined;
 
-  readonly #resumeFrom: ContinuationToken | undefined;
+  /** Path to resume reading the requested hierarchy level from, decoded from the token the request was made with. */
+  public readonly resumeFrom: ContinuationToken | undefined;
 
   /** @throws `InvalidContinuationTokenError` */
   public constructor(props: {
@@ -920,12 +859,7 @@ class ContinuationTokenContext {
       props.searchFingerprint,
     ]);
     this.#initialToken = props.continuationToken;
-    this.#resumeFrom = props.continuationToken !== undefined ? this.#decode(props.continuationToken) : undefined;
-  }
-
-  /** Creates a cursor for the requested hierarchy level, resuming from the token the request was made with. */
-  public createRootCursor(): LevelCursor {
-    return new LevelCursor(this, [], this.#resumeFrom);
+    this.resumeFrom = props.continuationToken !== undefined ? this.#decode(props.continuationToken) : undefined;
   }
 
   /** Called when the node's last value is returned to the consumer. */
@@ -1022,31 +956,85 @@ class ContinuationTokenContext {
  * hidden node: where to resume reading the level from and how to advance the request's continuation token.
  */
 class LevelCursor {
-  readonly #context: ContinuationTokenContext;
+  /** A cursor that reads the level from start and doesn't advance any continuation token. */
+  public static readonly untracked = new LevelCursor(undefined, [], undefined);
+
+  readonly #context: ContinuationTokenContext | undefined;
   // positions of the hidden nodes this level is nested in, relative to the requested level
   readonly #path: ContinuationToken;
+  // path to resume reading from, relative to this level; `undefined` to read the level from start
+  readonly #resumeFrom: ContinuationToken | undefined;
 
-  /** Remaining path to resume reading from, relative to this level. `undefined` to read the level from start. */
-  public readonly resume: ContinuationToken | undefined;
-
-  public constructor(
-    context: ContinuationTokenContext,
+  private constructor(
+    context: ContinuationTokenContext | undefined,
     path: ContinuationToken,
-    resume: ContinuationToken | undefined,
+    resumeFrom: ContinuationToken | undefined,
   ) {
     this.#context = context;
     this.#path = path;
-    this.resume = resume;
+    this.#resumeFrom = resumeFrom;
+  }
+
+  /** Creates a cursor for the requested hierarchy level, resuming from the token the request was made with. */
+  public static root(context: ContinuationTokenContext): LevelCursor {
+    return new LevelCursor(context, [], context.resumeFrom);
+  }
+
+  /**
+   * Returns the index of the hierarchy level definition to start reading from.
+   * @throws `InvalidContinuationTokenError` if the resume position points to a definition that doesn't exist.
+   */
+  public getStartDefinitionIndex(definitionsCount: number): number {
+    if (!this.#resumeFrom) {
+      return 0;
+    }
+    const { definitionIndex } = this.#resumeFrom[0];
+    if (definitionIndex >= definitionsCount) {
+      throw new InvalidContinuationTokenError(
+        "Continuation token points to a hierarchy level definition that doesn't exist.",
+      );
+    }
+    return definitionIndex;
+  }
+
+  /**
+   * Returns the offset to start reading the definition at `definitionIndex` from: the row that follows the resume
+   * position, or the resume position's row itself when resuming inside its (hidden) node, so that the node is
+   * re-created. Definitions after the resume position are read from start.
+   */
+  public startOffset(definitionIndex: number): number {
+    const resumePosition = this.#resumeFrom?.[0];
+    if (resumePosition?.definitionIndex !== definitionIndex) {
+      return 0;
+    }
+    return this.#getNestedResumeFrom(resumePosition) ? resumePosition.offset : resumePosition.offset + 1;
   }
 
   /** Called when the last value of this level's node at `position` is returned to the consumer. */
   public advance(position: LevelPosition) {
-    this.#context.advance(this.#path, position);
+    this.#context?.advance(this.#path, position);
   }
 
-  /** Creates a cursor for the child level of this level's hidden node at `position`. */
-  public createChildCursor(position: LevelPosition, resume: ContinuationToken | undefined): LevelCursor {
-    return new LevelCursor(this.#context, [...this.#path, position], resume);
+  /**
+   * Creates a cursor for the child level of this level's hidden node at `position`. The child level is resumed only
+   * if this cursor resumes inside that node, otherwise it's read from start.
+   */
+  public child(position: LevelPosition): LevelCursor {
+    return new LevelCursor(this.#context, [...this.#path, position], this.#getNestedResumeFrom(position));
+  }
+
+  /** Returns the path to resume reading from, relative to the child level of the hidden node at `position`, if any. */
+  #getNestedResumeFrom(position: LevelPosition): ContinuationToken | undefined {
+    const resumeFrom = this.#resumeFrom;
+    if (
+      !resumeFrom ||
+      resumeFrom.length < 2 ||
+      resumeFrom[0].definitionIndex !== position.definitionIndex ||
+      resumeFrom[0].offset !== position.offset
+    ) {
+      return undefined;
+    }
+    return resumeFrom.slice(1);
   }
 }
 
