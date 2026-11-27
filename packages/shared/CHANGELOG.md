@@ -1,5 +1,13 @@
 # @itwin/presentation-shared
 
+## 3.0.0
+
+### Major Changes
+
+- [#1731](https://github.com/iTwin/presentation/pull/1731): `StructValueDescriptor`: Add a required `className` property with the full name of the struct class that defines the value's shape, so consumers can identify the struct type without re-reading schema.
+  
+  This is a breaking change for code that creates `StructValueDescriptor` objects - they now need to specify `className`.
+
 ## 2.2.1
 
 ### Patch Changes
