@@ -7,6 +7,7 @@ public;type;ConcatenatedValue
 public;namespace;ConcatenatedValue
 public;type;ConcatenatedValuePart
 public;namespace;ConcatenatedValuePart
+beta;interface;ContinuableAsyncIterableIterator
 public;function;createBisInstanceLabelSelectClauseFactory
 public;function;createCachingECClassHierarchyInspector
 deprecated;function;createCachingECClassHierarchyInspector

@@ -69,3 +69,31 @@ export class NodesQueryRowsLimitExceededError extends RowsLimitExceededError {
     this.nodes = props.nodes;
   }
 }
+
+/**
+ * Error that is thrown by `StreamingIModelHierarchyProvider` when an in-flight request is interrupted, because the hierarchy
+ * changed or the provider was disposed. Unlike a normally finished request, an interrupted one doesn't mean all
+ * nodes of the hierarchy level have been returned.
+ *
+ * @beta
+ */
+export class HierarchyRequestInterruptedError extends Error {
+  public constructor() {
+    super("Hierarchy request was interrupted due to hierarchy change or provider disposal");
+  }
+}
+
+/**
+ * Error that is thrown by `StreamingIModelHierarchyProvider.getNodes` when the given continuation token can't be used:
+ * it's malformed, was created for a different iModel, parent node, instance filter or hierarchy search, was created
+ * before an iModel change, or points to a hierarchy level definition that doesn't exist, e.g. because the hierarchy
+ * definition now returns fewer hierarchy level definitions. In the latter cases, the hierarchy level should be loaded
+ * from the start.
+ *
+ * @beta
+ */
+export class InvalidContinuationTokenError extends Error {
+  public constructor(message: string) {
+    super(message);
+  }
+}

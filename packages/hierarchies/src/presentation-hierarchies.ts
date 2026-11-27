@@ -31,10 +31,20 @@ export {
   createIModelHierarchyProvider,
   createMergedIModelHierarchyProvider,
 } from "./hierarchies/imodel/IModelHierarchyProvider.js";
+export type {
+  GetStreamedHierarchyNodesProps,
+  StreamingIModelHierarchyProvider,
+} from "./hierarchies/imodel/StreamingIModelHierarchyProvider.js";
+export { createStreamingIModelHierarchyProvider } from "./hierarchies/imodel/StreamingIModelHierarchyProvider.js";
 export type { SourceHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 export { ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 
-export { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "./hierarchies/HierarchyErrors.js";
+export {
+  HierarchyRequestInterruptedError,
+  InvalidContinuationTokenError,
+  NodesQueryRowsLimitExceededError,
+  RowsLimitExceededError,
+} from "./hierarchies/HierarchyErrors.js";
 export type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode.js";
 export { HierarchyNode } from "./hierarchies/HierarchyNode.js";
 export type { HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier.js";

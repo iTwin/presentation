@@ -19,11 +19,14 @@ import type { HierarchySearchTree } from "./HierarchySearch.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.
+ *
+ * @typeParam TParentNode - Type of parent nodes the provider accepts. Defaults to `ParentHierarchyNode`, but providers
+ * may narrow it, e.g. to `ParentHierarchyNode<NonGroupingHierarchyNode>` if they don't create grouping nodes.
  * @public
  */
-export interface GetHierarchyNodesProps {
+export interface GetHierarchyNodesProps<TParentNode extends ParentHierarchyNode = ParentHierarchyNode> {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
-  parentNode: ParentHierarchyNode | undefined;
+  parentNode: TParentNode | undefined;
 
   /** Optional hierarchy level filter. Has no effect if `parentNode` is a `GroupingNode`. */
   instanceFilter?: GenericInstanceFilter;
@@ -55,9 +58,13 @@ interface HierarchyChangedEventArgs {
 
 /**
  * An interface for a hierarchy provider that knows how to create child nodes for a given parent node.
+ *
+ * @typeParam TNode - Type of nodes the provider returns from `getNodes`. The provider accepts parent nodes
+ * of the same type in `getNodes` and `getNodeInstanceKeys` calls. Defaults to `HierarchyNode`, but providers may
+ * narrow it, e.g. to `NonGroupingHierarchyNode` if they don't create grouping nodes.
  * @public
  */
-export interface HierarchyProvider {
+export interface HierarchyProvider<TNode extends HierarchyNode = HierarchyNode> {
   /**
    * An event that provider raises due to a hierarchy change that requires a reload.
    *
@@ -71,7 +78,7 @@ export interface HierarchyProvider {
    * Gets nodes for the specified parent node. This is **the method to implement**, otherwise
    * the provider doesn't return any nodes.
    */
-  getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
+  getNodes(props: GetHierarchyNodesProps<ParentHierarchyNode<TNode>>): AsyncIterableIterator<TNode>;
 
   /**
    * Gets instance keys for the specified parent node.
@@ -80,7 +87,9 @@ export interface HierarchyProvider {
    * of the specified parent node. For such use cases calling this method should be more efficient compared
    * to calling `getNodes`.
    */
-  getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
+  getNodeInstanceKeys(
+    props: Omit<GetHierarchyNodesProps<ParentHierarchyNode<TNode>>, "ignoreCache">,
+  ): AsyncIterableIterator<InstanceKey>;
 
   /**
    * Overrides the property value formatter used by the hierarchy provider. Setting to `undefined`

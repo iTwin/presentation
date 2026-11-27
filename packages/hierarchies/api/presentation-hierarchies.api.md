@@ -5,6 +5,7 @@
 ```ts
 
 import type { ConcatenatedValue } from '@itwin/presentation-shared';
+import type { ContinuableAsyncIterableIterator } from '@itwin/presentation-shared';
 import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
@@ -89,6 +90,9 @@ export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchy
 
 // @public
 export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition;
+
+// @beta
+export function createStreamingIModelHierarchyProvider(props: StreamingIModelHierarchyProviderProps): StreamingIModelHierarchyProvider;
 
 // @public
 export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
@@ -213,15 +217,20 @@ export interface GenericNodeKey {
 }
 
 // @public
-export interface GetHierarchyNodesProps {
+export interface GetHierarchyNodesProps<TParentNode extends ParentHierarchyNode = ParentHierarchyNode> {
     hierarchyLevelSizeLimit?: number | "unbounded";
     ignoreCache?: boolean;
     instanceFilter?: GenericInstanceFilter;
-    parentNode: ParentHierarchyNode | undefined;
+    parentNode: TParentNode | undefined;
 }
 
 // @public
 export function getLogger(): ILogger;
+
+// @beta
+export interface GetStreamedHierarchyNodesProps extends GetHierarchyNodesProps<ParentHierarchyNode<NonGroupingHierarchyNode>> {
+    continuationToken?: string;
+}
 
 // @public
 export interface GroupingHierarchyNode extends BaseHierarchyNode {
@@ -453,14 +462,19 @@ interface HierarchyNodeSearchProps {
 }
 
 // @public
-export interface HierarchyProvider {
-    getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
-    getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
+export interface HierarchyProvider<TNode extends HierarchyNode = HierarchyNode> {
+    getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps<ParentHierarchyNode<TNode>>, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
+    getNodes(props: GetHierarchyNodesProps<ParentHierarchyNode<TNode>>): AsyncIterableIterator<TNode>;
     readonly hierarchyChanged: Event_2<(args: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: {
         paths: HierarchySearchTree[];
     } | undefined): void;
+}
+
+// @beta
+export class HierarchyRequestInterruptedError extends Error {
+    constructor();
 }
 
 // @public
@@ -602,6 +616,11 @@ interface InstancesNodeChildHierarchyLevelDefinition {
 export interface InstancesNodeKey {
     instanceKeys: IModelInstanceKey[];
     type: "instances";
+}
+
+// @beta
+export class InvalidContinuationTokenError extends Error {
+    constructor(message: string);
 }
 
 // @public
@@ -847,6 +866,31 @@ type SourceInstanceHierarchyNode = SourceHierarchyNode<Omit<ProcessedInstanceHie
         instanceKeys: InstanceKey[];
     };
 }>;
+
+// @beta
+export interface StreamingIModelHierarchyProvider extends HierarchyProvider<NonGroupingHierarchyNode>, Disposable {
+    getNodeInstanceKeys(props: Omit<GetStreamedHierarchyNodesProps, "ignoreCache">): ContinuableAsyncIterableIterator<InstanceKey>;
+    getNodes(props: GetStreamedHierarchyNodesProps): ContinuableAsyncIterableIterator<NonGroupingHierarchyNode>;
+    readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
+    setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
+    setHierarchySearch(props: StreamingIModelHierarchyProviderProps["search"]): void;
+}
+
+// @beta
+interface StreamingIModelHierarchyProviderProps {
+    formatter?: IPrimitiveValueFormatter;
+    hierarchyDefinition: HierarchyDefinition;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
+    imodelChanged?: Event_2<() => void>;
+    instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
+    pageSize?: number;
+    queryConcurrency?: number;
+    search?: {
+        paths: HierarchySearchTree[];
+    };
+}
 
 // (No @packageDocumentation comment for this package)
 
