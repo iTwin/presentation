@@ -6,6 +6,8 @@
 
 const { spawn } = require("child_process");
 const fs = require("fs");
+const path = require("path");
+const markdownLinkCheck = require.resolve("markdown-link-check/markdown-link-check");
 
 const [_node, _script, ...targets] = process.argv;
 if (!targets.length) {
@@ -18,13 +20,17 @@ let combinedStdout = "";
 let combinedStderr = "";
 
 const filePaths = fs.globSync(targets).filter((filePath) => fs.statSync(filePath).isFile());
+const repoRoot = path.resolve(__dirname, "..");
+const configPath = path.join(__dirname, "markdown-link-check.json");
 
 Promise.all(
   filePaths.map(
     (filePath) =>
       new Promise((resolve) => {
         // TODO: fix false negatives for `npmjs.com` links. https://github.com/iTwin/presentation/issues/1116
-        const p = spawn("pnpm", ["markdown-link-check", "-a", "200,403", filePath], { shell: true });
+        const p = spawn(process.execPath, [markdownLinkCheck, "-c", configPath, path.resolve(filePath)], {
+          cwd: repoRoot,
+        });
 
         let myStdout = "";
         p.stdout.on("data", (data) => (myStdout += data));
