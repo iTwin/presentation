@@ -708,64 +708,56 @@ function onDemand<T>(demand: Observable<unknown>, work: () => Observable<T>): Ob
 }
 
 /**
- * Subscribes to `source` on the first `next()` call and calls `onRequest` whenever more values are needed. Unlike
- * async generators, `return()` takes effect immediately, even while a `next()` call is pending.
+ * Subscribes to `source` on the first `next()` call and calls `onRequest` whenever more values are needed. `source`
+ * must emit only in response to `onRequest`, so each value resolves a pending `next()` call. Unlike async generators,
+ * `return()` takes effect immediately, even while a `next()` call is pending.
  */
 function requestOnDemand<T>({ source, onRequest }: { source: Observable<T>; onRequest: () => void }): AsyncIterator<T> {
-  const values: T[] = [];
   const pending: Array<{ resolve: (result: IteratorResult<T>) => void; reject: (reason: unknown) => void }> = [];
   let subscription: Subscription | undefined;
   let finished = false;
+  // an error that occurred while no `next()` call was pending - reported by the following one
   // wrapped to tell apart "no error" from an error with `undefined` reason
   let error: { reason: unknown } | undefined;
   const done = (): IteratorResult<T> => ({ done: true, value: undefined });
-  const settle = () => {
-    while (pending.length && values.length) {
-      pending.shift()!.resolve({ done: false, value: values.shift()! });
-    }
-    if (pending.length && error) {
-      // the error is reported once - subsequent `next()` calls report the iterator as done
-      const { reason } = error;
-      error = undefined;
-      pending.shift()!.reject(reason);
-    }
-    if (finished) {
-      pending.splice(0).forEach(({ resolve }) => resolve(done()));
-    }
+  const finish = () => {
+    finished = true;
+    pending.splice(0).forEach(({ resolve }) => resolve(done()));
   };
   return {
     async next() {
+      if (error) {
+        // the error is reported once - subsequent `next()` calls report the iterator as done
+        const { reason } = error;
+        error = undefined;
+        throw reason;
+      }
+      if (finished) {
+        return done();
+      }
       // register the request before subscribing, because `source` may emit synchronously
       const result = new Promise<IteratorResult<T>>((resolve, reject) => pending.push({ resolve, reject }));
-      // a buffered value already satisfies the request, so only ask `source` for more when there's none
-      if (!finished && !values.length) {
-        onRequest();
-        subscription ??= source.subscribe({
-          next: (value) => {
-            values.push(value);
-            settle();
-          },
-          error: (reason: unknown) => {
+      onRequest();
+      subscription ??= source.subscribe({
+        next: (value) => pending.shift()!.resolve({ done: false, value }),
+        error: (reason: unknown) => {
+          const request = pending.shift();
+          if (request) {
+            request.reject(reason);
+          } else {
             error = { reason };
-            finished = true;
-            settle();
-          },
-          complete: () => {
-            finished = true;
-            settle();
-          },
-        });
-      }
-      settle();
+          }
+          finish();
+        },
+        complete: finish,
+      });
       return result;
     },
     async return() {
       // unsubscribing cancels any in-flight work, e.g. a query that's waiting for a page
       subscription?.unsubscribe();
-      values.length = 0;
       error = undefined;
-      finished = true;
-      settle();
+      finish();
       return done();
     },
   };
