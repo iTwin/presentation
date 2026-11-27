@@ -1,0 +1,9 @@
+{
+  "replacementPatterns": [
+    {
+      "pattern": "^https://github\\.com/iTwin/presentation/blob/master/",
+      "replacement": "{{BASEURL}}/"
+    }
+  ],
+  "aliveStatusCodes": [200, 403]
+}
