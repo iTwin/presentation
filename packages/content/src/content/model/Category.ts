@@ -5,7 +5,7 @@
 
 import { serializeRelationshipPath } from "./Utils.js";
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "../ContentTarget.js";
 
 /**
  * Places a field or category in a category defined in the descriptor's `categories`.
@@ -74,10 +74,10 @@ export namespace CategoryDefinition {
    *
    * @throws Error if the path is empty.
    */
-  export function computeId(props: { path: RelationshipPath; omitTargetClass?: boolean }): CategoryDefinition["id"] {
-    if (props.path.length === 0) {
-      throw new Error("Cannot compute category ID from an empty relationship path.");
-    }
+  export function computeId(props: {
+    path: NonEmptyRelationshipPath;
+    omitTargetClass?: boolean;
+  }): CategoryDefinition["id"] {
     return serializeRelationshipPath({
       path: props.path,
       omitLastTargetClass: props.omitTargetClass,
@@ -91,7 +91,7 @@ export namespace CategoryDefinition {
    * producing fields via the same path will share the same category.
    */
   export function create(
-    props: { path: RelationshipPath } & Pick<CategoryDefinition, "label" | "description" | "parent">,
+    props: { path: NonEmptyRelationshipPath } & Pick<CategoryDefinition, "label" | "description" | "parent">,
   ): CategoryDefinition {
     const { path, ...rest } = props;
     return { ...rest, id: computeId({ path }) };

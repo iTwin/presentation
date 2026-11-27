@@ -26,7 +26,7 @@ export interface ContentDescriptor {
   /**
    * All fields in this descriptor — property fields, calculated fields, and external fields,
    * keyed by field ID.
-   * Related fields carry a non-empty `pathFromTarget` indicating the relationship path
+   * Related property fields carry `related` attributes, including the relationship path
    * from the target class to the field's source class.
    */
   fields: Record<Field["id"], Field>;

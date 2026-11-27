@@ -75,7 +75,6 @@ function selectorsOf(selectorTypes: Record<string, ValueDescriptor>): ContentDef
         id,
         propertyClassName: "Schema.A" as const,
         propertyName: id,
-        pathFromTarget: [],
         type,
         read: (_className: string, value: Value | null) => value ?? undefined,
       },

@@ -40,6 +40,10 @@ describe("computeFieldForkKey", () => {
 });
 
 describe("serializeRelationshipPath", () => {
+  it("serializes an undefined path like an empty path", () => {
+    expect(serializeRelationshipPath({ path: undefined })).to.equal(serializeRelationshipPath({ path: [] }));
+  });
+
   describe("with includeInstanceFilters", () => {
     function step(overrides?: Partial<RelationshipPath[number]>): RelationshipPath[number] {
       return {

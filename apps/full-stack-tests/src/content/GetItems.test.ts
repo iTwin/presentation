@@ -22,8 +22,8 @@ import {
   getPropertyFieldsByName,
 } from "./Utils.js";
 
-import type { ContentConfiguration, ContentTarget } from "@itwin/presentation-content";
-import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
+import type { ContentConfiguration, ContentTarget, NonEmptyRelationshipPath } from "@itwin/presentation-content";
+import type { InstanceKey } from "@itwin/presentation-shared";
 import type { ContentIModelAccess } from "./Utils.js";
 
 /** Builds a provider wired for the given targets/config (running both pipeline stages). */
@@ -243,7 +243,7 @@ describe("Content", () => {
           return { schema };
         });
 
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
@@ -508,7 +508,7 @@ describe("Content", () => {
           builder.insertRelationship(schema.items.AtoB.fullName, a.id, b.id);
           return { schema, cId: c.id };
         });
-        const relationshipPath: RelationshipPath = [
+        const relationshipPath: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             relationshipName: setup.schema.items.AtoB.fullName,
@@ -1383,7 +1383,7 @@ describe("Content", () => {
           return { schema };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
@@ -1437,7 +1437,7 @@ describe("Content", () => {
           return { schema };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.C.fullName,
@@ -1496,7 +1496,7 @@ describe("Content", () => {
           return { schema, mixed, nonNull, missing };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
@@ -1620,7 +1620,7 @@ describe("Content", () => {
           return { schema, a1 };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
@@ -1685,7 +1685,7 @@ describe("Content", () => {
           return { schema, matches };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.C.fullName,
@@ -1776,7 +1776,7 @@ describe("Content", () => {
           return { schema, a, b };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
@@ -1838,7 +1838,7 @@ describe("Content", () => {
           return { schema, a, c1, c2 };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.C.fullName,
@@ -1861,7 +1861,7 @@ describe("Content", () => {
         // The anchor stays one row per primary even though the primary reaches many related instances.
         const descriptor = await provider.getContentDescriptor();
         const relatedField = getPropertyFieldByName(descriptor, "PropC");
-        expect(relatedField.pathCardinality).toEqual("many");
+        expect(relatedField.related?.pathCardinality).toEqual("many");
 
         const [item] = await collect(provider.getItems());
         expect(item.primaryKey.id).toBe(setup.a.id);
@@ -1905,7 +1905,7 @@ describe("Content", () => {
           return { schema, a };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.C.fullName,
@@ -1972,7 +1972,7 @@ describe("Content", () => {
           return { schema, a, b, rel };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
@@ -2051,14 +2051,14 @@ describe("Content", () => {
           return { schema, a };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const pathToB: RelationshipPath = [
+        const pathToB: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
             relationshipName: setup.schema.items.AtoB.fullName,
           },
         ];
-        const pathToC: RelationshipPath = [
+        const pathToC: NonEmptyRelationshipPath = [
           ...pathToB,
           {
             sourceClassName: setup.schema.items.B.fullName,
@@ -2081,8 +2081,8 @@ describe("Content", () => {
         const descriptor = await provider.getContentDescriptor();
         const propBField = getPropertyFieldByName(descriptor, "PropB");
         const propCField = getPropertyFieldByName(descriptor, "PropC");
-        expect(propBField.pathCardinality).toEqual("one");
-        expect(propCField.pathCardinality).toEqual("many");
+        expect(propBField.related?.pathCardinality).toEqual("one");
+        expect(propCField.related?.pathCardinality).toEqual("many");
 
         const items = await collect(provider.getItems());
         const item = items.find((i) => i.primaryKey.id === setup.a.id)!;
@@ -2133,7 +2133,7 @@ describe("Content", () => {
           return { schema, a, b1, b2, rel1, rel2 };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,
@@ -2204,8 +2204,12 @@ describe("Content", () => {
           targetClassName: setup.schema.items.B.fullName,
           relationshipName: setup.schema.items.AtoB.fullName,
         };
-        const pathKind1: RelationshipPath = [{ ...basePathStep, instanceFilter: { expression: "this.Kind = 1" } }];
-        const pathKind2: RelationshipPath = [{ ...basePathStep, instanceFilter: { expression: "this.Kind = 2" } }];
+        const pathKind1: NonEmptyRelationshipPath = [
+          { ...basePathStep, instanceFilter: { expression: "this.Kind = 1" } },
+        ];
+        const pathKind2: NonEmptyRelationshipPath = [
+          { ...basePathStep, instanceFilter: { expression: "this.Kind = 2" } },
+        ];
         const fieldsProvider = defineIModelFieldsProvider({
           id: "provider_v1",
           async getContribution() {

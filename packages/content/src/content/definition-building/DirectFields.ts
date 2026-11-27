@@ -14,7 +14,7 @@ import type { CategorizedField } from "./ClassPropertyFields.js";
 /**
  * Enumerates the **direct** property fields of a content source — the properties of the source's
  * primary class (and, for a polymorphic target, its resolved concrete subclasses), reached with no
- * relationship path (`pathFromTarget: []`).
+ * relationship path (no `related` attributes).
  *
  * A polymorphic target (e.g. `BisCore.Element`) resolves to concrete classes (e.g. `Pump`, `Valve`)
  * whose subclass-specific properties must surface as direct fields too. The enumeration reads each
@@ -26,7 +26,7 @@ import type { CategorizedField } from "./ClassPropertyFields.js";
  * declaration carries only the concretes under it. When no concrete classes were resolved, the
  * enumeration falls back to the normalized `primaryClass` alone.
  *
- * Direct fields have no class-based category (`anchor: "none"`) and, being schema-derived, carry no
+ * Direct fields have no `related` attributes, so no class-based category, and, being schema-derived, carry no
  * contributing provider.
  *
  * @internal

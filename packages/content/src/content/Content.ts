@@ -41,7 +41,7 @@
  *     - `getItems` additionally requires Stage 2 (the descriptor) to know which
  *       columns to SELECT.
  *   - A `nested` group's `paths` are already full concrete paths from the source's target, so a
- *     value-query implementation can join `group.paths[i].path` (or a field's `pathFromTarget`) as
+ *     value-query implementation can join `group.paths[i].path` (or a field's `related.pathFromTarget`) as
  *     for any other group — no anchor-specific handling is needed here. When a hint is needed for
  *     join/loading strategy, prefer `nested.effectiveCardinalityHint` (already the combined hint
  *     across the whole path) over re-deriving it from just the nested declaration.

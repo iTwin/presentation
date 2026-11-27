@@ -174,7 +174,7 @@ describe("Content", () => {
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
       expect(propB).toBeDefined();
-      expect(propB!.pathFromTarget).toHaveLength(1);
+      expect(propB!.related.pathFromTarget).toHaveLength(1);
     });
 
     it("includes selected properties from nested multi-step related paths", async () => {
@@ -285,7 +285,7 @@ describe("Content", () => {
 
       const propE = relatedFields.find((field) => field.propertyName === "PropE");
       expect(propE).toBeDefined();
-      expect(propE!.pathFromTarget).toHaveLength(4);
+      expect(propE!.related.pathFromTarget).toHaveLength(4);
     });
 
     it("applies a nested-content override when applyOnNestedContent is set", async () => {
@@ -432,13 +432,13 @@ describe("Content", () => {
       expect(propC).toBeDefined();
       // The nested rule's contribution is resolved as the full path from the original target — the
       // A-to-B prefix (from the other rule) plus its own B-to-C suffix — not just the suffix.
-      expect(propC!.pathFromTarget).toHaveLength(2);
-      expect(propC!.pathFromTarget[0]).toMatchObject({
+      expect(propC!.related.pathFromTarget).toHaveLength(2);
+      expect(propC!.related.pathFromTarget[0]).toMatchObject({
         sourceClassName: setup.schema.items.A.fullName,
         targetClassName: setup.schema.items.B.fullName,
         relationshipName: setup.schema.items.AtoB.fullName,
       });
-      expect(propC!.pathFromTarget[1]).toMatchObject({
+      expect(propC!.related.pathFromTarget[1]).toMatchObject({
         sourceClassName: setup.schema.items.B.fullName,
         targetClassName: setup.schema.items.C.fullName,
         relationshipName: setup.schema.items.BtoC.fullName,

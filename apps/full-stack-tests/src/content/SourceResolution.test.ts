@@ -14,8 +14,8 @@ import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { createContentIModelAccess } from "./Utils.js";
 
-import type { ContentSource, ContentTarget } from "@itwin/presentation-content";
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
+import type { ContentSource, ContentTarget, NonEmptyRelationshipPath } from "@itwin/presentation-content";
+import type { EC } from "@itwin/presentation-shared";
 
 describe("Content", () => {
   describe("Source resolution", () => {
@@ -695,7 +695,7 @@ describe("Content", () => {
       }
 
       async function resolveFinalTargetClasses(
-        path: RelationshipPath,
+        path: NonEmptyRelationshipPath,
         options?: { target?: Partial<ContentTarget>; resolve?: () => Promise<ResolvedPath[]> },
       ) {
         const provider = defineIModelFieldsProvider({
@@ -714,7 +714,7 @@ describe("Content", () => {
           .sort();
       }
 
-      function pathToBase(targetClassName: EC.FullClassNameDotNotation): RelationshipPath {
+      function pathToBase(targetClassName: EC.FullClassNameDotNotation): NonEmptyRelationshipPath {
         return [
           {
             sourceClassName: setup.schema.items.A.fullName,
@@ -724,7 +724,7 @@ describe("Content", () => {
         ];
       }
 
-      function pathThroughMid(targetClassName: EC.FullClassNameDotNotation): RelationshipPath {
+      function pathThroughMid(targetClassName: EC.FullClassNameDotNotation): NonEmptyRelationshipPath {
         return [
           {
             sourceClassName: setup.schema.items.A.fullName,
@@ -776,7 +776,7 @@ describe("Content", () => {
 
       it("excludes hidden final targets of a path long enough for every query strategy", async () => {
         const { items } = setup.schema;
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           ...pathThroughMid(items.Base.fullName),
           {
             sourceClassName: items.Base.fullName,
@@ -847,14 +847,14 @@ describe("Content", () => {
 
       it("excludes hidden classes when resolving through nested declarations", async () => {
         const { items } = setup.schema;
-        const toMid: RelationshipPath = [
+        const toMid: NonEmptyRelationshipPath = [
           {
             sourceClassName: items.A.fullName,
             targetClassName: items.Mid.fullName,
             relationshipName: items.RelToMid.fullName,
           },
         ];
-        const midToBase: RelationshipPath = [
+        const midToBase: NonEmptyRelationshipPath = [
           {
             sourceClassName: items.Mid.fullName,
             targetClassName: items.Base.fullName,

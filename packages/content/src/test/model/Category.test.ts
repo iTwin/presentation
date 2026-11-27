@@ -8,12 +8,6 @@ import { CategoryDefinition } from "../../content/model/Category.js";
 
 describe("CategoryDefinition", () => {
   describe("computeId", () => {
-    it("throws for empty path", () => {
-      expect(() => CategoryDefinition.computeId({ path: [] })).to.throw(
-        "Cannot compute category ID from an empty relationship path.",
-      );
-    });
-
     it("computes id for single-step forward path", () => {
       const result = CategoryDefinition.computeId({
         path: [

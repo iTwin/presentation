@@ -2,7 +2,7 @@
 
 ## RelatedFieldGroup — keep or flatten?
 
-`RelatedFieldGroup` provides a pre-built tree structure grouping fields by their relationship path. However, each `PropertyField` already carries `pathFromTarget: RelationshipPath`, making the grouping information redundant.
+`RelatedFieldGroup` provides a pre-built tree structure grouping fields by their relationship path. However, each related `PropertyField` already carries its path in `related.pathFromTarget`, making the grouping information redundant.
 
 **Arguments for keeping:**
 
@@ -11,7 +11,7 @@
 
 **Arguments for flattening (single `fields: Field[]` on descriptor):**
 
-- `pathFromTarget` already encodes the same path — consumers can group by it
+- `related.pathFromTarget` already encodes the same path — consumers can group by it
 - Fields wouldn't exist in two places (direct vs nested), simplifying iteration
 - Simpler descriptor serialization/comparison
 - Less complex descriptor schema

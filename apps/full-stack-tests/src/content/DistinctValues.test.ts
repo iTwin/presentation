@@ -11,7 +11,7 @@ import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { buildDescriptor, createContentIModelAccess, getPropertyFieldByName } from "./Utils.js";
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "@itwin/presentation-content";
 
 describe("Content", () => {
   describe("getDistinctFieldValues", () => {
@@ -225,7 +225,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -441,7 +441,7 @@ describe("Content", () => {
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       // The relationship path is declared from the *base* class `A`, so the related property is only
       // ever reached through its derived `A1`/`A2` instances.
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,

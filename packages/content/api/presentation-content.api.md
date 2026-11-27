@@ -12,6 +12,7 @@ import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Id64String } from '@itwin/core-bentley';
 import type { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
 import type { InstanceKey } from '@itwin/presentation-shared';
+import type { NonEmptyArray } from '@itwin/presentation-shared';
 import type { Point2dValue } from '@itwin/presentation-shared';
 import type { Point3dValue } from '@itwin/presentation-shared';
 import type { PrimitiveValue } from '@itwin/presentation-shared';
@@ -87,11 +88,11 @@ export interface CategoryDefinition {
 // @public (undocumented)
 export namespace CategoryDefinition {
     export function computeId(props: {
-        path: RelationshipPath;
+        path: NonEmptyRelationshipPath;
         omitTargetClass?: boolean;
     }): CategoryDefinition["id"];
     export function create(props: {
-        path: RelationshipPath;
+        path: NonEmptyRelationshipPath;
     } & Pick<CategoryDefinition, "label" | "description" | "parent">): CategoryDefinition;
 }
 
@@ -123,8 +124,8 @@ export interface ContentDescriptor {
 // @public
 export interface ContentItem {
     readonly descriptor: ReadonlyContentDescriptor;
-    getRelatedInstances(props: {
-        pathFromTarget: DeepReadonly<RelationshipPath>;
+    getRelatedInstances(props: ReadonlyPropertyField | {
+        pathFromTarget: DeepReadonly<NonEmptyRelationshipPath>;
     }): ReadonlyArray<{
         key: DeepReadonly<InstanceKey>;
         relationshipKey?: DeepReadonly<InstanceKey>;
@@ -336,7 +337,7 @@ interface InputPropertyDeclaration {
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     related?: {
-        path: RelationshipPath;
+        path: NonEmptyRelationshipPath;
         cardinalityHint?: CardinalityHint;
     };
 }
@@ -355,15 +356,16 @@ export function mapItems<TIn, TOut>(items: AsyncIterable<TIn>, transform: (item:
 type MutableFieldMetadata = "label" | "category" | "hidden" | "readOnly";
 
 // @public
+export type NonEmptyRelationshipPath = NonEmptyArray<RelationshipPath[number]>;
+
+// @public
 export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
-    pathCardinality: CardinalityHint;
-    pathFromTarget: RelationshipPath;
     primaryClassNames: EC.FullClassNameDotNotation[];
-    propertyClassKind?: "target" | "relationship";
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
+    related?: RelatedPropertyFieldAttributes;
     valueClassNames: EC.FullClassNameDotNotation[];
 }
 
@@ -372,9 +374,14 @@ export namespace PropertyField {
     export function computeId(props: {
         propertyClassName: EC.FullClassNameDotNotation;
         propertyName: string;
-        pathFromTarget?: RelationshipPath;
         forkKey?: string;
-    }): Field["id"];
+    } & ({
+        pathFromTarget?: DeepReadonly<NonEmptyRelationshipPath>;
+        related?: never;
+    } | {
+        pathFromTarget?: never;
+        related?: Pick<DeepReadonly<RelatedPropertyFieldAttributes>, "pathFromTarget">;
+    })): Field["id"];
 }
 
 // @public
@@ -399,7 +406,7 @@ interface PropertyGridFieldEntry extends PropertyGridEntryBase {
 
 // @public
 interface PropertyGridRelatedInstancesEntry extends PropertyGridEntryBase {
-    fields: ReadonlyPropertyField[];
+    fields: Array<ReadonlyPropertyField & Required<Pick<ReadonlyPropertyField, "related">>>;
     kind: "related-instances";
     values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
 }
@@ -450,13 +457,20 @@ export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accu
 // @public
 interface RelatedPropertiesDeclaration {
     cardinalityHint?: CardinalityHint;
-    path: RelationshipPath;
+    path: NonEmptyRelationshipPath;
     properties?: StepPropertySpec[];
     relationshipMeaning?: RelationshipMeaning;
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
-    }): Promise<ResolvedPath[]>;
+    }): Promise<readonly ResolvedPath[]>;
+}
+
+// @public
+interface RelatedPropertyFieldAttributes {
+    pathCardinality: CardinalityHint;
+    pathFromTarget: NonEmptyRelationshipPath;
+    propertyClassKind: "target" | "relationship";
 }
 
 // @public
@@ -494,7 +508,7 @@ interface ResolvedExternalInputGroup {
 
 // @public
 interface ResolvedPath {
-    path: RelationshipPath;
+    path: NonEmptyRelationshipPath;
     targetClassNames: EC.FullClassNameDotNotation[];
 }
 

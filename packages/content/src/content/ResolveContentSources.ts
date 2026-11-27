@@ -11,8 +11,10 @@ import {
   getCategoryContextKey,
   getOrCreate,
   getStepSourceConstraintClassName,
+  isNonEmptyArray,
   PRIMARY_CLASS_ALIAS,
   resolveEffectiveSourceClass,
+  toNonEmptyRelationshipPath,
 } from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
 import { namespaceBindings } from "./query/NamespaceBindings.js";
@@ -32,7 +34,14 @@ import type {
   Props,
   RelationshipPath,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext, ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
+import type {
+  CardinalityHint,
+  CategoryContext,
+  ContentSource,
+  ContentTarget,
+  NonEmptyRelationshipPath,
+  ResolvedPath,
+} from "./ContentTarget.js";
 import type { ExternalFieldsProvider, InputPropertyDeclaration } from "./extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
@@ -276,7 +285,7 @@ function validateContribution(provider: IModelFieldsProvider, contribution: Fiel
   return contribution;
 }
 
-// Makes a custom resolver's paths honor the declared source class: a broader first-step source is
+// Validates a custom resolver's paths and makes them honor the declared source class: a broader first-step source is
 // narrowed to it, while a source unrelated to it contradicts the declaration.
 async function enforceDeclaredSource({
   imodelAccess,
@@ -284,7 +293,7 @@ async function enforceDeclaredSource({
   sourceClassName,
 }: {
   imodelAccess: ECSchemaProvider;
-  paths: ResolvedPath[];
+  paths: readonly ResolvedPath[];
   sourceClassName: EC.FullClassNameDotNotation;
 }): Promise<ResolvedPath[]> {
   const enforcedByReturnedSource = new Map<EC.FullClassNameDotNotation, Promise<EC.FullClassNameDotNotation>>();
@@ -299,6 +308,9 @@ async function enforceDeclaredSource({
   };
   const enforcedPaths = await Promise.all(
     paths.map(async (resolved) => {
+      if (!isNonEmptyArray(resolved.path)) {
+        throw new Error("A custom resolver returned a path without steps.");
+      }
       const [first, ...rest] = resolved.path;
       const enforced = await getOrCreate({
         map: enforcedByReturnedSource,
@@ -315,10 +327,9 @@ async function enforceDeclaredSource({
         return undefined;
       }
       return {
-        ...resolved,
         path: enforced === first.sourceClassName ? resolved.path : [{ ...first, sourceClassName: enforced }, ...rest],
         targetClassNames,
-      };
+      } satisfies ResolvedPath;
     }),
   );
   return enforcedPaths.filter((resolved) => resolved !== undefined);
@@ -344,11 +355,8 @@ async function resolveDeclarationPaths({
   }
 
   if (declaration.resolve) {
-    const resolved = await declaration.resolve({ imodelAccess, target });
-    if (resolved.some((entry) => entry.path.length === 0)) {
-      throw new Error("A custom resolver returned a path without steps.");
-    }
-    return enforceDeclaredSource({ imodelAccess, paths: resolved, sourceClassName });
+    const paths = await declaration.resolve({ imodelAccess, target });
+    return enforceDeclaredSource({ imodelAccess, paths, sourceClassName });
   }
 
   const joinPath: JoinRelationshipPath = declaration.path.map((step: RelationshipPath[number], i: number) => ({
@@ -393,7 +401,8 @@ async function resolveDeclarationPaths({
           });
         }
         return {
-          path,
+          // The declared path is validated to be non-empty on intake, and this path has one step per declared step.
+          path: toNonEmptyRelationshipPath(path),
           targetClassNames: toSortedUniqueClassNames((row[0] as string).split(",") as EC.FullClassNameDotNotation[]),
         };
       }),
@@ -733,7 +742,7 @@ async function resolveNestedGroups({
   // Memoized per full (serialized) declared path — distinct branches can re-derive an identical
   // prefix + suffix combination.
   const resolutionCache = new Map<string, Promise<ResolvedPath[]>>();
-  const resolveFullPath = async (fullPath: RelationshipPath): Promise<ResolvedPath[]> => {
+  const resolveFullPath = async (fullPath: NonEmptyRelationshipPath): Promise<ResolvedPath[]> => {
     const key = serializeRelationshipPath({ path: fullPath, includeInstanceFilters: true });
     let cached = resolutionCache.get(key);
     if (!cached) {
@@ -816,12 +825,13 @@ async function resolveNestedGroups({
                 // Typing the anchor step at a narrower declared source restricts the join to it and makes
                 // that class's navigation properties reachable.
                 const lastPrefixIndex = entry.prefixSteps.length - 1;
-                const declaredPath = [
+                // Ends with the non-empty declared path.
+                const declaredPath = toNonEmptyRelationshipPath([
                   ...entry.prefixSteps.map((step, i) =>
                     i === lastPrefixIndex ? { ...step, targetClassName: effectiveSource } : step,
                   ),
                   ...declaration.path,
-                ];
+                ]);
                 const resolvedPaths = await resolveFullPath(declaredPath);
                 const paths = entry.allowedPrefixes
                   ? filterByAllowedPrefixes(resolvedPaths, entry.prefixSteps.length, entry.allowedPrefixes)

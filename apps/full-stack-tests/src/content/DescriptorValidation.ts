@@ -6,8 +6,7 @@
 import { isDeepStrictEqual } from "util";
 import { formatRelationshipPath, getVisiblePropertyFieldsByPath } from "./Utils.js";
 
-import type { Field, PropertyField } from "@itwin/presentation-content";
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { Field, NonEmptyRelationshipPath, PropertyField } from "@itwin/presentation-content";
 import type { Descriptor } from "./Utils.js";
 
 /**
@@ -129,7 +128,7 @@ export namespace PropertyFieldValidator {
 }
 
 /**
- * Asserts that the complete, unordered set of *visible* property fields at `path` (an empty path,
+ * Asserts that the complete, unordered set of *visible* property fields at `path` (no path,
  * the default, means the direct/target-class fields) matches `expect` exactly: the same number of
  * fields, each structurally matched to exactly one validator. Fields are matched greedily and out
  * of order — descriptor field iteration order is not part of the expected shape.
@@ -145,10 +144,10 @@ export namespace PropertyFieldValidator {
  */
 export function validateVisibleFieldsAtPath(props: {
   descriptor: Descriptor;
-  path?: RelationshipPath;
+  path?: NonEmptyRelationshipPath;
   expect: PropertyFieldValidator[];
 }): void {
-  const { descriptor, path = [], expect: expectedValidators } = props;
+  const { descriptor, path, expect: expectedValidators } = props;
   const pathDescription = formatRelationshipPath(path);
   const actualFields = getVisiblePropertyFieldsByPath(descriptor, path);
 

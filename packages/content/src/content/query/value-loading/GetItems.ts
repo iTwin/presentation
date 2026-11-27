@@ -145,8 +145,7 @@ async function createSourcePlan(props: {
   const { imodelAccess, descriptor, selectors, source, sorting, filters, externalInputs } = props;
   const propertySelectorPaths = Object.values(selectors)
     .filter((selector): selector is PropertySelectorDefinition => selector.kind === "property")
-    .map((selector) => selector.pathFromTarget)
-    .filter((path) => path.length > 0);
+    .flatMap((selector) => (selector.pathFromTarget ? [selector.pathFromTarget] : []));
   const { anchor, additional = [] } = await buildBaseQuery({
     schemaProvider: imodelAccess,
     source,

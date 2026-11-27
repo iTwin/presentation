@@ -15,13 +15,13 @@ import { toSortedUniqueClassNames } from "../../../content/model/Utils.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
-import type { Field } from "../../../content/model/Field.js";
+import type { Field, RelatedPropertyFieldAttributes } from "../../../content/model/Field.js";
 
 function propertyField(props: {
   propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames?: EC.FullClassNameDotNotation[];
-  pathFromTarget?: PropertyField["pathFromTarget"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
   label?: string;
 }): PropertyField {
   const id = PropertyField.computeId({
@@ -38,8 +38,9 @@ function propertyField(props: {
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
-    pathCardinality: "one",
+    ...(props.pathFromTarget
+      ? { related: { pathFromTarget: props.pathFromTarget, pathCardinality: "one", propertyClassKind: "target" } }
+      : {}),
     valueClassNames,
     primaryClassNames: props.pathFromTarget ? [props.pathFromTarget[0].sourceClassName] : valueClassNames,
   };

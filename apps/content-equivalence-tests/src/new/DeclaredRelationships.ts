@@ -7,10 +7,20 @@ import { createIModelContentConfiguration } from "@itwin/presentation-content";
 import { getClass } from "@itwin/presentation-shared";
 import { stableStringify } from "../Persistence.js";
 
-import type { ContentConfiguration, ReadonlyPropertyField } from "@itwin/presentation-content";
-import type { EC, ECSchemaProvider, ECSqlQueryExecutor, RelationshipPath } from "@itwin/presentation-shared";
+import type {
+  ContentConfiguration,
+  NonEmptyRelationshipPath,
+  ReadonlyPropertyField,
+} from "@itwin/presentation-content";
+import type {
+  DeepReadonly,
+  EC,
+  ECSchemaProvider,
+  ECSqlQueryExecutor,
+  RelationshipPath,
+} from "@itwin/presentation-shared";
 
-type ConcretePath = ReadonlyPropertyField["pathFromTarget"];
+type ConcretePath = DeepReadonly<NonEmptyRelationshipPath>;
 type DeclaredStep = RelationshipPath[number];
 
 async function getOrCreate<T>(cache: Map<string, Promise<T>>, key: string, create: () => Promise<T>): Promise<T> {
@@ -122,10 +132,12 @@ export async function createRelationshipNamesResolver(
   };
 
   return async (field) => {
+    if (!field.related) {
+      return [];
+    }
+    const path = field.related.pathFromTarget;
     const candidates = (
-      await Promise.all(
-        field.primaryClassNames.map(async (primaryClass) => matchFrom(field.pathFromTarget, 0, primaryClass, false)),
-      )
+      await Promise.all(field.primaryClassNames.map(async (primaryClass) => matchFrom(path, 0, primaryClass, false)))
     ).flat();
     const distinct = [...new Map(candidates.map((names) => [stableStringify(names), names])).values()];
     if (distinct.length !== 1) {
@@ -135,7 +147,7 @@ export async function createRelationshipNamesResolver(
     }
     return Promise.all(
       distinct[0].map(async (declaredName, index) => {
-        const step = field.pathFromTarget[index];
+        const step = path[index];
         // Legacy retains the declared relationship for navigation joins rather than reading RelECClassId.
         return step.relationshipName === declaredName || (await hasNavigationProperty(step, declaredName))
           ? declaredName

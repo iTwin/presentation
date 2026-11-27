@@ -24,11 +24,11 @@ describe("Content items", () => {
       const descriptor = await provider.getContentDescriptor();
       const labelField = getPropertyFields({ descriptor, propertyName: "UserLabel" }).find(
         (field) =>
-          field.pathFromTarget.length === 1 &&
-          field.pathFromTarget[0].relationshipName === "BisCore.ElementGroupsMembers" &&
-          field.pathFromTarget[0].relationshipReverse === true &&
-          field.pathFromTarget[0].targetClassName === dataset.meta.groupClassName &&
-          field.pathCardinality === "many",
+          field.related?.pathFromTarget.length === 1 &&
+          field.related.pathFromTarget[0].relationshipName === "BisCore.ElementGroupsMembers" &&
+          field.related.pathFromTarget[0].relationshipReverse === true &&
+          field.related.pathFromTarget[0].targetClassName === dataset.meta.groupClassName &&
+          field.related.pathCardinality === "many",
       );
       assert(labelField);
       return { provider, labelField, dataset };
@@ -38,7 +38,7 @@ describe("Content items", () => {
       const ids = new Set<Id64String>();
       let membersCount = 0;
       for await (const item of provider.getItems()) {
-        const related = item.getRelatedInstances({ pathFromTarget: labelField.pathFromTarget });
+        const related = item.getRelatedInstances(labelField);
         if (related.length > 0) {
           expect(related.length).toBe(1);
           expect(item.getValue(labelField)).toStrictEqual([dataset.meta.groupUserLabel]);

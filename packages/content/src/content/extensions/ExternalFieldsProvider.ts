@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { EC, RelationshipPath, Value, ValueDescriptor } from "@itwin/presentation-shared";
-import type { CardinalityHint } from "../ContentTarget.js";
+import type { EC, Value, ValueDescriptor } from "@itwin/presentation-shared";
+import type { CardinalityHint, NonEmptyRelationshipPath } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
 
@@ -93,11 +93,10 @@ export interface InputPropertyDeclaration {
    */
   related?: {
     /**
-     * Relationship path from the content target to the property's class. Must contain at least one step;
-     * source resolution and descriptor building reject empty paths.
+     * Relationship path from the content target to the property's class.
      * Polymorphic paths include values from all concrete path variants found during source resolution.
      */
-    path: RelationshipPath;
+    path: NonEmptyRelationshipPath;
     /**
      * Hint about how many related instances `path` reaches per target instance, with the same semantics as
      * `PropertyField.pathCardinality`. Declaring `"many"` narrows this input's `getValues` value to

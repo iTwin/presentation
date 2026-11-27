@@ -64,15 +64,15 @@ describe("Content property grid", () => {
           field,
           aspectClassIndex: Number(field.propertyClassName.slice(aspectClassNamePrefix.length)),
         }));
-      expect(aspectFields.every(({ field }) => field.pathCardinality === "one")).toBe(true);
+      expect(aspectFields.every(({ field }) => field.related?.pathCardinality === "one")).toBe(true);
       // The element owns aspects of every `typeCount`-th class, valued `aspectClassIndex`.
-      const ownedAspectFields = aspectFields.filter(({ field }) => field.pathFromTarget.length === 1);
+      const ownedAspectFields = aspectFields.filter(({ field }) => field.related?.pathFromTarget.length === 1);
       expect(ownedAspectFields).toHaveLength(meta.aspectClassCount / meta.typeCount);
       for (const { field, aspectClassIndex } of ownedAspectFields) {
         expect(item.getValue(field)).toBe(aspectClassIndex);
       }
       // The element's type owns an aspect of every class, valued `aspectClassIndex + aspectClassCount`.
-      const typeAspectFields = aspectFields.filter(({ field }) => field.pathFromTarget.length === 2);
+      const typeAspectFields = aspectFields.filter(({ field }) => field.related?.pathFromTarget.length === 2);
       expect(typeAspectFields).toHaveLength(meta.aspectClassCount);
       for (const { field, aspectClassIndex } of typeAspectFields) {
         expect(item.getValue(field)).toBe(aspectClassIndex + meta.aspectClassCount);

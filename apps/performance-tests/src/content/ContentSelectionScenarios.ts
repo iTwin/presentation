@@ -74,9 +74,9 @@ export const FILTER_SCENARIOS: ContentSelectionScenario[] = [
         primaryClass: meta.physicalElementClassName,
         filterFieldPredicate: (field) =>
           field.propertyName === "UserLabel" &&
-          field.pathCardinality === "many" &&
-          field.pathFromTarget.length === 1 &&
-          field.pathFromTarget[0].targetClassName === meta.groupClassName,
+          field.related?.pathCardinality === "many" &&
+          field.related.pathFromTarget.length === 1 &&
+          field.related.pathFromTarget[0].targetClassName === meta.groupClassName,
         value: meta.groupUserLabel,
         expectedIds,
       });
@@ -95,7 +95,7 @@ export const FILTER_SCENARIOS: ContentSelectionScenario[] = [
         primaryClass: `${schema.name}.${schema.className}`,
         // Type aspects are related to the element through its type.
         filterFieldPredicate: (field) =>
-          field.propertyName === schema.aspectPropertyName && field.pathFromTarget.length === 2,
+          field.propertyName === schema.aspectPropertyName && field.related?.pathFromTarget.length === 2,
         // Aspect values are non-negative.
         value: -1,
         expectedIds: [],
@@ -120,9 +120,9 @@ export const FILTER_SCENARIOS: ContentSelectionScenario[] = [
         primaryClass,
         filterFieldPredicate: (field) =>
           field.propertyName === "UserLabel" &&
-          field.pathCardinality === "one" &&
-          field.pathFromTarget.length === 1 &&
-          field.pathFromTarget[0].targetClassName === typeClassName,
+          field.related?.pathCardinality === "one" &&
+          field.related.pathFromTarget.length === 1 &&
+          field.related.pathFromTarget[0].targetClassName === typeClassName,
         value,
         expectedIds,
       });

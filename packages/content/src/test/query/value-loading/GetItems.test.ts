@@ -18,14 +18,8 @@ import {
 } from "../../MetadataStubs.js";
 
 import type { Id64String } from "@itwin/core-bentley";
-import type {
-  EC,
-  ECSqlQueryDef,
-  ECSqlQueryRow,
-  IInstanceLabelSelectClauseFactory,
-  RelationshipPath,
-} from "@itwin/presentation-shared";
-import type { ContentSource } from "../../../content/ContentTarget.js";
+import type { EC, ECSqlQueryDef, ECSqlQueryRow, IInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import type { ContentSource, NonEmptyRelationshipPath } from "../../../content/ContentTarget.js";
 import type {
   ContentDefinition,
   PropertySelectorDefinition,
@@ -42,13 +36,7 @@ function propertySelector(
   props: Pick<PropertySelectorDefinition, "id" | "propertyClassName" | "propertyName"> &
     Partial<Pick<PropertySelectorDefinition, "pathFromTarget" | "type" | "read">>,
 ): PropertySelectorDefinition {
-  return {
-    kind: "property",
-    pathFromTarget: [],
-    type: { kind: "primitive", type: "String" },
-    read: readProperty,
-    ...props,
-  };
+  return { kind: "property", type: { kind: "primitive", type: "String" }, read: readProperty, ...props };
 }
 
 /**
@@ -87,8 +75,6 @@ const codeField: PropertyField = {
   type: { kind: "primitive", type: "String" },
   propertyClassName: "Schema.A",
   propertyName: "Code",
-  pathFromTarget: [],
-  pathCardinality: "one",
   valueClassNames: ["Schema.A", "Schema.B"],
   primaryClassNames: ["Schema.A"],
 };
@@ -139,8 +125,6 @@ const navField: PropertyField = {
   type: { kind: "navigation", targetClassName: "Schema.Target" },
   propertyClassName: "Schema.A",
   propertyName: "Nav",
-  pathFromTarget: [],
-  pathCardinality: "one",
   valueClassNames: ["Schema.A", "Schema.B"],
   primaryClassNames: ["Schema.A"],
 };
@@ -187,7 +171,7 @@ function navTargetRow(id: Id64String, className: string, label: string): ECSqlQu
   return [id, className, label];
 }
 
-const manyPath: RelationshipPath = [
+const manyPath: NonEmptyRelationshipPath = [
   { sourceClassName: "TestSchema.Primary", relationshipName: "TestSchema.RelMany", targetClassName: "TestSchema.Many" },
 ];
 
@@ -199,8 +183,6 @@ const relCodeField: PropertyField = {
   type: { kind: "primitive", type: "String" },
   propertyClassName: "TestSchema.Primary",
   propertyName: "Code",
-  pathFromTarget: [],
-  pathCardinality: "one",
   valueClassNames: ["TestSchema.Primary"],
   primaryClassNames: ["TestSchema.Primary"],
 };
@@ -213,8 +195,7 @@ const relNameField: PropertyField = {
   type: { kind: "primitive", type: "String" },
   propertyClassName: "TestSchema.Many",
   propertyName: "Name",
-  pathFromTarget: manyPath,
-  pathCardinality: "many",
+  related: { pathFromTarget: manyPath, pathCardinality: "many", propertyClassKind: "target" },
   valueClassNames: ["TestSchema.Many"],
   primaryClassNames: ["TestSchema.Primary"],
 };
@@ -703,8 +684,12 @@ describe("getItems", () => {
   });
 
   it("loads the same related property separately through differently filtered paths", async () => {
-    const filteredManyPathA: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 1" } }];
-    const filteredManyPathB: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 2" } }];
+    const filteredManyPathA: NonEmptyRelationshipPath = [
+      { ...manyPath[0], instanceFilter: { expression: "this.Kind = 1" } },
+    ];
+    const filteredManyPathB: NonEmptyRelationshipPath = [
+      { ...manyPath[0], instanceFilter: { expression: "this.Kind = 2" } },
+    ];
     const filteredNameFieldA: PropertyField = {
       ...relNameField,
       id: PropertyField.computeId({
@@ -712,7 +697,7 @@ describe("getItems", () => {
         propertyName: "Name",
         pathFromTarget: filteredManyPathA,
       }),
-      pathFromTarget: filteredManyPathA,
+      related: { pathFromTarget: filteredManyPathA, pathCardinality: "many", propertyClassKind: "target" },
     };
     const filteredNameFieldB: PropertyField = {
       ...relNameField,
@@ -721,7 +706,7 @@ describe("getItems", () => {
         propertyName: "Name",
         pathFromTarget: filteredManyPathB,
       }),
-      pathFromTarget: filteredManyPathB,
+      related: { pathFromTarget: filteredManyPathB, pathCardinality: "many", propertyClassKind: "target" },
     };
     const filteredPathsDescriptor = {
       sources: [],
@@ -984,7 +969,7 @@ describe("getItems", () => {
   it("owns a sort-only related path on the anchor even though it is not any group's leaf path", async () => {
     // Joined solely to evaluate ORDER BY — no field/selector reads it, so it can never be a leaf path of
     // any group and must fall to `assignPathOwnership`'s second pass (first-resolvable-group tie-break).
-    const sortOnlyPath = [
+    const sortOnlyPath: NonEmptyRelationshipPath = [
       {
         sourceClassName: "TestSchema.Primary",
         relationshipName: "TestSchema.RelSort",
@@ -999,8 +984,7 @@ describe("getItems", () => {
       type: { kind: "primitive", type: "String" },
       propertyClassName: "TestSchema.Sort",
       propertyName: "Name",
-      pathFromTarget: sortOnlyPath as PropertyField["pathFromTarget"],
-      pathCardinality: "one",
+      related: { pathFromTarget: sortOnlyPath, pathCardinality: "one", propertyClassKind: "target" },
       valueClassNames: ["TestSchema.Sort"],
       primaryClassNames: ["TestSchema.Primary"],
     };

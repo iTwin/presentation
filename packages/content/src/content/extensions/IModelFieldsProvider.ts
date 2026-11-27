@@ -8,10 +8,15 @@ import type {
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryExecutor,
-  RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentTarget, RelationshipMeaning, ResolvedPath } from "../ContentTarget.js";
+import type {
+  CardinalityHint,
+  ContentTarget,
+  NonEmptyRelationshipPath,
+  RelationshipMeaning,
+  ResolvedPath,
+} from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
@@ -94,7 +99,7 @@ export interface RelatedPropertiesDeclaration {
    * case only pumps get the related properties; a base class of the target's class applies to the whole
    * target. A class neither deriving from nor being a base of the target's class applies to nothing.
    */
-  path: RelationshipPath;
+  path: NonEmptyRelationshipPath;
 
   /**
    * Per-step property specifications, opting in the classes to load properties from.
@@ -155,11 +160,14 @@ export interface RelatedPropertiesDeclaration {
    * The callback fully replaces default discovery, including its exclusion of hidden target subclasses, so
    * a returned path may end at a hidden class. When loading, each step reaches only instances of its class
    * and subclasses that aren't hidden relative to it, the same as for discovered paths.
+   *
+   * Returned paths must be non-empty. The type rejects empty paths, and an empty path from an
+   * untyped caller is rejected with an error.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
     target: ContentTarget;
-  }): Promise<ResolvedPath[]>;
+  }): Promise<readonly ResolvedPath[]>;
 }
 
 /**

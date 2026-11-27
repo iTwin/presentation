@@ -16,7 +16,7 @@ import { createRelationshipClass, createSchemaAccess } from "./MetadataStubs.js"
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../content/ContentTarget.js";
 import type { ContentDescriptor } from "../content/model/ContentDescriptor.js";
-import type { ExternalField, Field, PropertyField } from "../content/model/Field.js";
+import type { ExternalField, Field, PropertyField, RelatedPropertyFieldAttributes } from "../content/model/Field.js";
 
 describe("createPathCardinalityClassifier", () => {
   const aToB: RelationshipPath[number] = {
@@ -194,8 +194,8 @@ describe("collectPathCardinalities", () => {
 
   function makeField(props: {
     id: string;
-    pathFromTarget: RelationshipPath;
-    pathCardinality: CardinalityHint;
+    pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
+    pathCardinality?: CardinalityHint;
   }): PropertyField {
     return {
       category: { type: "target" },
@@ -205,8 +205,15 @@ describe("collectPathCardinalities", () => {
       type: { kind: "primitive", type: "String" },
       propertyClassName: "TestSchema.B",
       propertyName: "Name",
-      pathFromTarget: props.pathFromTarget,
-      pathCardinality: props.pathCardinality,
+      ...(props.pathFromTarget
+        ? {
+            related: {
+              pathFromTarget: props.pathFromTarget,
+              pathCardinality: props.pathCardinality ?? "one",
+              propertyClassKind: "target",
+            },
+          }
+        : {}),
       valueClassNames: ["TestSchema.B"],
       primaryClassNames: ["TestSchema.A"],
     };
@@ -217,7 +224,7 @@ describe("collectPathCardinalities", () => {
   }
 
   it("ignores a direct field and a non-property field", () => {
-    const directField = makeField({ id: "direct", pathFromTarget: [], pathCardinality: "one" });
+    const directField = makeField({ id: "direct" });
     const externalField: ExternalField = {
       category: { type: "target" },
       kind: "external",
@@ -238,10 +245,10 @@ describe("collectPathCardinalities", () => {
   });
 
   it("keeps differently filtered paths isolated when only one path is hinted", () => {
-    const filteredA: RelationshipPath = [
+    const filteredA: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
     ];
-    const filteredB: RelationshipPath = [
+    const filteredB: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
     ];
     const fieldA = makeField({ id: "filtered-a", pathFromTarget: filteredA, pathCardinality: "one" });
@@ -254,11 +261,11 @@ describe("collectPathCardinalities", () => {
   });
 
   it("does not leak a `one` hint across filtered prefixes or into the unfiltered path", () => {
-    const filteredA: RelationshipPath = [
+    const filteredA: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
       bToC,
     ];
-    const filteredB: RelationshipPath = [
+    const filteredB: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
       bToC,
     ];

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
+import { toNonEmptyRelationshipPath } from "../../content/InternalUtils.js";
 import {
   createJoinBudget,
   MAX_TABLES_PER_ASPECT_OR_MODEL_CLASS,
@@ -16,7 +17,7 @@ import {
 } from "../../content/query/QueryLimits.js";
 
 import type { EC, ECSql, RelationshipPath } from "@itwin/presentation-shared";
-import type { ResolvedPath } from "../../content/ContentTarget.js";
+import type { NonEmptyRelationshipPath, ResolvedPath } from "../../content/ContentTarget.js";
 
 type JoinInfo = Awaited<ReturnType<typeof ECSql.createRelationshipPathJoinInfo>>;
 
@@ -98,7 +99,7 @@ describe("QueryLimits", () => {
   // A resolved path paired with a join info. `cost` is either the number of classes to join, or the
   // explicit join entries of a single info step.
   function path(
-    props: ({ cost: number } | { joins: JoinInfo["steps"][number]["joins"] }) & { steps: RelationshipPath },
+    props: ({ cost: number } | { joins: JoinInfo["steps"][number]["joins"] }) & { steps: NonEmptyRelationshipPath },
   ): ResolvedPath & { joinInfo: JoinInfo } {
     const selector = props.steps.map((s) => s.targetClassName).join(">");
     return {
@@ -129,7 +130,7 @@ describe("QueryLimits", () => {
 
   function multiStepPath(...hops: ReturnType<typeof hop>[]): ResolvedPath & { joinInfo: JoinInfo } {
     return {
-      path: hops.map((h) => h.step),
+      path: toNonEmptyRelationshipPath(hops.map((h) => h.step)),
       targetClassNames: [hops[hops.length - 1].step.targetClassName],
       joinInfo: { steps: hops.flatMap((h) => h.infoSteps) },
     };

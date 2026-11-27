@@ -5,8 +5,8 @@
 
 import { serializeRelationshipPath } from "./Utils.js";
 
-import type { DeepReadonly, EC, ECSqlBinding, RelationshipPath, ValueDescriptor } from "@itwin/presentation-shared";
-import type { CardinalityHint } from "../ContentTarget.js";
+import type { DeepReadonly, EC, ECSqlBinding, ValueDescriptor } from "@itwin/presentation-shared";
+import type { CardinalityHint, NonEmptyRelationshipPath } from "../ContentTarget.js";
 import type { CategoryReference } from "./Category.js";
 
 /**
@@ -27,7 +27,7 @@ interface BaseField {
    * The shape of a *single* value for this field.
    *
    * A property field reached over a many-valued path carries one such value per related instance, so
-   * its stored value is an array of this shape — see {@link (PropertyField:interface).pathCardinality}.
+   * its stored value is an array of this shape. See `PropertyField.related.pathCardinality`.
    */
   type: ValueDescriptor;
   /** Where the field is placed: a category defined in the descriptor, or the content target's own category. */
@@ -58,38 +58,14 @@ export interface PropertyField extends BaseField {
   /** The EC property name within the property's class. */
   propertyName: string;
   /**
-   * For a related property, identifies whether the property belongs to the relationship path step's
-   * target class or relationship class. Undefined for a direct property.
+   * Attributes that only apply to a related property, i.e. one reached from the content target over a
+   * relationship path. Undefined for a direct property of the content target class.
    */
-  propertyClassKind?: "target" | "relationship";
-  /**
-   * Relationship path from the content target to this field's property class.
-   * Empty array means the field belongs to the target class directly.
-   *
-   * A related property's path starts at its first relationship's constraint class, so the property reached
-   * from different content targets is one field. A path declared for a subclass of the target's class keeps
-   * starting at it, and applies only to its instances — unless the constraint class derives from it.
-   */
-  pathFromTarget: RelationshipPath;
-  /**
-   * Whether one primary instance reaches at most one related instance over
-   * {@link (PropertyField:interface).pathFromTarget} (`"one"`) or possibly several (`"many"`).
-   * Always `"one"` for a direct property.
-   *
-   * `"many"` means the field's stored value is an array carrying one
-   * {@link (PropertyField:interface).type}-shaped element per related instance. The type itself stays
-   * the property's own value shape, so an array-shaped `type` always means a genuine EC array property.
-   *
-   * Taken from the contributing declaration's `cardinalityHint` where given, else from schema
-   * multiplicity of the traversed relationship constraints.
-   * Other fields and external inputs on the same query path do not change this field's value shape.
-   * Loading fails if a `"one"` field reaches more than one related instance.
-   */
-  pathCardinality: CardinalityHint;
+  related?: RelatedPropertyFieldAttributes;
   /**
    * Concrete classes of the instances that supply this field's value (the field's "value origin").
    *
-   * For a direct property (empty {@link (PropertyField:interface).pathFromTarget}) these are the
+   * For a direct property (no {@link (PropertyField:interface).related} attributes) these are the
    * primary (selected) classes; for a related property they are the concrete classes at the
    * relationship path's terminal end. For example, `["Stuff.Door", "Stuff.Window"]` for a
    * `Height` declared on `Stuff.Thing`, or `["BisCore.ExternalSourceAspectX",
@@ -108,7 +84,7 @@ export interface PropertyField extends BaseField {
   /**
    * Concrete primary (content target) classes whose instances have access to this field.
    *
-   * For a direct property (empty {@link (PropertyField:interface).pathFromTarget}) these coincide
+   * For a direct property (no {@link (PropertyField:interface).related} attributes) these coincide
    * with {@link (PropertyField:interface).valueClassNames} — the primary class *is* the value
    * origin. For a related property they are the concrete classes at the relationship path's
    * *first* step's source end — i.e. the primary-side classes that actually connect to this
@@ -126,6 +102,42 @@ export interface PropertyField extends BaseField {
    */
   primaryClassNames: EC.FullClassNameDotNotation[];
 }
+
+/**
+ * Attributes of a {@link (PropertyField:interface)} that is reached from the content target over a relationship path.
+ *
+ * @public
+ */
+export interface RelatedPropertyFieldAttributes {
+  /**
+   * Relationship path from the content target to this field's property class. Always non-empty.
+   *
+   * The path starts at its first relationship's constraint class, so the property reached from different
+   * content targets is one field. A path declared for a subclass of the target's class keeps starting at it,
+   * and applies only to its instances — unless the constraint class derives from it.
+   */
+  pathFromTarget: NonEmptyRelationshipPath;
+  /**
+   * Whether one primary instance reaches at most one related instance over
+   * `pathFromTarget` (`"one"`) or possibly several (`"many"`).
+   *
+   * `"many"` means the field's stored value is an array carrying one
+   * {@link (PropertyField:interface).type}-shaped element per related instance. The type itself stays
+   * the property's own value shape, so an array-shaped `type` always means a genuine EC array property.
+   *
+   * Taken from the contributing declaration's `cardinalityHint` where given, else from schema
+   * multiplicity of the traversed relationship constraints.
+   * Other fields and external inputs on the same query path do not change this field's value shape.
+   * Loading fails if a `"one"` field reaches more than one related instance.
+   */
+  pathCardinality: CardinalityHint;
+  /**
+   * Identifies whether the property belongs to the last relationship path step's target class
+   * or relationship class.
+   */
+  propertyClassKind: "target" | "relationship";
+}
+
 /** @public */
 export namespace PropertyField {
   /**
@@ -133,20 +145,24 @@ export namespace PropertyField {
    * and relationship path from the target. Use this to look up property fields
    * directly in `descriptor.fields`.
    *
+   * The path may be given either as `pathFromTarget` or through `related` attributes, which
+   * allows passing a property field itself.
+   *
    * When a non-empty `forkKey` is provided, it is appended as a `#${forkKey}` suffix so a field
    * that has been carved for a subset of its value-supplier classes gets a distinct, stable ID.
    * An `undefined` or empty `forkKey` leaves the identity unchanged — so a survivor field keeps
    * its original ID.
    */
-  export function computeId(props: {
-    propertyClassName: EC.FullClassNameDotNotation;
-    propertyName: string;
-    pathFromTarget?: RelationshipPath;
-    forkKey?: string;
-  }): Field["id"] {
+  export function computeId(
+    props: { propertyClassName: EC.FullClassNameDotNotation; propertyName: string; forkKey?: string } & (
+      | { pathFromTarget?: DeepReadonly<NonEmptyRelationshipPath>; related?: never }
+      | { pathFromTarget?: never; related?: Pick<DeepReadonly<RelatedPropertyFieldAttributes>, "pathFromTarget"> }
+    ),
+  ): Field["id"] {
     let identity = `${props.propertyClassName}.${props.propertyName}`;
-    if (props.pathFromTarget && props.pathFromTarget.length > 0) {
-      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true })})`;
+    const pathFromTarget = props.related?.pathFromTarget ?? props.pathFromTarget;
+    if (pathFromTarget) {
+      identity += `(${serializeRelationshipPath({ path: pathFromTarget, includeInstanceFilters: true })})`;
     }
     if (props.forkKey) {
       identity += `#${props.forkKey}`;

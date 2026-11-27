@@ -30,15 +30,6 @@ describe("PropertyField", () => {
       expect(result).to.equal("BisCore.Element.CodeValue");
     });
 
-    it("does not append path when pathFromTarget is empty", () => {
-      const result = PropertyField.computeId({
-        propertyClassName: "BisCore.Element",
-        propertyName: "CodeValue",
-        pathFromTarget: [],
-      });
-      expect(result).to.equal("BisCore.Element.CodeValue");
-    });
-
     it("appends single-step forward path in parentheses", () => {
       const result = PropertyField.computeId({
         propertyClassName: "BisCore.ElementAspect",

@@ -16,6 +16,7 @@ import {
   resolveEffectiveSourceClass,
   stableStringify,
   substituteExpressionAlias,
+  toNonEmptyRelationshipPath,
 } from "../content/InternalUtils.js";
 import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
 
@@ -359,5 +360,16 @@ describe("mergeBindings", () => {
     expect(() => mergeBindings(target, { a: { type: "int", value: 2 } })).to.throw(
       'Duplicate ECSQL binding name "a" with different values.',
     );
+  });
+});
+
+describe("toNonEmptyRelationshipPath", () => {
+  it("returns a non-empty path as is", () => {
+    const path = [{ sourceClassName: "S.A", relationshipName: "S.R", targetClassName: "S.B" }] as const;
+    expect(toNonEmptyRelationshipPath([...path])).to.deep.equal(path);
+  });
+
+  it("throws on an empty path", () => {
+    expect(() => toNonEmptyRelationshipPath([])).toThrow("Expected a non-empty relationship path.");
   });
 });

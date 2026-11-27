@@ -22,8 +22,7 @@ import {
   getPropertyFieldsByPath,
 } from "./Utils.js";
 
-import type { ContentConfiguration } from "@itwin/presentation-content";
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { ContentConfiguration, NonEmptyRelationshipPath } from "@itwin/presentation-content";
 
 describe("Content", () => {
   describe("Hidden schema members", () => {
@@ -209,14 +208,14 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const pathToBHidden: RelationshipPath = [
+      const pathToBHidden: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.BHidden.fullName,
           relationshipName: setup.schema.items.RelB.fullName,
         },
       ];
-      const pathToC: RelationshipPath = [
+      const pathToC: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.C.fullName,
@@ -312,7 +311,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const pathTo = (targetClassName: typeof setup.schema.items.A.fullName): RelationshipPath => [
+      const pathTo = (targetClassName: typeof setup.schema.items.A.fullName): NonEmptyRelationshipPath => [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName,
@@ -337,7 +336,7 @@ describe("Content", () => {
         });
       const getRelatedFieldsOf = (descriptor: Awaited<ReturnType<typeof buildDescriptor>>, className: string) =>
         getPropertyFields(descriptor)
-          .filter((f) => f.pathFromTarget.length > 0 && f.pathFromTarget.at(-1)!.targetClassName === className)
+          .filter((f) => f.related?.pathFromTarget.at(-1)!.targetClassName === className)
           .map((f) => f.propertyName)
           .sort();
 
@@ -476,7 +475,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,

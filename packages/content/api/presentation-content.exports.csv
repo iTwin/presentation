@@ -21,6 +21,7 @@ public;interface;ExternalField
 public;type;Field
 public;function;getDistinctFieldValues
 public;function;mapItems
+public;type;NonEmptyRelationshipPath
 public;interface;PropertyField
 public;namespace;PropertyField
 public;type;PropertyGridEntry

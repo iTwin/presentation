@@ -119,12 +119,12 @@ export function collectPathCardinalities(
 ): Map<string, CardinalityHint> {
   const declarations: Array<{ path: RelationshipPath; cardinality: CardinalityHint }> = [];
   for (const field of Object.values(descriptor.fields)) {
-    if (field.kind === "property" && field.pathFromTarget.length > 0) {
-      declarations.push({ path: field.pathFromTarget, cardinality: field.pathCardinality });
+    if (field.kind === "property" && field.related) {
+      declarations.push({ path: field.related.pathFromTarget, cardinality: field.related.pathCardinality });
     }
   }
   for (const input of externalInputs) {
-    if (input.pathFromTarget && input.pathFromTarget.length > 0) {
+    if (input.pathFromTarget) {
       declarations.push({ path: input.pathFromTarget, cardinality: input.cardinality });
     }
   }

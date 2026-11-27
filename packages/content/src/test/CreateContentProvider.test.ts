@@ -136,10 +136,8 @@ describe("createContentProvider", () => {
         type: { kind: "primitive", type: "Double" },
         propertyClassName: "Schema.A",
         propertyName: "Length",
-        pathFromTarget: [],
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
-        pathCardinality: "one",
       };
       const sizeIModelAccess = createSizeIModelAccess({ counts: [2] });
       const provider = createContentProvider({ imodelAccess: sizeIModelAccess, sources: [createSource("Schema.A")] });
@@ -237,10 +235,8 @@ describe("createContentProvider", () => {
         type: { kind: "primitive", type: "Double" },
         propertyClassName: "Schema.A",
         propertyName: "Length",
-        pathFromTarget: [],
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
-        pathCardinality: "one",
       };
       const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x2", className: "Schema.A" }]] });
       const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });

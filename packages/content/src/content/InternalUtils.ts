@@ -5,8 +5,15 @@
 
 import { getClass } from "@itwin/presentation-shared";
 
-import type { DeepReadonly, EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { CategoryContext, RelationshipMeaning } from "./ContentTarget.js";
+import type {
+  DeepReadonly,
+  EC,
+  ECSchemaProvider,
+  ECSqlBinding,
+  NonEmptyArray,
+  RelationshipPath,
+} from "@itwin/presentation-shared";
+import type { CategoryContext, NonEmptyRelationshipPath, RelationshipMeaning } from "./ContentTarget.js";
 import type { StepPropertySpec } from "./model/PropertySpec.js";
 
 /**
@@ -260,4 +267,22 @@ export function mergeBindings(
     }
     target[name] = binding;
   }
+}
+
+/**
+ * Returns the given relationship path typed as {@link NonEmptyArray}, e.g. for use as a related property
+ * field's or selector's `pathFromTarget`.
+ *
+ * @throws Error if `path` is empty.
+ */
+export function toNonEmptyRelationshipPath(path: RelationshipPath): NonEmptyRelationshipPath {
+  if (!isNonEmptyArray(path)) {
+    throw new Error("Expected a non-empty relationship path.");
+  }
+  return path;
+}
+
+/** Narrows an array to {@link NonEmptyArray} when it has at least one element. */
+export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
+  return array.length > 0;
 }

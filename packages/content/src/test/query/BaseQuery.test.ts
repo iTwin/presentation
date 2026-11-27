@@ -5,14 +5,19 @@
 
 import { describe, expect, it } from "vitest";
 import { ECSql, trimWhitespace } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX } from "../../content/InternalUtils.js";
+import { ECSQL_PREFIX, toNonEmptyRelationshipPath } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
 import { buildBaseQuery, buildTargetScopedQuery } from "../../content/query/BaseQuery.js";
 import { SOURCE_CLASS_ALIAS_PREFIX } from "../../content/query/CalculatedFieldSources.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../../content/Content.js";
-import type { CardinalityHint, ContentSource, ContentTarget } from "../../content/ContentTarget.js";
+import type {
+  CardinalityHint,
+  ContentSource,
+  ContentTarget,
+  NonEmptyRelationshipPath,
+} from "../../content/ContentTarget.js";
 import type { CalculatedField, PropertyField } from "../../content/model/Field.js";
 
 // A schema provider whose classes expose no navigation properties (except `NavTarget<N>`, see below), so
@@ -55,7 +60,7 @@ function makeStep(
   return { sourceClassName, relationshipName, targetClassName, ...extra };
 }
 
-function makeSource(paths: RelationshipPath[], target: ContentTarget = { primaryClass }): ContentSource {
+function makeSource(paths: NonEmptyRelationshipPath[], target: ContentTarget = { primaryClass }): ContentSource {
   return {
     target,
     resolvedPrimaryClasses: [primaryClass],
@@ -85,50 +90,49 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     type: props.type ?? { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName ?? primaryClass,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
+    ...(props.related ? { related: props.related } : {}),
     valueClassNames: props.valueClassNames ?? [primaryClass],
     primaryClassNames: props.primaryClassNames ?? [primaryClass],
-    pathCardinality: props.pathCardinality ?? "one",
   };
 }
 
 // Shared 1:1 and 1:many related paths + a `Name` field on each, reused by the value-filter tests below
 // (which only vary the filter operator/expected clause) to avoid repeating the same path/field setup.
-function makeOneToOnePath(): RelationshipPath {
+function makeOneToOnePath(): NonEmptyRelationshipPath {
   return [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
 }
-function makeOneToOneNameField(path: RelationshipPath = makeOneToOnePath()): PropertyField {
+function makeOneToOneNameField(path: NonEmptyRelationshipPath = makeOneToOnePath()): PropertyField {
   return makePropertyField({
     propertyName: "Name",
     propertyClassName: "TestSchema.Target",
-    pathFromTarget: path,
+    related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
     valueClassNames: ["TestSchema.Target"],
     primaryClassNames: [primaryClass],
-    pathCardinality: "one",
   });
 }
-function makeOneToManyPath(): RelationshipPath {
+function makeOneToManyPath(): NonEmptyRelationshipPath {
   return [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
 }
-function makeOneToManyNameField(path: RelationshipPath = makeOneToManyPath()): PropertyField {
+function makeOneToManyNameField(path: NonEmptyRelationshipPath = makeOneToManyPath()): PropertyField {
   return makePropertyField({
     propertyName: "Name",
     propertyClassName: "TestSchema.Many",
-    pathFromTarget: path,
+    related: { pathFromTarget: path, pathCardinality: "many", propertyClassKind: "target" },
     valueClassNames: ["TestSchema.Many"],
     primaryClassNames: [primaryClass],
-    pathCardinality: "many",
   });
 }
 
-function makeMultiStepPath(length: number, relationshipPrefix: string): RelationshipPath {
+function makeMultiStepPath(length: number, relationshipPrefix: string): NonEmptyRelationshipPath {
   let sourceClassName = primaryClass;
-  return Array.from({ length }, (_, index) => {
-    const targetClassName = `TestSchema.Target${index}` as EC.FullClassNameDotNotation;
-    const step = makeStep(sourceClassName, `TestSchema.${relationshipPrefix}${index}`, targetClassName);
-    sourceClassName = targetClassName;
-    return step;
-  });
+  return toNonEmptyRelationshipPath(
+    Array.from({ length }, (_, index) => {
+      const targetClassName = `TestSchema.Target${index}` as EC.FullClassNameDotNotation;
+      const step = makeStep(sourceClassName, `TestSchema.${relationshipPrefix}${index}`, targetClassName);
+      sourceClassName = targetClassName;
+      return step;
+    }),
+  );
 }
 
 describe("buildBaseQuery", () => {
@@ -152,7 +156,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("builds a single related-path join with prefixed outer-join aliases", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([path]),
@@ -180,7 +184,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("chains joins for a multi-step path with intermediate prefixes", async () => {
-      const path = [
+      const path: NonEmptyRelationshipPath = [
         makeStep(primaryClass, "TestSchema.Rel1", "TestSchema.Mid"),
         makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.Target"),
       ];
@@ -223,8 +227,14 @@ describe("buildBaseQuery", () => {
 
     it("emits a shared prefix step only once across paths", async () => {
       const shared = makeStep(primaryClass, "TestSchema.Rel1", "TestSchema.Mid");
-      const pathB = [shared, makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.TargetB")];
-      const pathC = [shared, makeStep("TestSchema.Mid", "TestSchema.Rel3", "TestSchema.TargetC")];
+      const pathB: NonEmptyRelationshipPath = [
+        shared,
+        makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.TargetB"),
+      ];
+      const pathC: NonEmptyRelationshipPath = [
+        shared,
+        makeStep("TestSchema.Mid", "TestSchema.Rel3", "TestSchema.TargetC"),
+      ];
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([pathB, pathC]),
@@ -242,10 +252,10 @@ describe("buildBaseQuery", () => {
 
     it("keeps paths that differ only by a step instance filter as distinct joins", async () => {
       const base = makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target");
-      const pathA = [
+      const pathA: NonEmptyRelationshipPath = [
         { ...base, instanceFilter: { expression: "this.A > 0", bindings: { fa: { type: "int" as const, value: 1 } } } },
       ];
-      const pathB = [
+      const pathB: NonEmptyRelationshipPath = [
         { ...base, instanceFilter: { expression: "this.B > 0", bindings: { fb: { type: "int" as const, value: 2 } } } },
       ];
       const result = await buildBaseQuery({
@@ -265,7 +275,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("de-duplicates identical paths across declaration groups", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
@@ -288,10 +298,10 @@ describe("buildBaseQuery", () => {
 
     it("throws when identical paths across declaration groups uses same bindings with different values", async () => {
       const step = makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target");
-      const pathA: RelationshipPath = [
+      const pathA: NonEmptyRelationshipPath = [
         { ...step, instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 1 } } } },
       ];
-      const pathB: RelationshipPath = [
+      const pathB: NonEmptyRelationshipPath = [
         { ...step, instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 2 } } } },
       ];
       const source: ContentSource = {
@@ -319,20 +329,8 @@ describe("buildBaseQuery", () => {
       ).rejects.toThrow(`Duplicate ECSQL binding name "p" with different values.`);
     });
 
-    it("ignores zero-step resolved paths", async () => {
-      const result = await buildBaseQuery({
-        schemaProvider,
-        source: makeSource([[]]),
-        includeRelatedJoins: true,
-        propertySelectorPaths: [],
-      });
-
-      expect(result.anchor.parts.joins).to.equal("");
-      expect(result.anchor.parts.relatedClassAliases.size).to.equal(0);
-    });
-
     it("collects instance-filter bindings from joined steps", async () => {
-      const path = [
+      const path: NonEmptyRelationshipPath = [
         makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target", {
           instanceFilter: { expression: "this.Prop > 0", bindings: { stepBinding: { type: "int", value: 1 } } },
         }),
@@ -348,7 +346,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("excludes hidden subclasses of every step's target class from its join", async () => {
-      const path = [
+      const path: NonEmptyRelationshipPath = [
         makeStep(primaryClass, "TestSchema.Rel1", "TestSchema.Mid"),
         makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.Target"),
       ];
@@ -372,7 +370,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("combines the exclusion of hidden subclasses with the step's own instance filter", async () => {
-      const path = [
+      const path: NonEmptyRelationshipPath = [
         makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target", {
           instanceFilter: { expression: "x.Prop = 1 OR x.Prop = 2", targetAlias: "x" },
         }),
@@ -399,8 +397,14 @@ describe("buildBaseQuery", () => {
       const shared = makeStep(primaryClass, "TestSchema.Rel1", "TestSchema.Mid", {
         instanceFilter: { expression: "this.X > 0", bindings: { sharedBinding: { type: "int", value: 1 } } },
       });
-      const pathB = [shared, makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.TargetB")];
-      const pathC = [shared, makeStep("TestSchema.Mid", "TestSchema.Rel3", "TestSchema.TargetC")];
+      const pathB: NonEmptyRelationshipPath = [
+        shared,
+        makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.TargetB"),
+      ];
+      const pathC: NonEmptyRelationshipPath = [
+        shared,
+        makeStep("TestSchema.Mid", "TestSchema.Rel3", "TestSchema.TargetC"),
+      ];
 
       const result = await buildBaseQuery({
         schemaProvider,
@@ -494,7 +498,7 @@ describe("buildBaseQuery", () => {
       // The anchor reserves 4 tables (3 for the primary class + 1 paging IdSet join), leaving 60. Each
       // single-step outer link-table path costs 8 (2 for the relationship + 2 target classes × 3), so 7
       // fit (56) and the 8th (64) exceeds the limit. Sort paths can't spill, so that throws.
-      const paths = Array.from({ length: 8 }, (_, index) => [
+      const paths = Array.from({ length: 8 }, (_, index): NonEmptyRelationshipPath => [
         makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
       ]);
       await expect(
@@ -507,7 +511,7 @@ describe("buildBaseQuery", () => {
             makePropertyField({
               propertyName: "Name",
               propertyClassName: path[0].targetClassName,
-              pathFromTarget: path,
+              related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
               valueClassNames: [path[0].targetClassName],
             }),
           ),
@@ -520,7 +524,7 @@ describe("buildBaseQuery", () => {
       // relationship + 2 target classes × 3). Summed per path, that is 4 × 16 = 64 plus 4 reserved, over
       // the limit; merged, the shared hop is joined once: 4 reserved + 8 shared + 4 × 8 leaves = 44.
       const sharedStep = makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared");
-      const paths = Array.from({ length: 4 }, (_, index) => [
+      const paths = Array.from({ length: 4 }, (_, index): NonEmptyRelationshipPath => [
         sharedStep,
         makeStep("TestSchema.Shared", `TestSchema.RelLeaf${index}`, `TestSchema.Leaf${index}`),
       ]);
@@ -533,7 +537,7 @@ describe("buildBaseQuery", () => {
           makePropertyField({
             propertyName: "Name",
             propertyClassName: path[path.length - 1].targetClassName,
-            pathFromTarget: path,
+            related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
             valueClassNames: [path[path.length - 1].targetClassName],
           }),
         ),
@@ -546,7 +550,7 @@ describe("buildBaseQuery", () => {
     it("keeps an otherwise-overflowed 1:1 sort path on the anchor", async () => {
       // 60 tables remain after reserves. Seven paths cost 56, but all 8 cost 64; the last path is sorted,
       // so it stays on the anchor only because sort joins are reserved before packing selected paths.
-      const paths = Array.from({ length: 8 }, (_, index) => [
+      const paths = Array.from({ length: 8 }, (_, index): NonEmptyRelationshipPath => [
         makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
       ]);
       const sortPath = paths[paths.length - 1];
@@ -559,7 +563,7 @@ describe("buildBaseQuery", () => {
           makePropertyField({
             propertyName: "Name",
             propertyClassName: sortPath[0].targetClassName,
-            pathFromTarget: sortPath,
+            related: { pathFromTarget: sortPath, pathCardinality: "one", propertyClassKind: "target" },
             valueClassNames: [sortPath[0].targetClassName],
           }),
         ],
@@ -600,12 +604,15 @@ describe("buildBaseQuery", () => {
     });
 
     it("counts a selected path's prefix shared with a sort path only once against the budget", async () => {
-      const prefix = [makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared")];
-      const extension = [...prefix, makeStep("TestSchema.Shared", "TestSchema.RelLeaf", "TestSchema.Leaf")];
+      const prefix: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared")];
+      const extension: NonEmptyRelationshipPath = [
+        ...prefix,
+        makeStep("TestSchema.Shared", "TestSchema.RelLeaf", "TestSchema.Leaf"),
+      ];
       const sortField = makePropertyField({
         propertyName: "Name",
         propertyClassName: "TestSchema.Shared",
-        pathFromTarget: prefix,
+        related: { pathFromTarget: prefix, pathCardinality: "one", propertyClassKind: "target" },
         valueClassNames: ["TestSchema.Shared"],
       });
       // 5 unrelated single-step paths fill most of the rest of the budget so that only *incremental*
@@ -615,7 +622,7 @@ describe("buildBaseQuery", () => {
       // (`extension`'s own unshared suffix hop) = 60 tables, fitting the 64-table budget. Counted
       // independently, `extension` would cost 16 instead of 8, totalling 68 — over budget — and would
       // force an overflow group instead.
-      const otherPaths = Array.from({ length: 5 }, (_, index) => [
+      const otherPaths = Array.from({ length: 5 }, (_, index): NonEmptyRelationshipPath => [
         makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
       ]);
       const source: ContentSource = {
@@ -666,14 +673,13 @@ describe("buildBaseQuery", () => {
     });
 
     it("resolves a relationship-class property against the relationship alias", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const field = makePropertyField({
         propertyName: "RelProp",
         propertyClassName: "TestSchema.Rel",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "relationship" },
         valueClassNames: ["TestSchema.Rel"],
         primaryClassNames: [primaryClass],
-        pathCardinality: "one",
       });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
@@ -819,14 +825,13 @@ describe("buildBaseQuery", () => {
     });
 
     it("validates the coordinate member of a related point property", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const field = makePropertyField({
         propertyName: "Location",
         propertyClassName: "TestSchema.Target",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
         valueClassNames: ["TestSchema.Target"],
         primaryClassNames: [primaryClass],
-        pathCardinality: "one",
         type: { kind: "primitive", type: "Point3d" },
       });
 
@@ -1078,7 +1083,7 @@ describe("buildBaseQuery", () => {
     const restriction = `[this].[ECClassId] IS ([TestSchema].[Pump])`;
 
     it("limits the first join to primaries of that class", async () => {
-      const path = [makeStep(pump, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(pump, "TestSchema.Rel", "TestSchema.Target")];
       const result = await buildBaseQuery({
         schemaProvider: scopedSchemaProvider,
         source: makeSource([path]),
@@ -1101,7 +1106,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("limits an existential filter's correlation to primaries of that class", async () => {
-      const path = [makeStep(pump, "TestSchema.RelMany", "TestSchema.Many")];
+      const path: NonEmptyRelationshipPath = [makeStep(pump, "TestSchema.RelMany", "TestSchema.Many")];
       const field = makeOneToManyNameField(path);
 
       const result = await buildBaseQuery({
@@ -1114,7 +1119,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("does not limit a path starting at the queried class or a base of it", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const result = await buildBaseQuery({
         schemaProvider: scopedSchemaProvider,
         source: makeSource([path]),
@@ -1141,7 +1146,7 @@ describe("buildBaseQuery", () => {
 
   describe("primaries-only mode", () => {
     it("returns only the anchor and skips related joins", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), includeRelatedJoins: false });
 
       expect(result).to.not.have.property("additional");
@@ -1151,14 +1156,13 @@ describe("buildBaseQuery", () => {
     });
 
     it("outer-joins the paths referenced by value filters", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const field = makePropertyField({
         propertyName: "Name",
         propertyClassName: "TestSchema.Target",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
         valueClassNames: ["TestSchema.Target"],
         primaryClassNames: [primaryClass],
-        pathCardinality: "one",
       });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
@@ -1186,7 +1190,10 @@ describe("buildBaseQuery", () => {
 
     it("uses a filter field's many-valued path hint", async () => {
       const path = makeOneToOnePath();
-      const field = { ...makeOneToOneNameField(path), pathCardinality: "many" as const };
+      const field: PropertyField = {
+        ...makeOneToOneNameField(path),
+        related: { pathFromTarget: path, pathCardinality: "many", propertyClassKind: "target" },
+      };
 
       const result = await buildBaseQuery({
         schemaProvider,
@@ -1209,11 +1216,11 @@ describe("buildBaseQuery", () => {
     });
 
     it("de-duplicates filter-referenced paths and ignores direct fields", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const relatedField = makePropertyField({
         propertyName: "Name",
         propertyClassName: "TestSchema.Target",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
       });
       const directField = makePropertyField({ propertyName: "Direct" });
       const filters: ContentValueFilter[] = [
@@ -1236,8 +1243,8 @@ describe("buildBaseQuery", () => {
 
   describe("split groups", () => {
     it("keeps all 1:1 paths in the anchor when they fit the join budget", async () => {
-      const pathB = [makeStep(primaryClass, "TestSchema.RelB", "TestSchema.B")];
-      const pathC = [makeStep(primaryClass, "TestSchema.RelC", "TestSchema.C")];
+      const pathB: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelB", "TestSchema.B")];
+      const pathC: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelC", "TestSchema.C")];
 
       const result = await buildBaseQuery({
         schemaProvider,
@@ -1261,7 +1268,7 @@ describe("buildBaseQuery", () => {
       // Each navigation-property path costs 3 tables. The primary class and paging IdSet leave room
       // for 20 paths per group, but the explicit-ID IdSet lowers that to 19. With 39 paths, that
       // extra table forces a third group and checks the budget in both the anchor and overflow groups.
-      const paths = Array.from({ length: 39 }, (_, index) => [
+      const paths = Array.from({ length: 39 }, (_, index): NonEmptyRelationshipPath => [
         makeStep(primaryClass, `TestSchema.RelNav${index}`, `TestSchema.NavTarget${index}`),
       ]);
 
@@ -1279,7 +1286,7 @@ describe("buildBaseQuery", () => {
       // Each group reserves 4 tables (3 for the primary + 1 paging IdSet), leaving 60. Each path costs 8,
       // so 7 fit in each group:
       // 12 paths fill exactly the anchor and one additional group.
-      const paths = Array.from({ length: 12 }, (_, i) => [
+      const paths = Array.from({ length: 12 }, (_, i): NonEmptyRelationshipPath => [
         makeStep(primaryClass, `TestSchema.Rel${i}`, `TestSchema.Target${i}`),
       ]);
 
@@ -1337,8 +1344,8 @@ describe("buildBaseQuery", () => {
     });
 
     it("isolates a 1:many path (by schema multiplicity) into its own inner-joined group", async () => {
-      const oneToOne = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
-      const oneToMany = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+      const oneToOne: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const oneToMany: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
 
       const result = await buildBaseQuery({
         schemaProvider,
@@ -1356,7 +1363,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("isolates a 1:many path forced by a `many` cardinality hint", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
       const cardinalityHints = new Map<string, CardinalityHint>([[serializeRelationshipPath({ path }), "many"]]);
 
       const result = await buildBaseQuery({
@@ -1374,7 +1381,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("keeps a schema-`many` path in the anchor when a `one` hint overrides it", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
       const cardinalityHints = new Map<string, CardinalityHint>([[serializeRelationshipPath({ path }), "one"]]);
 
       const result = await buildBaseQuery({
@@ -1392,7 +1399,7 @@ describe("buildBaseQuery", () => {
 
   describe("selector-driven candidate paths", () => {
     it("joins no path when no property selector reads it or a prefix of it", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
 
       const result = await buildBaseQuery({
         schemaProvider,
@@ -1408,8 +1415,11 @@ describe("buildBaseQuery", () => {
     });
 
     it("joins a selected strict prefix without joining the un-selected 1:many leaf it prefixes", async () => {
-      const prefix = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
-      const path = [...prefix, makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many")];
+      const prefix: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
+      const path: NonEmptyRelationshipPath = [
+        ...prefix,
+        makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many"),
+      ];
       // `targetClassNames` is the near-end primary classes reaching a path, not the path's own far end
       // (unlike `makeSource`'s shortcut elsewhere in this file) — using the primary class here keeps the
       // validated prefix's inherited value unambiguous.
@@ -1437,8 +1447,11 @@ describe("buildBaseQuery", () => {
     });
 
     it("joins a selected 1:1 prefix and its selected 1:many leaf as independent paths", async () => {
-      const prefix = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
-      const path = [...prefix, makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many")];
+      const prefix: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
+      const path: NonEmptyRelationshipPath = [
+        ...prefix,
+        makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many"),
+      ];
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
@@ -1465,7 +1478,7 @@ describe("buildBaseQuery", () => {
     });
 
     it("joins input-only paths once when multiple external input groups share them", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
       const source = makeSource([]);
       source.resolvedExternalInputs = [
         { providerId: "first_v1", inputKey: "name", paths: [{ path, targetClassNames: [primaryClass] }] },
@@ -1484,8 +1497,8 @@ describe("buildBaseQuery", () => {
     });
 
     it("ignores a propertySelectorPaths entry that is not a prefix of any resolved path", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
-      const unrelated = [makeStep(primaryClass, "TestSchema.RelOther", "TestSchema.Other")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const unrelated: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOther", "TestSchema.Other")];
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
@@ -1508,23 +1521,12 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
     });
 
-    it("ignores an empty (direct-property) propertySelectorPaths entry", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
-
-      const result = await buildBaseQuery({
-        schemaProvider,
-        source: makeSource([path]),
-        includeRelatedJoins: true,
-        propertySelectorPaths: [[], path],
-      });
-
-      expect(result.anchor.paths).to.deep.equal([{ path, targetClassNames: ["TestSchema.One"] }]);
-      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
-    });
-
     it("joins a prefix once when it is both its own declared path and a longer selected path's prefix", async () => {
-      const prefix = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
-      const path = [...prefix, makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many")];
+      const prefix: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
+      const path: NonEmptyRelationshipPath = [
+        ...prefix,
+        makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many"),
+      ];
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
@@ -1560,19 +1562,18 @@ describe("buildBaseQuery", () => {
   });
 
   describe("value filters on split paths", () => {
-    function makeIndexedOneToOnePath(index: number): RelationshipPath {
+    function makeIndexedOneToOnePath(index: number): NonEmptyRelationshipPath {
       return [makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`)];
     }
 
-    function makeIndexedOneToOneFilter(path: RelationshipPath, index: number): ContentValueFilter {
+    function makeIndexedOneToOneFilter(path: NonEmptyRelationshipPath, index: number): ContentValueFilter {
       return {
         field: makePropertyField({
           propertyName: "Name",
           propertyClassName: `TestSchema.Target${index}`,
-          pathFromTarget: path,
+          related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
           valueClassNames: [`TestSchema.Target${index}`],
           primaryClassNames: [primaryClass],
-          pathCardinality: "one",
         }),
         operator: "is-equal",
         value: `value-${index}`,
@@ -1658,10 +1659,9 @@ describe("buildBaseQuery", () => {
         field: makePropertyField({
           propertyName: "Name",
           propertyClassName: "TestSchema.Target7",
-          pathFromTarget: overflowPath,
+          related: { pathFromTarget: overflowPath, pathCardinality: "one", propertyClassKind: "target" },
           valueClassNames: ["TestSchema.Target7"],
           primaryClassNames: [primaryClass],
-          pathCardinality: "one",
         }),
         operator: "is-null",
       });
@@ -1677,9 +1677,9 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel7]");
       const allPaths = [...fittingPaths, overflowPath];
       const sortedPathKeys = allPaths.map((path) => serializeRelationshipPath({ path })).sort();
-      const targetAlias = (path: RelationshipPath) =>
+      const targetAlias = (path: NonEmptyRelationshipPath) =>
         `${ECSQL_PREFIX}t${sortedPathKeys.indexOf(serializeRelationshipPath({ path }))}`;
-      const relationshipAlias = (path: RelationshipPath) =>
+      const relationshipAlias = (path: NonEmptyRelationshipPath) =>
         `${ECSQL_PREFIX}r${sortedPathKeys.indexOf(serializeRelationshipPath({ path }))}`;
       const joinedPredicates = fittingPaths
         .map((path, index) => `([${targetAlias(path)}].[Name] = :${ECSQL_PREFIX}vf${index})`)
@@ -1882,14 +1882,13 @@ describe("buildBaseQuery", () => {
         getHiddenClassesTree: async () => [],
       } as unknown as ECSchemaProvider;
 
-      const path = [makeStep(primaryClass, "TestSchema.RelManyNav", "TestSchema.ManyNav")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelManyNav", "TestSchema.ManyNav")];
       const field = makePropertyField({
         propertyName: "Name",
         propertyClassName: "TestSchema.ManyNav",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "many", propertyClassKind: "target" },
         valueClassNames: ["TestSchema.ManyNav"],
         primaryClassNames: [primaryClass],
-        pathCardinality: "many",
       });
 
       const result = await buildBaseQuery({
@@ -1918,10 +1917,9 @@ describe("buildBaseQuery", () => {
       const field = makePropertyField({
         propertyName: "RelProp",
         propertyClassName: "TestSchema.RelMany",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "many", propertyClassKind: "relationship" },
         valueClassNames: ["TestSchema.RelMany"],
         primaryClassNames: [primaryClass],
-        pathCardinality: "many",
       });
 
       const result = await buildBaseQuery({
@@ -1948,15 +1946,14 @@ describe("buildBaseQuery", () => {
     });
 
     it("evaluates a path forced 1:many by a `many` hint with an existential subquery for filtering", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const path: NonEmptyRelationshipPath = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
       const cardinalityHints = new Map<string, CardinalityHint>([[serializeRelationshipPath({ path }), "many"]]);
       const field = makePropertyField({
         propertyName: "Name",
         propertyClassName: "TestSchema.One",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "many", propertyClassKind: "target" },
         valueClassNames: ["TestSchema.One"],
         primaryClassNames: [primaryClass],
-        pathCardinality: "many",
       });
 
       const result = await buildBaseQuery({
@@ -1987,17 +1984,16 @@ describe("buildBaseQuery", () => {
     it("keeps a filtered-and-selected path on the anchor even when other selected paths overflow", async () => {
       // The filtered path costs 8 and is reserved first. Of the 7 other paths, 6 fit in the remaining
       // budget; ordinary packing would spill the filtered path instead and leave no room for one of them.
-      const paths = Array.from({ length: 8 }, (_, i) => [
+      const paths = Array.from({ length: 8 }, (_, i): NonEmptyRelationshipPath => [
         makeStep(primaryClass, `TestSchema.Rel${i}`, `TestSchema.Target${i}`),
       ]);
       const filteredPath = paths[paths.length - 1];
       const field = makePropertyField({
         propertyName: "Name",
         propertyClassName: "TestSchema.Target7",
-        pathFromTarget: filteredPath,
+        related: { pathFromTarget: filteredPath, pathCardinality: "one", propertyClassKind: "target" },
         valueClassNames: ["TestSchema.Target7"],
         primaryClassNames: [filteredPath[0].sourceClassName],
-        pathCardinality: "one",
       });
 
       const result = await buildBaseQuery({
@@ -2007,7 +2003,7 @@ describe("buildBaseQuery", () => {
         propertySelectorPaths: paths,
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
-      const relationshipName = (p: { path: RelationshipPath }) => p.path[0].relationshipName;
+      const relationshipName = (p: { path: NonEmptyRelationshipPath }) => p.path[0].relationshipName;
 
       // All 8 paths are accounted for.
       expect(result.additional).to.have.length(1);
@@ -2163,6 +2159,7 @@ describe("buildTargetScopedQuery", () => {
     });
 
     expect(trimWhitespace(parts.from)).to.equal(`FROM [TestSchema].[Primary] [this]`);
+    expect(parts.joins).to.equal("");
   });
 
   it("scopes FROM to exactly the target's primary class for an `exact` scope", async () => {

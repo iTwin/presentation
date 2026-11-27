@@ -23,10 +23,11 @@ import {
   getFieldCategory,
   getPropertyFieldByName,
   getPropertyFieldsByName,
+  getRelatedPropertyFields,
 } from "./Utils.js";
 
-import type { ContentConfiguration, ContentTarget } from "@itwin/presentation-content";
-import type { EC, InstanceKey, RelationshipPath, Value } from "@itwin/presentation-shared";
+import type { ContentConfiguration, ContentTarget, NonEmptyRelationshipPath } from "@itwin/presentation-content";
+import type { EC, InstanceKey, Value } from "@itwin/presentation-shared";
 import type { ContentIModelAccess } from "./Utils.js";
 
 /** Builds a provider wired for the given targets/config (running both pipeline stages). */
@@ -194,7 +195,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -257,7 +258,7 @@ describe("Content", () => {
           return { schema: s, related, unrelated, c1, c2 };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.C.fullName,
@@ -309,7 +310,7 @@ describe("Content", () => {
         expect(items[unrelatedIndex].getValue(joinedField)).toBe("");
         if (includePropertyFields) {
           const relatedField = getPropertyFieldByName(descriptor, "PropC");
-          expect(relatedField.pathCardinality).toBe("many");
+          expect(relatedField.related?.pathCardinality).toBe("many");
           expect(items[relatedIndex].getValue(relatedField)).toEqual(expect.arrayContaining(["first", "second"]));
           expect(items[unrelatedIndex].getValue(relatedField)).toEqual([]);
           const relatedInstances = items[relatedIndex].getRelatedInstances(relatedField);
@@ -321,7 +322,7 @@ describe("Content", () => {
             ]),
           );
           expect(items[unrelatedIndex].getRelatedInstances(relatedField)).toEqual([]);
-          expect(getPropertyFieldByName(descriptor, "PropA").pathCardinality).toBe("one");
+          expect(getPropertyFieldByName(descriptor, "PropA").related).toBeUndefined();
         }
       },
     );
@@ -402,7 +403,7 @@ describe("Content", () => {
             mark: "r-multipleSameVariant-nullValue",
           });
           builder.insertRelationship(s.items.Rel1.fullName, missingValue.id, nullValue.id, {});
-          const pathAB: RelationshipPath = [
+          const pathAB: NonEmptyRelationshipPath = [
             {
               sourceClassName: s.items.A.fullName,
               relationshipName: s.items.Rel.fullName,
@@ -558,12 +559,10 @@ describe("Content", () => {
             filteredName: "first",
           },
         ]);
-        const relatedFields = Object.values(descriptor.fields).filter(
-          (field) => field.kind === "property" && field.pathFromTarget.length > 0,
-        );
+        const relatedFields = getRelatedPropertyFields(descriptor);
         expect(relatedFields.length).toBeGreaterThan(0);
         for (const field of relatedFields) {
-          expect(field.kind === "property" && field.pathCardinality).toBe("many");
+          expect(field.related.pathCardinality).toBe("many");
         }
         const [echoedField] = getExternalFields(descriptor);
         expect(items.map((item) => item.getValue(echoedField))).toEqual(inputs.map((input) => JSON.stringify(input)));
@@ -586,8 +585,8 @@ describe("Content", () => {
         });
         const nameField = getPropertyFieldByName(descriptor, "Name");
         const tagsField = getPropertyFieldByName(descriptor, "Tags");
-        expect(nameField.pathCardinality).toBe("one");
-        expect(tagsField.pathCardinality).toBe("one");
+        expect(nameField.related?.pathCardinality).toBe("one");
+        expect(tagsField.related?.pathCardinality).toBe("one");
         expect(nameField.type.kind).toBe("primitive");
         expect(tagsField.type.kind).toBe("array");
 
@@ -631,7 +630,7 @@ describe("Content", () => {
           ],
         });
         const nameField = getPropertyFieldByName(descriptor, "Name");
-        expect(nameField.pathCardinality).toBe("one");
+        expect(nameField.related?.pathCardinality).toBe("one");
 
         const items = await getItems([{ field: nameField, direction: "desc" }]);
 
@@ -656,8 +655,8 @@ describe("Content", () => {
         });
         const nameField = getPropertyFieldByName(descriptor, "Name");
         const tagsField = getPropertyFieldByName(descriptor, "Tags");
-        expect(nameField.pathCardinality).toBe("many");
-        expect(tagsField.pathCardinality).toBe("many");
+        expect(nameField.related?.pathCardinality).toBe("many");
+        expect(tagsField.related?.pathCardinality).toBe("many");
         expect(nameField.type.kind).toBe("primitive");
         expect(tagsField.type.kind).toBe("array");
 
@@ -724,8 +723,8 @@ describe("Content", () => {
         });
         const nameField = getPropertyFieldByName(descriptor, "Name");
         const tagsField = getPropertyFieldByName(descriptor, "Tags");
-        expect(nameField.pathCardinality).toBe("one");
-        expect(tagsField.pathCardinality).toBe("many");
+        expect(nameField.related?.pathCardinality).toBe("one");
+        expect(tagsField.related?.pathCardinality).toBe("many");
         expect(nameField.type.kind).toBe("primitive");
         expect(tagsField.type.kind).toBe("array");
 
@@ -762,7 +761,7 @@ describe("Content", () => {
         const tagsFields = getPropertyFieldsByName(descriptor, "Tags");
         expect(nameFields).toHaveLength(2);
         expect(tagsFields).toHaveLength(2);
-        expect([...nameFields, ...tagsFields].map((field) => field.pathCardinality)).toEqual([
+        expect([...nameFields, ...tagsFields].map((field) => field.related?.pathCardinality)).toEqual([
           "one",
           "one",
           "one",
@@ -838,8 +837,8 @@ describe("Content", () => {
             }),
           ],
         });
-        expect(getPropertyFieldByName(descriptor, "Name").pathCardinality).toBe("one");
-        expect(getPropertyFieldByName(descriptor, "Tags").pathCardinality).toBe("one");
+        expect(getPropertyFieldByName(descriptor, "Name").related?.pathCardinality).toBe("one");
+        expect(getPropertyFieldByName(descriptor, "Tags").related?.pathCardinality).toBe("one");
 
         await expect(getItems()).rejects.toThrow(/Field ".*".*more than one related instance/);
         expect(getValues).not.toHaveBeenCalled();
@@ -913,7 +912,7 @@ describe("Content", () => {
         return { schema: s, related, unrelated };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,

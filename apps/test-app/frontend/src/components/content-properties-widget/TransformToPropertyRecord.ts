@@ -93,7 +93,10 @@ function getEntryRecordProps(entry: PropertyGridEntry, categories: CategoryDefin
   // Related instances are shown as an array of structs, one struct per related instance. The array and its structs
   // are read-only, while struct members take read-only status from their fields.
   const { fields } = entry;
-  const { pathFromTarget, category } = fields[0];
+  const {
+    related: { pathFromTarget },
+    category,
+  } = fields[0];
   const readonlyFieldIds = new Set(fields.filter((field) => field.readOnly).map((field) => field.id));
   const instances = entry.values.find((itemInstances) => itemInstances.length > 0) ?? [];
   const targetClassName = pathFromTarget[pathFromTarget.length - 1].targetClassName;

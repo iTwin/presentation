@@ -4,9 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Id64String } from "@itwin/core-bentley";
-import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, ECSqlBinding, NonEmptyArray, RelationshipPath } from "@itwin/presentation-shared";
 import type { BaseFieldsProvider } from "./extensions/BaseFieldsProvider.js";
 import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider.js";
+
+/**
+ * A relationship path with at least one step.
+ * @public
+ */
+export type NonEmptyRelationshipPath = NonEmptyArray<RelationshipPath[number]>;
 
 /**
  * Hint about the effective cardinality of a relationship path.
@@ -203,7 +209,7 @@ export interface ResolvedPath {
    * subclass(es) actually present in the data; distinct subclasses are reported as separate `ResolvedPath`
    * entries.
    */
-  path: RelationshipPath;
+  path: NonEmptyRelationshipPath;
 
   /**
    * Concrete content-target (near-end primary) classes — a subset of

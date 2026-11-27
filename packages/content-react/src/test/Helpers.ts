@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ContentDescriptor, ContentSource, Field, PropertyField } from "@itwin/presentation-content";
-import type { EC, RelationshipPath, Value } from "@itwin/presentation-shared";
+import type { EC, Value } from "@itwin/presentation-shared";
 
 export const classA = "TestSchema.A" as const;
 export const classB = "TestSchema.B" as const;
@@ -20,7 +20,7 @@ export function createDescriptor(source: ContentSource | ContentSource[], fields
 
 export function createSource(props: {
   resolvedPrimaryClasses: EC.FullClassNameDotNotation[];
-  resolvedPaths: Array<{ path: RelationshipPath; targetClassNames: EC.FullClassNameDotNotation[] }>;
+  resolvedPaths: ContentSource["resolvedDeclarations"][number]["paths"];
   targetPrimaryClass?: EC.FullClassNameDotNotation;
 }): ContentSource {
   return {
@@ -38,7 +38,6 @@ export function createPropertyField(props: {
   valueClassNames: EC.FullClassNameDotNotation[];
   primaryClassNames?: EC.FullClassNameDotNotation[];
   propertyClassName?: EC.FullClassNameDotNotation;
-  pathFromTarget?: RelationshipPath;
   hidden?: boolean;
   type?: PropertyField["type"];
 }): PropertyField {
@@ -49,8 +48,6 @@ export function createPropertyField(props: {
     type: props.type ?? { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName ?? classA,
     propertyName: props.id,
-    pathFromTarget: props.pathFromTarget ?? [],
-    pathCardinality: "one",
     valueClassNames: props.valueClassNames,
     primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
     category: { type: "target" },

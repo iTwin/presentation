@@ -17,7 +17,12 @@ import {
 } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CategoryContext, ContentSource, ResolvedPath } from "../../content/ContentTarget.js";
+import type {
+  CategoryContext,
+  ContentSource,
+  NonEmptyRelationshipPath,
+  ResolvedPath,
+} from "../../content/ContentTarget.js";
 import type {
   IModelFieldsProvider,
   RelatedPropertiesDeclaration,
@@ -88,7 +93,7 @@ function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"
   };
 }
 
-function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassNameDotNotation[]): ResolvedPath {
+function resolvedPath(path: NonEmptyRelationshipPath, targetClassNames: EC.FullClassNameDotNotation[]): ResolvedPath {
   return { path, targetClassNames };
 }
 
@@ -316,7 +321,7 @@ describe("collectRelatedPropertyFields", () => {
     expect(fields).to.have.lengthOf(1);
     expect(fields[0].propertyClassName).to.equal("TestSchema.B");
     expect(fields[0].propertyName).to.equal("Prop");
-    expect(fields[0].pathFromTarget).to.deep.equal([aToB]);
+    expect(fields[0].related?.pathFromTarget).to.deep.equal([aToB]);
     expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.B"]);
     expect(fields[0].id).to.equal(
       PropertyField.computeId({ propertyClassName: "TestSchema.B", propertyName: "Prop", pathFromTarget: [aToB] }),
@@ -368,7 +373,7 @@ describe("collectRelatedPropertyFields", () => {
     const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields.map((f) => f.propertyName)).to.deep.equal(["Keep"]);
-    expect(fields[0].pathFromTarget).to.deep.equal([aToB, bToC]);
+    expect(fields[0].related?.pathFromTarget).to.deep.equal([aToB, bToC]);
     expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.C"]);
   });
 
@@ -393,11 +398,11 @@ describe("collectRelatedPropertyFields", () => {
     expect(fields).to.have.lengthOf(1);
     expect(fields[0].propertyClassName).to.equal("TestSchema.AToB");
     expect(fields[0].propertyName).to.equal("Weight");
-    expect(fields[0].pathFromTarget).to.deep.equal([aToB]);
+    expect(fields[0].related?.pathFromTarget).to.deep.equal([aToB]);
     expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.AToB"]);
   });
 
-  it("reports each related field's category facts with a `targetClass` anchor", async () => {
+  it("reports each related field's category facts", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.B",
@@ -424,12 +429,11 @@ describe("collectRelatedPropertyFields", () => {
 
     expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
       {
-        anchor: "targetClass",
         relationshipMeaning: "relatedInstance",
         category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
         categoryContext: [],
       },
-      { anchor: "targetClass", relationshipMeaning: "relatedInstance", categoryContext: [] },
+      { relationshipMeaning: "relatedInstance", categoryContext: [] },
     ]);
   });
 
@@ -479,7 +483,6 @@ describe("collectRelatedPropertyFields", () => {
 
     const candidate = candidates.find(({ field }) => field.propertyName === "relProp");
     expect(candidate?.categorization).to.deep.equal({
-      anchor: "relationshipClass",
       relationshipMeaning: "relatedInstance",
       category: { source: "override", id: "custom" },
       categoryContext: [],
@@ -532,9 +535,8 @@ describe("collectRelatedPropertyFields", () => {
       });
 
       expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
-        { anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: [] },
+        { relationshipMeaning: "sameInstance", categoryContext: [] },
         {
-          anchor: "targetClass",
           relationshipMeaning: "sameInstance",
           categoryContext: [],
           category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
@@ -703,7 +705,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
 
     expect(fields).to.have.lengthOf(1);
     expect(fields[0].propertyClassName).to.equal("TestSchema.C");
-    expect(fields[0].pathFromTarget).to.deep.equal([aToB, bToC]);
+    expect(fields[0].related?.pathFromTarget).to.deep.equal([aToB, bToC]);
     expect(targetsSeen).to.deep.equal(["TestSchema.B"]);
   });
 
@@ -734,7 +736,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
     const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields).to.have.lengthOf(1);
-    expect(fields[0].pathCardinality).to.equal("many");
+    expect(fields[0].related?.pathCardinality).to.equal("many");
   });
 
   it("offsets a nested declaration's StepPropertySpec.stepIndex by nested.prefixStepCount", async () => {
@@ -768,7 +770,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
 
     expect(fields).to.have.lengthOf(1);
     expect(fields[0].propertyName).to.equal("Prop");
-    expect(fields[0].pathFromTarget).to.deep.equal([aToB, bToC]);
+    expect(fields[0].related?.pathFromTarget).to.deep.equal([aToB, bToC]);
     expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.C"]);
   });
 

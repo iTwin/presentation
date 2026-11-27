@@ -8,29 +8,42 @@ import { createPropertyFields } from "../../content/definition-building/ClassPro
 import { PropertyField } from "../../content/model/Field.js";
 import { createPrimitiveProperty } from "../MetadataStubs.js";
 
-import type { Props, RelationshipPath } from "@itwin/presentation-shared";
+import type { Props } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "../../content/ContentTarget.js";
 
-const path: RelationshipPath = [
+const path: NonEmptyRelationshipPath = [
   { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
 ];
 
-/** Calls the function and returns just the produced fields (dropping category facts). */
+type CreatePropertyFieldsProps = Props<typeof createPropertyFields>;
+
+/**
+ * Calls the function and returns just the produced fields (dropping category facts). Anchors related
+ * properties at the target class.
+ */
 function collectFields(
-  props: Omit<Props<typeof createPropertyFields>, "anchor" | "categoryContext" | "relationshipMeaning">,
+  props: Omit<CreatePropertyFieldsProps, "anchor" | "categoryContext" | "relationshipInfo" | "relationshipMeaning"> & {
+    relationshipInfo?: NonNullable<CreatePropertyFieldsProps["relationshipInfo"]>;
+  },
 ): PropertyField[] {
-  return createPropertyFields({
-    categoryContext: [],
-    relationshipMeaning: "relatedInstance",
-    ...props,
-    anchor: "none",
-  }).map(({ field }) => field);
+  const { relationshipInfo: info, ...rest } = { ...props, relationshipMeaning: "relatedInstance" as const };
+  const results = info
+    ? createPropertyFields({ categoryContext: [], ...rest, anchor: "targetClass", relationshipInfo: info })
+    : createPropertyFields({ categoryContext: [], ...rest, anchor: "none" });
+  return results.map(({ field }) => field);
 }
+
+const relationshipInfo: NonNullable<CreatePropertyFieldsProps["relationshipInfo"]> = {
+  pathFromTarget: path,
+  pathCardinality: "one",
+  primaryClassNames: ["TestSchema.A"],
+};
 
 describe("createPropertyFields", () => {
   it("enumerates all selected properties with the given path and value classes", () => {
     const fields = collectFields({
       properties: [createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" })],
-      relationshipInfo: { pathFromTarget: path, pathCardinality: "one", primaryClassNames: ["TestSchema.A"] },
+      relationshipInfo,
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
     });
@@ -43,10 +56,9 @@ describe("createPropertyFields", () => {
         type: { kind: "primitive", type: "String" },
         propertyClassName: "TestSchema.B",
         propertyName: "Prop",
-        pathFromTarget: path,
+        related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
         valueClassNames: ["TestSchema.B"],
         primaryClassNames: ["TestSchema.A"],
-        pathCardinality: "one",
         category: { type: "target" },
       },
     ]);
@@ -60,7 +72,7 @@ describe("createPropertyFields", () => {
       spec: { select: "all" },
     });
 
-    expect(field.pathCardinality).to.equal("many");
+    expect(field.related?.pathCardinality).to.equal("many");
     expect(field.type).to.deep.equal({ kind: "primitive", type: "String" });
   });
 
@@ -70,7 +82,7 @@ describe("createPropertyFields", () => {
   ] as const)("reports the related property's class kind for %s fields", (anchor, propertyClassKind) => {
     const [field] = createPropertyFields({
       properties: [createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" })],
-      relationshipInfo: { pathFromTarget: path, pathCardinality: "one", primaryClassNames: ["TestSchema.A"] },
+      relationshipInfo,
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
       anchor,
@@ -78,7 +90,18 @@ describe("createPropertyFields", () => {
       relationshipMeaning: "relatedInstance",
     }).map(({ field: result }) => result);
 
-    expect(field.propertyClassKind).to.equal(propertyClassKind);
+    expect(field.related?.propertyClassKind).to.equal(propertyClassKind);
+  });
+
+  it("omits related attributes for direct properties", () => {
+    const [field] = collectFields({
+      properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.C" })],
+      valueClassNames: ["TestSchema.C"],
+      spec: { select: "all" },
+    });
+
+    expect(field).to.not.have.property("related");
+    expect(field.primaryClassNames).to.deep.equal(["TestSchema.C"]);
   });
 
   it("resolves label from override, then property label, then property name", () => {
@@ -164,7 +187,7 @@ describe("createPropertyFields", () => {
           createPrimitiveProperty({ name: "B", declaringClass: "TestSchema.C" }),
         ],
         valueClassNames: ["TestSchema.C"],
-        relationshipInfo: undefined,
+        relationshipInfo,
         spec: { select: "all", defaultOverrides: { readOnly: true, categoryId: "cat", hidden: true } },
         anchor: "targetClass",
       });
@@ -185,7 +208,7 @@ describe("createPropertyFields", () => {
           createPrimitiveProperty({ name: "beta", declaringClass: "TestSchema.C" }),
         ],
         valueClassNames: ["TestSchema.C"],
-        relationshipInfo: undefined,
+        relationshipInfo,
         spec: {
           select: "all",
           defaultOverrides: { categoryId: "default", readOnly: true },
@@ -257,7 +280,6 @@ describe("createPropertyFields", () => {
       expect(categorization).to.deep.equal({
         categoryContext: [],
         relationshipMeaning: "relatedInstance",
-        anchor: "none",
         category: { source: "propertyCategory", id: "TestSchema.GeometryClass", label: "Geometry" },
       });
     });
@@ -274,7 +296,7 @@ describe("createPropertyFields", () => {
           }),
         ],
         valueClassNames: ["TestSchema.C"],
-        relationshipInfo: undefined,
+        relationshipInfo,
         spec: { select: "all" },
         anchor: "targetClass",
       });
@@ -282,7 +304,6 @@ describe("createPropertyFields", () => {
       expect(categorization).to.deep.equal({
         categoryContext: [],
         relationshipMeaning: "relatedInstance",
-        anchor: "targetClass",
         category: { source: "propertyCategory", id: "TestSchema.GeometryClass", label: "GeometryClass" },
       });
     });
@@ -307,7 +328,6 @@ describe("createPropertyFields", () => {
       expect(categorization).to.deep.equal({
         categoryContext: [],
         relationshipMeaning: "relatedInstance",
-        anchor: "none",
         category: { source: "override", id: "custom" },
       });
     });
@@ -318,16 +338,12 @@ describe("createPropertyFields", () => {
         relationshipMeaning: "relatedInstance",
         properties: [createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" })],
         valueClassNames: ["TestSchema.C"],
-        relationshipInfo: undefined,
+        relationshipInfo,
         spec: { select: "all" },
         anchor: "relationshipClass",
       });
 
-      expect(categorization).to.deep.equal({
-        categoryContext: [],
-        relationshipMeaning: "relatedInstance",
-        anchor: "relationshipClass",
-      });
+      expect(categorization).to.deep.equal({ categoryContext: [], relationshipMeaning: "relatedInstance" });
     });
   });
 });

@@ -12,13 +12,13 @@ import { computeFieldForkKey, toSortedUniqueClassNames } from "../../../content/
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type * as PresentationRules from "../../../content/extensions/presentation-rules/PresentationRules.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
-import type { CalculatedField, Field } from "../../../content/model/Field.js";
+import type { CalculatedField, Field, RelatedPropertyFieldAttributes } from "../../../content/model/Field.js";
 
 function propertyField(props: {
   sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
-  pathFromTarget?: PropertyField["pathFromTarget"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
   label?: string;
   category?: PropertyField["category"];
   hidden?: boolean;
@@ -36,8 +36,9 @@ function propertyField(props: {
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.sourceClassName,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
-    pathCardinality: "one",
+    ...(props.pathFromTarget
+      ? { related: { pathFromTarget: props.pathFromTarget, pathCardinality: "one", propertyClassKind: "target" } }
+      : {}),
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
     primaryClassNames: props.pathFromTarget
       ? [props.pathFromTarget[0].sourceClassName]
@@ -64,7 +65,7 @@ function forkedId(props: {
   sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   subset: EC.FullClassNameDotNotation[];
-  pathFromTarget?: PropertyField["pathFromTarget"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
 }): Field["id"] {
   return PropertyField.computeId({
     propertyClassName: props.sourceClassName,
@@ -306,7 +307,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
   });
 
   describe("property specification mapping", () => {
-    const relatedPath: PropertyField["pathFromTarget"] = [
+    const relatedPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       {
         sourceClassName: "Stuff.Thing",
         relationshipName: "Stuff.ThingHasRelated",
@@ -572,7 +573,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
     });
 
     it("includes related fields when applyOnNestedContent is true", async () => {
-      const path: PropertyField["pathFromTarget"] = [
+      const path: RelatedPropertyFieldAttributes["pathFromTarget"] = [
         {
           sourceClassName: "Stuff.Thing",
           relationshipName: "Stuff.ThingHasRelated",

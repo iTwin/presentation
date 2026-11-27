@@ -8,15 +8,15 @@ import { serializeRelationshipPath } from "../model/Utils.js";
 import { validateExternalInputs } from "../ValidateExternalInputs.js";
 import { computePropertySelectorId } from "./ValueSelector.js";
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentSource } from "../ContentTarget.js";
+import type { CardinalityHint, ContentSource, NonEmptyRelationshipPath } from "../ContentTarget.js";
 import type { ExternalFieldsProvider, InputPropertyDeclaration } from "../extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { PathCardinalityClassifier } from "../PathCardinality.js";
 
 /** Property coordinates and resolved cardinality required by an external input's query. */
 export interface ExternalInput extends Pick<InputPropertyDeclaration, "propertyClassName" | "propertyName"> {
-  pathFromTarget?: RelationshipPath;
+  /** Relationship path from the content target to the property's class. Not set for a direct property. */
+  pathFromTarget?: NonEmptyRelationshipPath;
   /** Resolved for this concrete path. Always `"one"` for direct properties. */
   cardinality: CardinalityHint;
 }
@@ -64,7 +64,7 @@ export async function prepareExternalProviders(props: {
 async function prepareProvider(props: {
   provider: ExternalFieldsProvider;
   fields: ContentDescriptor["fields"];
-  pathsByInput?: Map<string, Map<string, RelationshipPath>>;
+  pathsByInput?: Map<string, Map<string, NonEmptyRelationshipPath>>;
   classifier: PathCardinalityClassifier;
 }): Promise<{ inputs: ExternalInput[]; plan?: ExternalProviderPlan }> {
   const { provider, fields, pathsByInput, classifier } = props;
@@ -102,7 +102,7 @@ async function prepareProvider(props: {
 async function prepareInput(props: {
   key: string;
   declaration: InputPropertyDeclaration;
-  resolvedPaths?: Map<string, RelationshipPath>;
+  resolvedPaths?: Map<string, NonEmptyRelationshipPath>;
   classifier: PathCardinalityClassifier;
   includePlan: boolean;
 }): Promise<{ inputs: ExternalInput[]; plan?: ExternalProviderPlan["inputs"][number] }> {
@@ -110,19 +110,21 @@ async function prepareInput(props: {
   // Retain unresolved declarations for schema validation and missing-value handling.
   const paths = resolvedPaths?.size ? [...resolvedPaths.values()] : [declaration.related?.path];
   const inputs = await Promise.all(
-    paths.map(async (pathFromTarget): Promise<ExternalInput> => ({
-      propertyClassName: declaration.propertyClassName,
-      propertyName: declaration.propertyName,
-      ...(pathFromTarget ? { pathFromTarget } : {}),
-      // Loading requirement for this concrete path, not the combined provider input.
-      cardinality: pathFromTarget?.length
-        ? await classifier.classify({
-            path: pathFromTarget,
-            declaredPath: pathFromTarget,
-            hint: declaration.related?.cardinalityHint,
-          })
-        : "one",
-    })),
+    paths.map(async (pathFromTarget): Promise<ExternalInput> => {
+      return {
+        propertyClassName: declaration.propertyClassName,
+        propertyName: declaration.propertyName,
+        ...(pathFromTarget ? { pathFromTarget } : {}),
+        // Loading requirement for this concrete path, not the combined provider input.
+        cardinality: pathFromTarget
+          ? await classifier.classify({
+              path: pathFromTarget,
+              declaredPath: pathFromTarget,
+              hint: declaration.related?.cardinalityHint,
+            })
+          : "one",
+      };
+    }),
   );
   if (!includePlan) {
     return { inputs };
@@ -139,7 +141,7 @@ async function prepareInput(props: {
       : "one",
     selectors: inputs.map((input) => ({
       selectorId: computePropertySelectorId(input),
-      ...(input.pathFromTarget?.length ? { pathKey: serializeRelationshipPath({ path: input.pathFromTarget }) } : {}),
+      ...(input.pathFromTarget ? { pathKey: serializeRelationshipPath({ path: input.pathFromTarget }) } : {}),
     })),
   };
   return { inputs, plan };
@@ -148,9 +150,9 @@ async function prepareInput(props: {
 function collectResolvedInputPaths(props: {
   providers: ExternalFieldsProvider[];
   sources: ContentSource[];
-}): Map<string, Map<string, Map<string, RelationshipPath>>> {
+}): Map<string, Map<string, Map<string, NonEmptyRelationshipPath>>> {
   const providersById = new Map(props.providers.map((provider) => [provider.id, provider]));
-  const pathsByProvider = new Map<string, Map<string, Map<string, RelationshipPath>>>();
+  const pathsByProvider = new Map<string, Map<string, Map<string, NonEmptyRelationshipPath>>>();
   for (const source of props.sources) {
     for (const group of source.resolvedExternalInputs) {
       const provider = providersById.get(group.providerId);

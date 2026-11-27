@@ -5,7 +5,8 @@
 
 import { serializeRelationshipPath } from "../model/Utils.js";
 
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "../ContentTarget.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
 
 /**
@@ -22,15 +23,17 @@ export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
  * A {@link ValueSelector} that selects a real EC property column.
  *
  * Reuses the column-locating coordinates of the {@link (PropertyField:interface)}(s) that read it
- * (`propertyClassName`, `propertyName`, `pathFromTarget`) via `Pick`, so the field stays the single
- * source of truth. Unlike a field, a selector is deduplicated and may exist with no backing field
- * (an external fields provider input column).
+ * (`propertyClassName`, `propertyName`) via `Pick`, so the field stays the single source of truth.
+ * Unlike a field, a selector is deduplicated and may exist with no backing field (an external
+ * fields provider input column).
  */
-export interface PropertyValueSelector extends Pick<
-  PropertyField,
-  "propertyClassName" | "propertyName" | "pathFromTarget"
-> {
+export interface PropertyValueSelector extends Pick<PropertyField, "propertyClassName" | "propertyName"> {
   kind: "property";
+  /**
+   * Relationship path from the content target to the property's class — the field's
+   * `related.pathFromTarget`. Omitted for a direct property.
+   */
+  pathFromTarget?: NonEmptyRelationshipPath;
   /**
    * Stable column identity. For a direct property, this matches the base property-field id; for a
    * related property, it also includes the relationship path and any step instance filters/bindings so
@@ -64,10 +67,10 @@ export interface CalculatedValueSelector extends Pick<
 export function computePropertySelectorId(props: {
   propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
-  pathFromTarget?: RelationshipPath;
+  pathFromTarget?: NonEmptyRelationshipPath;
 }): ValueSelector["id"] {
   let identity = `${props.propertyClassName}.${props.propertyName}`;
-  if (props.pathFromTarget && props.pathFromTarget.length > 0) {
+  if (props.pathFromTarget) {
     identity += `(${serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true })})`;
   }
   return identity;

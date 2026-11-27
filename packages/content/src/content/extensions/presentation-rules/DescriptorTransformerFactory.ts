@@ -61,7 +61,7 @@ export function createDescriptorTransformerFromContentModifierRule({
         if (field.kind !== "property") {
           continue;
         }
-        if (rule.applyOnNestedContent !== true && field.pathFromTarget.length > 0) {
+        if (rule.applyOnNestedContent !== true && field.related) {
           continue;
         }
         candidates.push(field);
