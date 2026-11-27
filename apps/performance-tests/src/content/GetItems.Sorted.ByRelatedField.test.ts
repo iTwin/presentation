@@ -24,9 +24,9 @@ describe("Content items", () => {
       const descriptor = await provider.getContentDescriptor();
       const typeLabelField = getPropertyFields({ descriptor, propertyName: "UserLabel" }).find(
         (field) =>
-          field.pathFromTarget.length === 1 &&
-          field.pathFromTarget[0].targetClassName === dataset.meta.typeClassName &&
-          field.pathCardinality === "one",
+          field.related?.pathFromTarget.length === 1 &&
+          field.related.pathFromTarget[0].targetClassName === dataset.meta.typeClassName &&
+          field.related.pathCardinality === "one",
       );
       assert(typeLabelField);
       return { provider, typeLabelField, typeUserLabelPrefix: dataset.meta.typeUserLabelPrefix };

@@ -17,7 +17,7 @@ import {
   getRelatedPropertyFields,
 } from "./Utils.js";
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "@itwin/presentation-content";
 
 describe("Content", () => {
   describe("Property categorization", () => {
@@ -262,7 +262,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -322,7 +322,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -384,7 +384,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -762,7 +762,7 @@ describe("Content", () => {
         relationship: "AtoB" | "AtoB2",
       ) {
         const fields = getRelatedPropertyFields(descriptor).filter((f) =>
-          f.pathFromTarget[0].relationshipName.endsWith(relationship),
+          f.related.pathFromTarget[0].relationshipName.endsWith(relationship),
         );
         return {
           categorized: fields.find((f) => f.propertyName === "Categorized")!,
@@ -1006,7 +1006,7 @@ describe("Content", () => {
           builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id, { relCategorized: "c", relUncategorized: "u" });
           return { schema: s };
         });
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName: setup.schema.items.A.fullName,
             targetClassName: setup.schema.items.B.fullName,

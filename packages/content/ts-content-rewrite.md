@@ -137,7 +137,7 @@ This is a plain data bag — serializable, no behavior, no reference to the desc
 **Content item (`ContentItem`)** — an accessor that pairs a descriptor with a `ContentValues` instance, providing ergonomic access, e.g.:
 
 - `getValue(field: Field): unknown` — retrieve a value by field reference.
-- `getRelatedInstances({ pathFromTarget })` — retrieve the related instances reached over a relationship path (a raw path, or a property field itself, since fields carry their own `pathFromTarget`), each paired with a `key`, an optional `relationshipKey`, and a scoped `getValue(field)` that reads that instance's value for a field on the same path.
+- `getRelatedInstances(field)` retrieves the instances reached by a property field. A direct property field returns an empty array. To look up an explicit non-empty path, use `getRelatedInstances({ pathFromTarget })`. Each entry has a `key`, an optional `relationshipKey`, and a scoped `getValue(field)` for fields on the same path.
 - Access to `primaryKey`, `relatedInstances` (the raw serialization-level bag), and the underlying `descriptor`.
 
 The pipeline's async iterator yields `ContentItem` instances. Consumers work with `ContentItem`; `ContentValues` is an internal/serialization-level concept (used by external fields providers' `resolve` function, export utilities, etc.).

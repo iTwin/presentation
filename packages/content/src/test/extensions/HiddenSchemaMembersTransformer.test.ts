@@ -12,13 +12,18 @@ import { createEntityClass, createMixinClass, createPrimitiveProperty, createSch
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
-import type { CalculatedField, ExternalField, Field } from "../../content/model/Field.js";
+import type {
+  CalculatedField,
+  ExternalField,
+  Field,
+  RelatedPropertyFieldAttributes,
+} from "../../content/model/Field.js";
 
 function propertyField(props: {
   sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
-  pathFromTarget?: PropertyField["pathFromTarget"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
   hidden?: boolean;
 }): PropertyField {
   const id = PropertyField.computeId({
@@ -34,8 +39,9 @@ function propertyField(props: {
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.sourceClassName,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
-    pathCardinality: "one",
+    ...(props.pathFromTarget
+      ? { related: { pathFromTarget: props.pathFromTarget, pathCardinality: "one", propertyClassKind: "target" } }
+      : {}),
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
     primaryClassNames: props.pathFromTarget
       ? [props.pathFromTarget[0].sourceClassName]

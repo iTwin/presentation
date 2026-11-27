@@ -18,7 +18,7 @@ import {
   getRelatedPropertyFields,
 } from "./Utils.js";
 
-import type { ContentConfiguration, ContentTarget } from "@itwin/presentation-content";
+import type { ContentConfiguration, ContentTarget, NonEmptyRelationshipPath } from "@itwin/presentation-content";
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 
 describe("Content", () => {
@@ -59,7 +59,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -82,7 +82,7 @@ describe("Content", () => {
       const propB = related.find((f) => f.propertyName === "PropB");
       expect(propB).toBeDefined();
       expect(propB!.propertyClassName).toBe(setup.schema.items.B.fullName);
-      expect(propB!.pathFromTarget).toEqual(path);
+      expect(propB!.related.pathFromTarget).toEqual(path);
       expect(propB!.valueClassNames).toEqual([setup.schema.items.B.fullName]);
       expect(propB!.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
     });
@@ -128,7 +128,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -154,7 +154,7 @@ describe("Content", () => {
 
       const propC = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropC");
       expect(propC).toBeDefined();
-      expect(propC!.pathFromTarget).toEqual(path);
+      expect(propC!.related.pathFromTarget).toEqual(path);
       expect(propC!.propertyClassName).toBe(setup.schema.items.C.fullName);
       expect(propC!.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
     });
@@ -195,7 +195,7 @@ describe("Content", () => {
             targetClassName: setup.schema.items.B.fullName,
             relationshipName: setup.schema.items.AtoB.fullName,
           },
-        ],
+        ] satisfies NonEmptyRelationshipPath,
         properties: [{ stepIndex: 0, target: { select: { include: ["Keep"] } } }],
       };
       const provider = defineIModelFieldsProvider({
@@ -211,7 +211,7 @@ describe("Content", () => {
       });
 
       const keepField = getPropertyFieldByName(descriptor, "Keep");
-      expect(keepField.pathFromTarget).toEqual(declaration.path);
+      expect(keepField.related?.pathFromTarget).toEqual(declaration.path);
       expect(keepField.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
       expect(getPropertyFieldsByName(descriptor, "Drop")).toHaveLength(0);
     });
@@ -252,7 +252,7 @@ describe("Content", () => {
             targetClassName: setup.schema.items.B.fullName,
             relationshipName: setup.schema.items.AtoB.fullName,
           },
-        ],
+        ] satisfies NonEmptyRelationshipPath,
         properties: [{ stepIndex: 0, relationship: { select: "all" as const } }],
       };
       const provider = defineIModelFieldsProvider({
@@ -270,7 +270,7 @@ describe("Content", () => {
       const relProp = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "RelProp");
       expect(relProp).toBeDefined();
       expect(relProp!.propertyClassName).toBe(setup.schema.items.AtoB.fullName);
-      expect(relProp!.pathFromTarget).toEqual(declaration.path);
+      expect(relProp!.related.pathFromTarget).toEqual(declaration.path);
       expect(relProp!.valueClassNames).toEqual([setup.schema.items.AtoB.fullName]);
       expect(relProp!.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
     });
@@ -311,7 +311,7 @@ describe("Content", () => {
             targetClassName: setup.schema.items.B.fullName,
             relationshipName: setup.schema.items.AtoB.fullName,
           },
-        ],
+        ] satisfies NonEmptyRelationshipPath,
         properties: [{ stepIndex: 0, target: { select: "none" as const } }],
       };
       const provider = defineIModelFieldsProvider({
@@ -366,7 +366,7 @@ describe("Content", () => {
             targetClassName: setup.schema.items.B.fullName,
             relationshipName: setup.schema.items.AtoB.fullName,
           },
-        ],
+        ] satisfies NonEmptyRelationshipPath,
         properties: [{ stepIndex: 0, target: { select: { exclude: ["Drop"] } } }],
       };
       const provider = defineIModelFieldsProvider({
@@ -382,7 +382,7 @@ describe("Content", () => {
       });
 
       const keepField = getPropertyFieldByName(descriptor, "Keep");
-      expect(keepField.pathFromTarget).toEqual(declaration.path);
+      expect(keepField.related?.pathFromTarget).toEqual(declaration.path);
       expect(keepField.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
       expect(getPropertyFieldsByName(descriptor, "Drop")).toHaveLength(0);
     });
@@ -414,7 +414,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -477,14 +477,14 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const pathToB: RelationshipPath = [
+      const pathToB: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
           relationshipName: setup.schema.items.AtoB.fullName,
         },
       ];
-      const pathToC: RelationshipPath = [
+      const pathToC: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.C.fullName,
@@ -506,8 +506,8 @@ describe("Content", () => {
       const related = getRelatedPropertyFields(descriptor);
       const propB = related.find((f) => f.propertyName === "PropB");
       const propC = related.find((f) => f.propertyName === "PropC");
-      expect(propB?.pathFromTarget).toEqual(pathToB);
-      expect(propC?.pathFromTarget).toEqual(pathToC);
+      expect(propB?.related.pathFromTarget).toEqual(pathToB);
+      expect(propC?.related.pathFromTarget).toEqual(pathToC);
       expect(propB?.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
       expect(propC?.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
     });
@@ -542,7 +542,7 @@ describe("Content", () => {
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       // The `BtoA` relationship points from `B` to `A`, so to load `B`'s properties for `A` content we
       // traverse it backwards: the step starts at `A`, reaches `B`, and sets `relationshipReverse`.
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -565,7 +565,7 @@ describe("Content", () => {
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
       expect(propB).toBeDefined();
       expect(propB!.propertyClassName).toBe(setup.schema.items.B.fullName);
-      expect(propB!.pathFromTarget).toEqual([
+      expect(propB!.related.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -622,7 +622,7 @@ describe("Content", () => {
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       // The path targets the *base* class `B`; resolution should discover the concrete `B1`/`B2`
       // subclasses present in the data.
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -673,14 +673,14 @@ describe("Content", () => {
       expect(sharedFields[0].primaryClassNames).toEqual([setup.schema.items.A.fullName]);
       expect(sharedFields[1].primaryClassNames).toEqual([setup.schema.items.A.fullName]);
 
-      expect(sharedFields[0].pathFromTarget).toEqual([
+      expect(sharedFields[0].related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B1.fullName,
           relationshipName: setup.schema.items.AtoB.fullName,
         },
       ]);
-      expect(sharedFields[1].pathFromTarget).toEqual([
+      expect(sharedFields[1].related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B2.fullName,
@@ -692,7 +692,7 @@ describe("Content", () => {
       const prop1Field = getPropertyFieldByName(descriptor, "Prop1");
       expect(prop1Field.valueClassNames).toEqual([setup.schema.items.B1.fullName]);
       expect(prop1Field.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
-      expect(prop1Field.pathFromTarget).toEqual([
+      expect(prop1Field.related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B1.fullName,
@@ -703,7 +703,7 @@ describe("Content", () => {
       const prop2Field = getPropertyFieldByName(descriptor, "Prop2");
       expect(prop2Field.valueClassNames).toEqual([setup.schema.items.B2.fullName]);
       expect(prop2Field.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
-      expect(prop2Field.pathFromTarget).toEqual([
+      expect(prop2Field.related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B2.fullName,
@@ -750,7 +750,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -771,7 +771,7 @@ describe("Content", () => {
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
       expect(propB?.propertyClassName).toBe(setup.schema.items.B.fullName);
-      expect(propB?.pathFromTarget).toEqual([
+      expect(propB?.related.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -838,7 +838,7 @@ describe("Content", () => {
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       // Two-step path whose middle step targets the *base* class `B`.
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -871,7 +871,7 @@ describe("Content", () => {
       expect(propCFields[0].primaryClassNames).toEqual([setup.schema.items.A.fullName]);
       expect(propCFields[1].primaryClassNames).toEqual([setup.schema.items.A.fullName]);
 
-      expect(propCFields[0].pathFromTarget).toEqual([
+      expect(propCFields[0].related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B1.fullName,
@@ -883,7 +883,7 @@ describe("Content", () => {
           relationshipName: setup.schema.items.BtoC.fullName,
         },
       ]);
-      expect(propCFields[1].pathFromTarget).toEqual([
+      expect(propCFields[1].related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B2.fullName,
@@ -938,14 +938,14 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const shortPath: RelationshipPath = [
+      const shortPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
           relationshipName: setup.schema.items.AtoB.fullName,
         },
       ];
-      const longPath: RelationshipPath = [
+      const longPath: NonEmptyRelationshipPath = [
         ...shortPath,
         {
           sourceClassName: setup.schema.items.B.fullName,
@@ -969,13 +969,13 @@ describe("Content", () => {
       const propBFields = getPropertyFieldsByPath(descriptor, shortPath);
       expect(propBFields).toHaveLength(1);
       expect(propBFields[0].propertyName).toBe("PropB");
-      expect(propBFields[0].pathFromTarget).toEqual(shortPath);
+      expect(propBFields[0].related?.pathFromTarget).toEqual(shortPath);
       expect(propBFields[0].primaryClassNames).toEqual([setup.schema.items.A.fullName]);
 
       const propCFields = getPropertyFieldsByPath(descriptor, longPath);
       expect(propCFields).toHaveLength(1);
       expect(propCFields[0].propertyName).toBe("PropC");
-      expect(propCFields[0].pathFromTarget).toEqual(longPath);
+      expect(propCFields[0].related?.pathFromTarget).toEqual(longPath);
       expect(propCFields[0].primaryClassNames).toEqual([setup.schema.items.A.fullName]);
 
       expect(propBFields[0].id).not.toBe(propCFields[0].id);
@@ -1010,7 +1010,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const expectedPath: RelationshipPath = [
+      const expectedPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -1038,14 +1038,14 @@ describe("Content", () => {
       expect(propB!.propertyClassName).toBe(setup.schema.items.B.fullName);
       expect(propB!.valueClassNames).toEqual([setup.schema.items.B.fullName]);
       expect(propB!.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
-      expect(propB!.pathFromTarget).toEqual(expectedPath);
+      expect(propB!.related.pathFromTarget).toEqual(expectedPath);
 
       const relProp = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "RelProp");
       expect(relProp).toBeDefined();
       expect(relProp!.propertyClassName).toBe(setup.schema.items.AtoB.fullName);
       expect(relProp!.valueClassNames).toEqual([setup.schema.items.AtoB.fullName]);
       expect(relProp!.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
-      expect(relProp!.pathFromTarget).toEqual(expectedPath);
+      expect(relProp!.related.pathFromTarget).toEqual(expectedPath);
 
       expect(propB!.id).not.toBe(relProp!.id);
     });
@@ -1079,7 +1079,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const expectedPath: RelationshipPath = [
+      const expectedPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -1105,7 +1105,7 @@ describe("Content", () => {
       const relProp = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "RelProp");
       expect(relProp).toBeDefined();
       expect(relProp!.propertyClassName).toBe(setup.schema.items.AtoB.fullName);
-      expect(relProp!.pathFromTarget).toEqual(expectedPath);
+      expect(relProp!.related.pathFromTarget).toEqual(expectedPath);
       expect(relProp!.primaryClassNames).toEqual([setup.schema.items.A.fullName]);
       // The target class contributes no fields.
       expect(getPropertyFieldsByName(descriptor, "PropB")).toHaveLength(0);
@@ -1152,7 +1152,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -1174,7 +1174,7 @@ describe("Content", () => {
       const propBFields = getPropertyFieldByName(descriptor, "PropB");
       expect(propBFields.valueClassNames).toEqual([setup.schema.items.B.fullName]);
       expect(propBFields.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A2.fullName]);
-      expect(propBFields.pathFromTarget).toEqual([
+      expect(propBFields.related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -1238,7 +1238,7 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -1260,7 +1260,7 @@ describe("Content", () => {
       const propB1Fields = getPropertyFieldByName(descriptor, "PropB1");
       expect(propB1Fields.valueClassNames).toEqual([setup.schema.items.B1.fullName]);
       expect(propB1Fields.primaryClassNames).toEqual([setup.schema.items.A1.fullName]);
-      expect(propB1Fields.pathFromTarget).toEqual([
+      expect(propB1Fields.related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B1.fullName,
@@ -1271,7 +1271,7 @@ describe("Content", () => {
       const propB2Fields = getPropertyFieldByName(descriptor, "PropB2");
       expect(propB2Fields.valueClassNames).toEqual([setup.schema.items.B2.fullName]);
       expect(propB2Fields.primaryClassNames).toEqual([setup.schema.items.A2.fullName]);
-      expect(propB2Fields.pathFromTarget).toEqual([
+      expect(propB2Fields.related?.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B2.fullName,
@@ -1352,7 +1352,7 @@ describe("Content", () => {
         const items = await collect(provider.getItems());
         return Object.fromEntries(
           fields.map((field) => [
-            field.pathFromTarget[0].sourceClassName,
+            field.related?.pathFromTarget[0].sourceClassName,
             Object.fromEntries(items.map((item) => [item.primaryKey.id, item.getValue(field)])),
           ]),
         );
@@ -1382,13 +1382,13 @@ describe("Content", () => {
         const items = await collect(provider.getItems());
 
         expect(field.primaryClassNames).toEqual([schema.items.A1.fullName, schema.items.A2.fullName]);
-        expect(field.pathFromTarget).toEqual([createStep(schema.items.Base.fullName)]);
+        expect(field.related?.pathFromTarget).toEqual([createStep(schema.items.Base.fullName)]);
         expect(Object.fromEntries(items.map((item) => [item.primaryKey.id, item.getValue(field)]))).toEqual({
           [instances.A1.id]: "c-a1",
           [instances.A2.id]: "c-a2",
         });
         const a1Item = items.find((item) => item.primaryKey.id === instances.A1.id)!;
-        expect(a1Item.getRelatedInstances({ pathFromTarget: field.pathFromTarget })).toHaveLength(1);
+        expect(a1Item.getRelatedInstances(field)).toHaveLength(1);
       });
 
       it("keeps a separate field for a property declared for a subclass of the target's class", async () => {
@@ -1474,7 +1474,7 @@ describe("Content", () => {
       const { schema, a11, a2 } = setup;
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       // `A1` doesn't implement the mixin, but its subclass `A11` does.
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: schema.items.A1.fullName,
           targetClassName: schema.items.C.fullName,
@@ -1501,7 +1501,7 @@ describe("Content", () => {
       const field = getPropertyFieldByName(await provider.getContentDescriptor(), "PropC");
       const items = await collect(provider.getItems());
 
-      expect(field.pathFromTarget).toEqual(path);
+      expect(field.related?.pathFromTarget).toEqual(path);
       // `A2` implements the mixin too, but the declaration is for `A1` instances only.
       expect(Object.fromEntries(items.map((item) => [item.primaryKey.id, item.getValue(field)]))).toEqual({
         [a11.id]: "c-a11",

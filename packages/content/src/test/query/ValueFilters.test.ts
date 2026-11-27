@@ -20,10 +20,8 @@ describe("buildValueFilterClauses", () => {
     type: { kind: "primitive", type: "Double" },
     propertyClassName: "TestSchema.TestClass",
     propertyName: "Length",
-    pathFromTarget: [],
     valueClassNames: ["TestSchema.TestClass"],
     primaryClassNames: ["TestSchema.TestClass"],
-    pathCardinality: "one",
   };
 
   const calculatedField: CalculatedField = {

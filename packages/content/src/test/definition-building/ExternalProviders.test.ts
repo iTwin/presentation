@@ -8,12 +8,13 @@ import { describe, expect, it } from "vitest";
 import { collectExternalFields } from "../../content/definition-building/ExternalFields.js";
 import { prepareExternalProviders } from "../../content/definition-building/ExternalProviders.js";
 import { computePropertySelectorId } from "../../content/definition-building/ValueSelector.js";
+import { toNonEmptyRelationshipPath } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
 import { createPathCardinalityClassifier } from "../../content/PathCardinality.js";
 import { createRelationshipClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentSource } from "../../content/ContentTarget.js";
+import type { ContentSource, NonEmptyRelationshipPath } from "../../content/ContentTarget.js";
 import type {
   ExternalFieldsProvider,
   InputPropertyDeclaration,
@@ -21,13 +22,13 @@ import type {
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
 import type { PathCardinalityClassifier } from "../../content/PathCardinality.js";
 
-const declaredPath: RelationshipPath = [
+const declaredPath: NonEmptyRelationshipPath = [
   { sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" },
 ];
-const firstPath: RelationshipPath = [
+const firstPath: NonEmptyRelationshipPath = [
   { sourceClassName: "Schema.A1", relationshipName: "Schema.Rel1", targetClassName: "Schema.B1" },
 ];
-const secondPath: RelationshipPath = [
+const secondPath: NonEmptyRelationshipPath = [
   { sourceClassName: "Schema.A2", relationshipName: "Schema.Rel2", targetClassName: "Schema.B2" },
 ];
 const input: InputPropertyDeclaration = {
@@ -60,7 +61,7 @@ function createSource(resolvedExternalInputs: ContentSource["resolvedExternalInp
 }
 
 function createGroup(
-  paths: RelationshipPath[],
+  paths: NonEmptyRelationshipPath[],
   inputKey = "name",
   providerId: ExternalFieldsProvider["id"] = "ext_v1",
 ): ContentSource["resolvedExternalInputs"][number] {
@@ -89,14 +90,21 @@ async function prepare(props: {
 }
 
 function selector(
-  path: RelationshipPath,
+  path: NonEmptyRelationshipPath,
   propertyClassName: InputPropertyDeclaration["propertyClassName"] = "Schema.B",
 ) {
   return {
-    selectorId: computePropertySelectorId({ propertyClassName, propertyName: "Name", pathFromTarget: path }),
+    selectorId: computePropertySelectorId({
+      propertyClassName,
+      propertyName: "Name",
+      pathFromTarget: toNonEmptyRelationshipPath(path),
+    }),
     pathKey: serializeRelationshipPath({ path }),
   };
 }
+
+// Bypasses the non-empty path type to check runtime validation of untyped provider input.
+const EMPTY_PATH = [] as unknown as NonEmptyRelationshipPath;
 
 describe("prepareExternalProviders", () => {
   it("returns empty requirements and plans when there are no providers", async () => {
@@ -114,7 +122,7 @@ describe("prepareExternalProviders", () => {
   });
 
   it("keeps provider, input, and path order when classification finishes out of order", async () => {
-    const otherPath: RelationshipPath = [{ ...declaredPath[0], relationshipName: "Schema.OtherRel" }];
+    const otherPath: NonEmptyRelationshipPath = [{ ...declaredPath[0], relationshipName: "Schema.OtherRel" }];
     const providers = [
       createProvider({ name: input, code: { propertyClassName: "Schema.A", propertyName: "Code" } }),
       createProvider({ name: { ...input, related: { path: otherPath, cardinalityHint: "one" } } }, "other_v1"),
@@ -199,7 +207,7 @@ describe("prepareExternalProviders", () => {
   });
 
   it("keeps filtered multi-step paths associated with their input keys", async () => {
-    const filteredPath = (value: string): RelationshipPath => [
+    const filteredPath = (value: string): NonEmptyRelationshipPath => [
       declaredPath[0],
       {
         sourceClassName: "Schema.B",
@@ -211,7 +219,7 @@ describe("prepareExternalProviders", () => {
     ];
     const firstDeclared = filteredPath("first");
     const secondDeclared = filteredPath("second");
-    const concrete = (path: RelationshipPath): RelationshipPath => [
+    const concrete = (path: NonEmptyRelationshipPath): NonEmptyRelationshipPath => [
       { ...path[0], targetClassName: "Schema.B1" },
       { ...path[1], sourceClassName: "Schema.B1", relationshipName: "Schema.BackRel1", targetClassName: "Schema.C1" },
     ];
@@ -352,7 +360,7 @@ describe("prepareExternalProviders", () => {
   it.each([undefined, "one", "many"] as const)(
     "rejects an empty related path with cardinality hint %s",
     async (cardinalityHint) => {
-      const provider = createProvider({ name: { ...input, related: { path: [], cardinalityHint } } });
+      const provider = createProvider({ name: { ...input, related: { path: EMPTY_PATH, cardinalityHint } } });
       await expect(prepare({ providers: [provider], sources: [] })).rejects.toThrow(
         'External fields provider "ext_v1" input "name" declares an empty related path. Omit "related" for a direct property input.',
       );
@@ -360,7 +368,7 @@ describe("prepareExternalProviders", () => {
   );
 
   it("rejects an empty related path even when cached paths exist and output fields were removed", async () => {
-    const provider = createProvider({ name: { ...input, related: { path: [], cardinalityHint: "many" } } });
+    const provider = createProvider({ name: { ...input, related: { path: EMPTY_PATH, cardinalityHint: "many" } } });
     await expect(
       prepare({ providers: [provider], sources: [createSource([createGroup([firstPath])])], fields: {} }),
     ).rejects.toThrow(/provider "ext_v1" input "name" declares an empty related path/);

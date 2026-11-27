@@ -10,14 +10,14 @@ import { computeFieldForkKey, toSortedUniqueClassNames } from "../../content/mod
 
 import type { EC } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
-import type { CalculatedField, Field } from "../../content/model/Field.js";
+import type { CalculatedField, Field, RelatedPropertyFieldAttributes } from "../../content/model/Field.js";
 
 function propertyField(props: {
   sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
   primaryClassNames?: EC.FullClassNameDotNotation[];
-  pathFromTarget?: PropertyField["pathFromTarget"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
 }): PropertyField {
   const fieldId = PropertyField.computeId({
     propertyClassName: props.sourceClassName,
@@ -32,8 +32,9 @@ function propertyField(props: {
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.sourceClassName,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
-    pathCardinality: "one",
+    ...(props.pathFromTarget
+      ? { related: { pathFromTarget: props.pathFromTarget, pathCardinality: "one", propertyClassKind: "target" } }
+      : {}),
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
     primaryClassNames:
       props.primaryClassNames ??
@@ -135,7 +136,7 @@ describe("createTransformableDescriptor", () => {
     });
 
     it("carves a related-endpoint subclass over a relationship path", () => {
-      const path: PropertyField["pathFromTarget"] = [
+      const path: RelatedPropertyFieldAttributes["pathFromTarget"] = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.ExternalSourceAspect",
@@ -154,10 +155,18 @@ describe("createTransformableDescriptor", () => {
       const fork = transformable.forkField(field.id, ["BisCore.ExternalSourceAspectX"]);
       expect(fork.valueClassNames).to.deep.equal(["BisCore.ExternalSourceAspectX"]);
       expect(field.valueClassNames).to.deep.equal(["BisCore.ExternalSourceAspectY"]);
+      expect(fork.id).to.eq(
+        PropertyField.computeId({
+          propertyClassName: "BisCore.ExternalSourceAspect",
+          propertyName: "Identifier",
+          pathFromTarget: path,
+          forkKey: computeFieldForkKey(["BisCore.ExternalSourceAspectX"]),
+        }),
+      );
     });
 
     it("leaves primaryClasses untouched on both sides for a related property fork", () => {
-      const path: PropertyField["pathFromTarget"] = [
+      const path: RelatedPropertyFieldAttributes["pathFromTarget"] = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.ExternalSourceAspect",

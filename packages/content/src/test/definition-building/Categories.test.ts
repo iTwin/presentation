@@ -10,12 +10,12 @@ import { CategoryDefinition } from "../../content/model/Category.js";
 import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentSource } from "../../content/ContentTarget.js";
+import type { ContentSource, NonEmptyRelationshipPath } from "../../content/ContentTarget.js";
 import type { CategorizedField, FieldCategorization } from "../../content/definition-building/ClassPropertyFields.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 import type { DefinedCategoryReference } from "../../content/model/Category.js";
-import type { PropertyField } from "../../content/model/Field.js";
+import type { PropertyField, RelatedPropertyFieldAttributes } from "../../content/model/Field.js";
 
 const aToB: RelationshipPath[number] = {
   sourceClassName: "TestSchema.A",
@@ -84,16 +84,16 @@ function createExternalProvider(
 function createCategorizedField(props: {
   id?: string;
   propertyName?: string;
-  pathFromTarget?: RelationshipPath;
-  anchor?: FieldCategorization["anchor"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
+  propertyClassKind?: RelatedPropertyFieldAttributes["propertyClassKind"];
   propertyCategory?: { id: EC.FullClassNameDotNotation; label: string };
   overrideCategoryId?: string;
   relationshipMeaning?: FieldCategorization["relationshipMeaning"];
   categoryContext?: FieldCategorization["categoryContext"];
 }): CategorizedField {
   const id = props.id ?? "field";
+  const path = props.pathFromTarget;
   const categorization: FieldCategorization = {
-    anchor: props.anchor ?? (props.pathFromTarget?.length ? "targetClass" : "none"),
     relationshipMeaning: props.relationshipMeaning ?? "relatedInstance",
     categoryContext: props.categoryContext ?? [],
   };
@@ -111,10 +111,17 @@ function createCategorizedField(props: {
       type: { kind: "primitive", type: "String" },
       propertyClassName: "TestSchema.B",
       propertyName: props.propertyName ?? "Prop",
-      pathFromTarget: props.pathFromTarget ?? [],
+      ...(path
+        ? {
+            related: {
+              pathFromTarget: path,
+              pathCardinality: "one",
+              propertyClassKind: props.propertyClassKind ?? "target",
+            },
+          }
+        : {}),
       valueClassNames: ["TestSchema.B"],
-      primaryClassNames: props.pathFromTarget?.length ? [props.pathFromTarget[0].sourceClassName] : ["TestSchema.B"],
-      pathCardinality: "one",
+      primaryClassNames: path ? [path[0].sourceClassName] : ["TestSchema.B"],
       category: { type: "target" },
     },
     categorization,
@@ -131,10 +138,8 @@ function createFieldWithCategory(props: { id?: string; category?: PropertyField[
     type: { kind: "primitive", type: "String" },
     propertyClassName: "TestSchema.B",
     propertyName: "Prop",
-    pathFromTarget: [],
     valueClassNames: ["TestSchema.B"],
     primaryClassNames: ["TestSchema.B"],
-    pathCardinality: "one",
     category: props.category ?? { type: "target" },
   };
 }
@@ -237,10 +242,10 @@ describe("collectCategories", () => {
   });
 
   it("reuses category IDs across filtered paths that share the same relationship", () => {
-    const filteredA: RelationshipPath = [
+    const filteredA: NonEmptyRelationshipPath = [
       { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
     ];
-    const filteredB: RelationshipPath = [
+    const filteredB: NonEmptyRelationshipPath = [
       { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
     ];
 
@@ -449,7 +454,7 @@ describe("collectCategories", () => {
   });
 
   it("does not auto-create for direct fields or fields that already have a category", async () => {
-    const direct = createCategorizedField({ id: "direct", pathFromTarget: [], anchor: "none" });
+    const direct = createCategorizedField({ id: "direct" });
     const categorized = createCategorizedField({
       id: "categorized",
       pathFromTarget: [aToB],
@@ -488,7 +493,7 @@ describe("collectCategories", () => {
 
   it("does not auto-create when a provider already declared a relationship category", async () => {
     const id = CategoryDefinition.computeId({ path: [aToB], omitTargetClass: true });
-    const field = createCategorizedField({ pathFromTarget: [aToB], anchor: "relationshipClass" });
+    const field = createCategorizedField({ pathFromTarget: [aToB], propertyClassKind: "relationship" });
     const provider = createProvider("p_v1", { [id]: { id, label: "Provider Relationship" } });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
@@ -539,27 +544,25 @@ describe("collectCategories", () => {
       id: "relUn",
       propertyName: "RelUn",
       pathFromTarget: [aToB],
-      anchor: "relationshipClass",
+      propertyClassKind: "relationship",
     });
     const relCat = createCategorizedField({
       id: "relCat",
       propertyName: "RelCat",
       pathFromTarget: [aToB],
-      anchor: "relationshipClass",
+      propertyClassKind: "relationship",
       propertyCategory: geometry,
     });
     const targetUn = createCategorizedField({
       id: "targetUn",
       propertyName: "TargetUn",
       pathFromTarget: [aToB],
-      anchor: "targetClass",
       categoryContext: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
     });
     const targetCat = createCategorizedField({
       id: "targetCat",
       propertyName: "TargetCat",
       pathFromTarget: [aToB],
-      anchor: "targetClass",
       categoryContext: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
       propertyCategory: geometry,
     });
@@ -613,13 +616,13 @@ describe("collectCategories", () => {
       id: "b",
       propertyName: "B",
       pathFromTarget: [aToB],
-      anchor: "targetClass",
+      propertyClassKind: "target",
     });
     const bcField = createCategorizedField({
       id: "bc",
       propertyName: "BC",
       pathFromTarget: [aToB, bToC],
-      anchor: "relationshipClass",
+      propertyClassKind: "relationship",
       categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     });
     const categories = await collectCategories({
@@ -650,13 +653,13 @@ describe("collectCategories", () => {
       id: "ab",
       propertyName: "AB",
       pathFromTarget: [aToB],
-      anchor: "relationshipClass",
+      propertyClassKind: "relationship",
     });
     const bcField = createCategorizedField({
       id: "bc",
       propertyName: "BC",
       pathFromTarget: [aToB, bToC],
-      anchor: "relationshipClass",
+      propertyClassKind: "relationship",
       categoryContext: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
     });
     const categories = await collectCategories({
@@ -681,10 +684,7 @@ describe("collectCategories", () => {
 
   describe("schema property categories", () => {
     it("registers a direct field's schema property category in the target category", async () => {
-      const field = createCategorizedField({
-        anchor: "none",
-        propertyCategory: { id: "TestSchema.Geometry", label: "Geometry" },
-      });
+      const field = createCategorizedField({ propertyCategory: { id: "TestSchema.Geometry", label: "Geometry" } });
       const categories = await collectCategories({
         imodelAccess: createSchemaAccess([]),
         sources: [createSource()],
@@ -705,7 +705,6 @@ describe("collectCategories", () => {
         "TestSchema.Geometry": { id: "TestSchema.Geometry", label: "Provider Geometry", parent: { type: "target" } },
       });
       const field = createCategorizedField({
-        anchor: "none",
         propertyCategory: { id: "TestSchema.Geometry", label: "Schema Geometry" },
       });
       const categories = await collectCategories({
@@ -983,7 +982,9 @@ describe("collectCategories", () => {
     }
 
     it("reparents a provider category to the shared class category without changing the provider's definition", async () => {
-      const otherPath = [{ ...aToB, relationshipName: "TestSchema.zToB" as const }];
+      const otherPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
+        { ...aToB, relationshipName: "TestSchema.zToB" },
+      ];
       const originalParentId = CategoryDefinition.computeId({ path: otherPath });
       const sharedParentId = CategoryDefinition.computeId({ path: [aToB] });
       const child: CategoryDefinition = {
@@ -1059,19 +1060,19 @@ describe("collectCategories", () => {
     });
 
     it("keeps outermost class and property categories with matching unqualified names separate across schemas", async () => {
-      const otherSchemaPath: RelationshipPath = [{ ...aToB, targetClassName: "OtherSchema.B" }];
+      const otherSchemaPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
+        { ...aToB, targetClassName: "OtherSchema.B" },
+      ];
       const testClassField = createCategorizedField({ id: "testClass", pathFromTarget: [aToB] });
       const otherClassField = createCategorizedField({ id: "otherClass", pathFromTarget: otherSchemaPath });
       const testGeometryField = createCategorizedField({
         categoryContext: [],
         id: "testGeometry",
-        anchor: "none",
         propertyCategory: { id: "TestSchema.Geometry", label: "First" },
       });
       const otherGeometryField = createCategorizedField({
         categoryContext: [],
         id: "otherGeometry",
-        anchor: "none",
         propertyCategory: { id: "OtherSchema.Geometry", label: "Second" },
       });
       const testClassId = CategoryDefinition.computeId({ path: [aToB] });

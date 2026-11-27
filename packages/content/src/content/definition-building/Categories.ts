@@ -7,8 +7,8 @@ import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvid
 import { collectInParallel, getClassLabel } from "../InternalUtils.js";
 import { CategoryDefinition } from "../model/Category.js";
 
-import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentSource } from "../ContentTarget.js";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ContentSource, NonEmptyRelationshipPath } from "../ContentTarget.js";
 import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { CategoryReference } from "../model/Category.js";
@@ -151,7 +151,7 @@ function resolveFieldCategoryRequests(
   declared: ReadonlyMap<string, CategoryDefinition>,
 ): FieldCategoryRequest[] {
   const requestAnchor = (
-    path: RelationshipPath,
+    path: NonEmptyRelationshipPath,
     kind: "targetClass" | "relationshipClass",
     parent: CategoryRequest | undefined,
   ): CategoryRequest => {
@@ -165,22 +165,23 @@ function resolveFieldCategoryRequests(
   };
 
   return fields.map(({ field, categorization }) => {
+    const { related } = field;
     const { category, relationshipMeaning, categoryContext } = categorization;
     const outermostMeaning = categoryContext.length > 0 ? categoryContext[0].relationshipMeaning : relationshipMeaning;
-    const base: CategoryBase =
-      categorization.anchor === "none" || outermostMeaning === "sameInstance" ? "target" : "topLevel";
+    const base: CategoryBase = !related || outermostMeaning === "sameInstance" ? "target" : "topLevel";
     if (category?.source === "override") {
       return { field, category: { kind: "declared", id: category.id }, base };
     }
     let anchor: CategoryRequest | undefined;
-    for (const context of categoryContext) {
-      anchor = requestAnchor(field.pathFromTarget.slice(0, context.stepIndex + 1), context.kind, anchor);
-    }
-    if (
-      categorization.anchor !== "none" &&
-      !(relationshipMeaning === "sameInstance" && category?.source === "propertyCategory")
-    ) {
-      anchor = requestAnchor(field.pathFromTarget, categorization.anchor, anchor);
+    if (related) {
+      const [firstStep, ...restSteps] = related.pathFromTarget;
+      for (const context of categoryContext) {
+        anchor = requestAnchor([firstStep, ...restSteps.slice(0, context.stepIndex)], context.kind, anchor);
+      }
+      if (!(relationshipMeaning === "sameInstance" && category?.source === "propertyCategory")) {
+        const kind = related.propertyClassKind === "relationship" ? "relationshipClass" : "targetClass";
+        anchor = requestAnchor(related.pathFromTarget, kind, anchor);
+      }
     }
     if (category?.source !== "propertyCategory") {
       return { field, category: anchor, base };

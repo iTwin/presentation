@@ -42,6 +42,7 @@ public;type;LogFunction
 public;type;LogLevel
 public;interface;NavigationValue
 public;interface;NavigationValueDescriptor
+public;type;NonEmptyArray
 public;const;NOOP_LOGGER
 public;function;normalizeFullClassName
 public;type;OmitOverUnion

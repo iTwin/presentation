@@ -396,13 +396,14 @@ function projectPropertyFieldValue(props: {
   hasValueClass: (className: EC.FullClassNameDotNotation) => boolean;
 }): Value {
   const { field, primaryKey, selectorId, groupValues, hasValueClass } = props;
-  if (field.pathFromTarget.length === 0) {
+  const { related } = field;
+  if (!related) {
     return hasValueClass(primaryKey.className) ? groupValues.selectorValues.get(selectorId)?.[0] : undefined;
   }
 
-  const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
+  const pathKey = serializeRelationshipPath({ path: related.pathFromTarget, includeInstanceFilters: true });
   const entries = groupValues.relatedInstances.get(pathKey) ?? [];
-  if (field.pathCardinality === "one" && entries.length > 1) {
+  if (related.pathCardinality === "one" && entries.length > 1) {
     throw new Error(
       `Field "${field.id}" has more than one related instance for primary "${toInstanceKeyString(primaryKey)}" despite "one" path cardinality.`,
     );
@@ -412,10 +413,10 @@ function projectPropertyFieldValue(props: {
   }
   const values = getRelatedSelectorValues({ values: groupValues, selectorId, pathKey });
   const appliesToEntry = (entry: RelatedInstanceEntry | undefined): boolean => {
-    const key = field.propertyClassKind === "relationship" ? entry?.relationshipKey : entry?.key;
+    const key = related.propertyClassKind === "relationship" ? entry?.relationshipKey : entry?.key;
     return key !== undefined && hasValueClass(key.className);
   };
-  if (field.pathCardinality === "many") {
+  if (related.pathCardinality === "many") {
     // Mask rather than filter so values stay aligned with the path's related-instance entries.
     return values.map((element, index) => (appliesToEntry(entries[index]) ? element : undefined));
   }

@@ -16,8 +16,8 @@ import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { createContentIModelAccess, getCalculatedFieldByLabel, getPropertyFieldByName } from "./Utils.js";
 
-import type { ContentConfiguration, ContentTarget } from "@itwin/presentation-content";
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
+import type { ContentConfiguration, ContentTarget, NonEmptyRelationshipPath } from "@itwin/presentation-content";
+import type { EC } from "@itwin/presentation-shared";
 
 async function createProvider(props: {
   imodelAccess: ReturnType<typeof createContentIModelAccess>;
@@ -99,7 +99,7 @@ describe("Content", () => {
 
     describe("related properties", () => {
       function createNotesProvider(sourceClassName: EC.FullClassNameDotNotation) {
-        const path: RelationshipPath = [
+        const path: NonEmptyRelationshipPath = [
           {
             sourceClassName,
             targetClassName: setup.schema.items.Note.fullName,

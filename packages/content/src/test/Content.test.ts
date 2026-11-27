@@ -17,7 +17,7 @@ import type {
   ECSqlQueryRow,
   RelationshipPath,
 } from "@itwin/presentation-shared";
-import type { ContentTarget, ResolvedPath } from "../content/ContentTarget.js";
+import type { ContentTarget, NonEmptyRelationshipPath, ResolvedPath } from "../content/ContentTarget.js";
 import type { ExternalFieldsProvider } from "../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../content/extensions/IModelFieldsProvider.js";
 
@@ -210,7 +210,7 @@ describe("resolveContentSources", () => {
     });
 
     it("omits declaration when resolution query returns no rows", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -229,7 +229,7 @@ describe("resolveContentSources", () => {
     });
 
     it("propagates error when query reader throws", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -252,7 +252,7 @@ describe("resolveContentSources", () => {
     });
 
     it("propagates error when hidden classes of the declared final target can't be determined", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -271,7 +271,7 @@ describe("resolveContentSources", () => {
 
   describe("single-step path resolution", () => {
     it("resolves a single-step path to concrete classes from query results", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -320,7 +320,7 @@ describe("resolveContentSources", () => {
     });
 
     it("resolves multiple rows to multiple concrete paths", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -381,7 +381,7 @@ describe("resolveContentSources", () => {
 
   describe("concrete relationship class resolution", () => {
     it("projects and groups by the concrete relationship class in the resolution query", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -410,7 +410,7 @@ describe("resolveContentSources", () => {
     });
 
     it("resolves distinct relationship subclasses of the same source/target as separate paths", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -459,7 +459,7 @@ describe("resolveContentSources", () => {
     it("projects the first step's relationship class and instance out of the anchoring subquery for multi-step paths", async () => {
       // A 2-step path makes the subquery-anchor strategy applicable; its first step's relationship
       // class and instance are resolved inside the anchoring subquery.
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -496,7 +496,7 @@ describe("resolveContentSources", () => {
 
   describe("multi-step path resolution", () => {
     it("resolves a multi-step path with correct source/target from each row", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -557,7 +557,7 @@ describe("resolveContentSources", () => {
     });
 
     it("resolves a three-step path triggering all strategies", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -636,7 +636,7 @@ describe("resolveContentSources", () => {
 
   describe("content-target class capture", () => {
     it("splits the aggregated near-end class list for a path", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -679,7 +679,7 @@ describe("resolveContentSources", () => {
     });
 
     it("keeps separate near-end sets for distinct downstream chains", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -777,14 +777,14 @@ describe("resolveContentSources", () => {
 
   describe("multiple providers", () => {
     it("collects declarations from all applicable providers", async () => {
-      const pathA: RelationshipPath = [
+      const pathA: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
           relationshipName: "TestSchema.RelAB",
         },
       ];
-      const pathB: RelationshipPath = [
+      const pathB: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassC",
@@ -842,7 +842,7 @@ describe("resolveContentSources", () => {
     });
 
     it("skips providers that return undefined and includes those that contribute", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -867,7 +867,7 @@ describe("resolveContentSources", () => {
     });
 
     it("preserves provider and declaration order even when later providers resolve faster", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -901,7 +901,7 @@ describe("resolveContentSources", () => {
 
   describe("instance IDs filter", () => {
     it("passes idset binding in the resolution query when instanceIds are provided", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -933,7 +933,7 @@ describe("resolveContentSources", () => {
 
   describe("instance filter expression", () => {
     it("includes the filter expression in the resolution query", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -961,7 +961,7 @@ describe("resolveContentSources", () => {
     });
 
     it("groups the instance filter before excluding hidden classes of the final target", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -987,7 +987,7 @@ describe("resolveContentSources", () => {
     });
 
     it("replaces custom primaryClassAlias in expression", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -1014,7 +1014,7 @@ describe("resolveContentSources", () => {
     });
 
     it("replaces bracket-quoted primaryClassAlias in expression", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -1041,7 +1041,7 @@ describe("resolveContentSources", () => {
     });
 
     it("passes bindings through all strategies for multi-step paths", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -1093,7 +1093,7 @@ describe("resolveContentSources", () => {
 
   describe("declared source class", () => {
     const target: ContentTarget = { primaryClass: "TestSchema.Base" };
-    const createPath = (sourceClassName: EC.FullClassNameDotNotation): RelationshipPath => [
+    const createPath = (sourceClassName: EC.FullClassNameDotNotation): NonEmptyRelationshipPath => [
       { sourceClassName, targetClassName: "TestSchema.ClassB", relationshipName: "TestSchema.RelAB" },
     ];
     const pathRow = { 0: "TestSchema.Pump", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" };
@@ -1101,7 +1101,7 @@ describe("resolveContentSources", () => {
     // The source resolution is expected to produce for the declaration `test_v1`/0 on `Base`.
     function createExpectedSource(props: {
       target?: ContentTarget;
-      path?: RelationshipPath;
+      path?: NonEmptyRelationshipPath;
       targetClassNames?: EC.FullClassNameDotNotation[];
     }) {
       return {
@@ -1120,7 +1120,7 @@ describe("resolveContentSources", () => {
       };
     }
 
-    const resolvedPath = (sourceClassName: EC.FullClassNameDotNotation): RelationshipPath => [
+    const resolvedPath = (sourceClassName: EC.FullClassNameDotNotation): NonEmptyRelationshipPath => [
       { sourceClassName, targetClassName: "TestSchema.ConcreteB", relationshipName: "TestSchema.ConcreteRelAB" },
     ];
 
@@ -1320,7 +1320,9 @@ describe("resolveContentSources", () => {
 
     it("rejects a declaration without path steps", async () => {
       const imodelAccess = createAccess({});
-      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path: [] }] });
+      const provider = createMockIModelFieldsProvider("test_v1", {
+        relatedProperties: [{ path: [] as unknown as NonEmptyRelationshipPath }],
+      });
 
       await expect(
         resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } }),
@@ -1333,7 +1335,9 @@ describe("resolveContentSources", () => {
         relatedProperties: [
           {
             path: createPath("TestSchema.Base"),
-            resolve: async () => [{ path: [], targetClassNames: ["TestSchema.Base" as const] }],
+            resolve: async () => [
+              { path: [] as unknown as NonEmptyRelationshipPath, targetClassNames: ["TestSchema.Base" as const] },
+            ],
           },
         ],
       });
@@ -1381,7 +1385,7 @@ describe("resolveContentSources", () => {
     });
 
     it("calls provider getContribution once per target", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -1404,14 +1408,14 @@ describe("resolveContentSources", () => {
 
   describe("multiple declarations", () => {
     it("resolves multiple declarations from one provider with correct declarationIndex", async () => {
-      const pathA: RelationshipPath = [
+      const pathA: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
           relationshipName: "TestSchema.RelAB",
         },
       ];
-      const pathB: RelationshipPath = [
+      const pathB: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassC",
@@ -1437,14 +1441,14 @@ describe("resolveContentSources", () => {
     });
 
     it("omits declarations with empty results but keeps those with results", async () => {
-      const pathA: RelationshipPath = [
+      const pathA: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
           relationshipName: "TestSchema.RelAB",
         },
       ];
-      const pathB: RelationshipPath = [
+      const pathB: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassC",
@@ -2058,7 +2062,9 @@ describe("resolveContentSources", () => {
       const provider: IModelFieldsProvider = {
         id: "providerX_v1",
         applyRecursively: true,
-        getContribution: vi.fn(async () => ({ relatedProperties: [{ path: [xToX] }] })),
+        getContribution: vi.fn(async () => ({
+          relatedProperties: [{ path: [xToX] satisfies NonEmptyRelationshipPath }],
+        })),
       };
       // Every query — regardless of how many steps it joins — resolves to the same self-referencing
       // class, so an unguarded implementation would recurse forever; only the cycle guard stops it.
@@ -2153,7 +2159,7 @@ describe("resolveContentSources", () => {
       const narrowBToC: RelationshipPath[number] = { ...bToC, sourceClassName: "TestSchema.NarrowB" };
       const unrelatedBToC: RelationshipPath[number] = { ...bToC, sourceClassName: "TestSchema.Unrelated" };
 
-      async function resolveNested(declaredPath: RelationshipPath) {
+      async function resolveNested(declaredPath: NonEmptyRelationshipPath) {
         const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
         const providerB: IModelFieldsProvider = {
           id: "providerB_v1",
@@ -2213,7 +2219,9 @@ describe("resolveContentSources", () => {
           id: "providerB_v1",
           applyRecursively: true,
           async getContribution({ target }) {
-            return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [] }] } : undefined;
+            return target.primaryClass === "TestSchema.ClassB"
+              ? { relatedProperties: [{ path: [] as unknown as NonEmptyRelationshipPath }] }
+              : undefined;
           },
         };
         const imodelAccess = createRoutedIModelAccess({
@@ -2778,7 +2786,7 @@ describe("resolveContentSources", () => {
                     {
                       path: [
                         { sourceClassName, targetClassName: "TestSchema.ClassC", relationshipName: "TestSchema.RelBC" },
-                      ] satisfies RelationshipPath,
+                      ] satisfies NonEmptyRelationshipPath,
                     },
                   ],
                 }
@@ -3063,7 +3071,10 @@ describe("resolveContentSources", () => {
             relationshipName: "TestSchema.RelDE",
           };
           // A second parent declaration, one step longer so its query can be told apart.
-          const longerParentDeclaration = { ...parentDeclaration, path: [...parentDeclaration.path, dToE] };
+          const longerParentDeclaration: RelatedPropertiesDeclaration = {
+            ...parentDeclaration,
+            path: [...parentDeclaration.path, dToE],
+          };
           const imodelAccess = createRoutedIModelAccess({
             routeRows: (ecsql) => {
               switch (countSteps(ecsql)) {
@@ -3826,7 +3837,7 @@ describe("resolveContentSources", () => {
     const constraintClass = (fullName: string) => ({ fullName }) as unknown as EC.EntityClass;
 
     it("starts a resolved path at the source constraint's abstract class", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -3860,7 +3871,7 @@ describe("resolveContentSources", () => {
     });
 
     it("starts a resolved reversed path at the target constraint's single class", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -3891,7 +3902,7 @@ describe("resolveContentSources", () => {
     });
 
     it("keeps the declared source class when the constraint names several classes", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -3920,7 +3931,7 @@ describe("resolveContentSources", () => {
     });
 
     it("keeps the source class of a path declared from a class narrower than the target's", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA1",
           targetClassName: "TestSchema.ClassB",
@@ -3950,7 +3961,7 @@ describe("resolveContentSources", () => {
     });
 
     it("starts a path declared from a class narrower than the target's at a narrower constraint class", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA1",
           targetClassName: "TestSchema.ClassB",
@@ -3983,7 +3994,7 @@ describe("resolveContentSources", () => {
     });
 
     it("keeps the source class of a path declared from a class narrower than the target's when the constraint is unrelated to it", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA1",
           targetClassName: "TestSchema.ClassB",
@@ -4014,7 +4025,7 @@ describe("resolveContentSources", () => {
     });
 
     it("throws when a resolved path's first step isn't a relationship class", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",
@@ -4072,7 +4083,7 @@ describe("resolveContentSources", () => {
     });
 
     it("starts resolved external input paths at the constraint class", async () => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
           targetClassName: "TestSchema.ClassB",

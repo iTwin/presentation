@@ -6,8 +6,13 @@
 import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext, RelationshipMeaning } from "../ContentTarget.js";
+import type { EC } from "@itwin/presentation-shared";
+import type {
+  CardinalityHint,
+  CategoryContext,
+  NonEmptyRelationshipPath,
+  RelationshipMeaning,
+} from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
 
@@ -20,13 +25,6 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
  * creates the category tree, and places each field in its category (`field.category`).
  */
 export interface FieldCategorization {
-  /**
-   * Which class the field's value comes from, for class-based category anchoring:
-   * - `"none"` — a direct field (no class-based category; a property category, if any, is top-level);
-   * - `"targetClass"` — a related field from its step's target class;
-   * - `"relationshipClass"` — a related field from its step's relationship class.
-   */
-  anchor: "none" | "targetClass" | "relationshipClass";
   /**
    * The property's category source, if any — the two sources are mutually exclusive (an explicit
    * spec override takes precedence over the EC schema property category):
@@ -52,43 +50,52 @@ export interface CategorizedField {
 }
 
 /** Props for {@link createPropertyFields}. */
-interface CreatePropertyFieldsProps {
+type CreatePropertyFieldsProps = {
   /** The properties to convert, as read from the class in effect. */
   properties: EC.Property[];
   /** Concrete value-supplier classes for the produced fields. */
   valueClassNames: EC.FullClassNameDotNotation[];
-  /** Information on how to reach related properties or `undefined` for direct properties. */
-  relationshipInfo:
-    | {
+  /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
+  spec: ClassPropertySpec;
+  /** See {@link FieldCategorization.relationshipMeaning}. */
+  relationshipMeaning: RelationshipMeaning;
+  /** See {@link FieldCategorization.categoryContext}. */
+  categoryContext: CategoryContext;
+} & (
+  | {
+      /** Direct properties have no class-based category; a property category, if any, is top-level. */
+      anchor: "none";
+      relationshipInfo?: undefined;
+    }
+  | {
+      /**
+       * Whether the related properties come from the step's target or relationship class. Sets the
+       * fields' `related.propertyClassKind`, which also anchors their class-based category.
+       */
+      anchor: "targetClass" | "relationshipClass";
+      /** Information on how to reach the related properties. */
+      relationshipInfo: {
         /** Relationship path from the content target to the properties' class. */
-        pathFromTarget: RelationshipPath;
+        pathFromTarget: NonEmptyRelationshipPath;
         /**
          * Cardinality of `pathFromTarget` as the contributing declaration sees it. Declarations that
          * disagree about a shared path are reconciled by `mergePropertyFieldsByIdentity`.
          */
         pathCardinality: CardinalityHint;
         /**
-         * Concrete primary classes that have access to the produced fields. Defaults to `valueClassNames`
-         * (the direct-property case, where the primary class is itself the value origin). Related-property
-         * enumeration passes the concrete source classes of the path's first step instead.
+         * Concrete primary classes that have access to the produced fields. Direct properties use
+         * `valueClassNames` instead (the primary class is itself the value origin). Related-property
+         * enumeration passes the concrete source classes of the path's first step.
          */
         primaryClassNames: EC.FullClassNameDotNotation[];
-      }
-    | undefined;
-  /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
-  spec: ClassPropertySpec;
-  /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
-  anchor: FieldCategorization["anchor"];
-  /** See {@link FieldCategorization.relationshipMeaning}. */
-  relationshipMeaning: RelationshipMeaning;
-  /** See {@link FieldCategorization.categoryContext}. */
-  categoryContext: CategoryContext;
-}
+      };
+    }
+);
 
 /**
  * Converts EC properties into `PropertyField` candidates.
  *
- * Shared by direct-property enumeration (zero-length `pathFromTarget`) and related-property
+ * Shared by direct-property enumeration (no `related` attributes) and related-property
  * enumeration (a non-empty path to the class). The `spec` controls which properties are included
  * (`select`) and applies metadata overrides; direct enumeration passes `{ select: "all" }`.
  *
@@ -98,10 +105,10 @@ interface CreatePropertyFieldsProps {
  * - `label` resolves to the override label, else the property's label, else its name;
  * - `readOnly` comes from the merged overrides when present, else is `true` when the schema declares
  *   the property read-only; `hidden` comes from the merged overrides when present;
- * - `id` is derived from `(propertyClassName, propertyName, pathFromTarget)`.
+ * - `id` is derived from `(propertyClassName, propertyName, related.pathFromTarget)`.
  *
  * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
- * property category and/or spec override, plus the given `anchor`). Fields start in the content target's
+ * property category and/or spec override, plus the given relationship meaning and context). Fields start in the content target's
  * category (`{ type: "target" }`) and no category is created here: placing fields in their categories is
  * the categorization pass's job.
  *
@@ -110,10 +117,15 @@ interface CreatePropertyFieldsProps {
  * `mergePropertyFieldsByIdentity`.
  */
 export function createPropertyFields(props: CreatePropertyFieldsProps): CategorizedField[] {
-  const { properties, relationshipInfo, valueClassNames, spec, anchor, relationshipMeaning, categoryContext } = props;
-  const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
-  const pathCardinality = relationshipInfo?.pathCardinality ?? "one";
-  const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
+  const { properties, valueClassNames, spec, relationshipMeaning, categoryContext } = props;
+  const related: PropertyField["related"] = props.relationshipInfo
+    ? {
+        pathFromTarget: props.relationshipInfo.pathFromTarget,
+        pathCardinality: props.relationshipInfo.pathCardinality,
+        propertyClassKind: props.anchor === "relationshipClass" ? "relationship" : "target",
+      }
+    : undefined;
+  const primaryClassNames = props.relationshipInfo?.primaryClassNames ?? valueClassNames;
   const result: CategorizedField[] = [];
   for (const property of properties) {
     if (!isSelected(property.name, spec.select)) {
@@ -125,7 +137,7 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
     }
     const overrides: PropertyOverrides = { ...spec.defaultOverrides, ...spec.overrides?.[property.name] };
     const propertyClassName = property.class.fullName;
-    const id = PropertyField.computeId({ propertyClassName, propertyName: property.name, pathFromTarget });
+    const id = PropertyField.computeId({ propertyClassName, propertyName: property.name, related });
     const field: PropertyField = {
       kind: "property",
       id,
@@ -133,13 +145,7 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       type,
       propertyClassName,
       propertyName: property.name,
-      ...(anchor === "targetClass"
-        ? { propertyClassKind: "target" as const }
-        : anchor === "relationshipClass"
-          ? { propertyClassKind: "relationship" as const }
-          : {}),
-      pathFromTarget,
-      pathCardinality,
+      ...(related ? { related } : {}),
       valueClassNames,
       primaryClassNames,
       // The categorization pass places the field in its category.
@@ -154,7 +160,7 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       field.hidden = overrides.hidden;
     }
     // Report the raw category facts: an explicit spec override, else the EC schema property category.
-    const categorization: FieldCategorization = { anchor, relationshipMeaning, categoryContext };
+    const categorization: FieldCategorization = { relationshipMeaning, categoryContext };
     if (overrides.categoryId !== undefined) {
       categorization.category = { source: "override", id: overrides.categoryId };
     } else {

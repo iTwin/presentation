@@ -18,6 +18,7 @@ import type {
   ECSqlQueryExecutor,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
+  NonEmptyArray,
   RelationshipPath,
   Value,
   ValueDescriptor,
@@ -34,10 +35,9 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     type: props.type ?? { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName ?? "TestSchema.Primary",
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
+    ...(props.related ? { related: props.related } : {}),
     valueClassNames: props.valueClassNames ?? ["TestSchema.Primary"],
     primaryClassNames: props.primaryClassNames ?? ["TestSchema.Primary"],
-    pathCardinality: "one",
   };
 }
 
@@ -378,13 +378,17 @@ describe("getDistinctFieldValues", () => {
       const field = makePropertyField({
         propertyName: "PropRelated",
         propertyClassName: "TestSchema.Target",
-        pathFromTarget: [
-          {
-            sourceClassName: derived.fullName,
-            targetClassName: "TestSchema.Target",
-            relationshipName: "TestSchema.Rel",
-          },
-        ],
+        related: {
+          pathFromTarget: [
+            {
+              sourceClassName: derived.fullName,
+              targetClassName: "TestSchema.Target",
+              relationshipName: "TestSchema.Rel",
+            },
+          ],
+          pathCardinality: "one",
+          propertyClassKind: "target",
+        },
         primaryClassNames: [a1.fullName, a2.fullName],
       });
 
@@ -767,11 +771,13 @@ describe("buildDistinctValuesQuery", () => {
   });
 
   it("resolves a related property column against the target alias", async () => {
-    const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+    const path: NonEmptyArray<RelationshipPath[number]> = [
+      makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target"),
+    ];
     const field = makePropertyField({
       propertyName: "Name",
       propertyClassName: "TestSchema.Target",
-      pathFromTarget: path,
+      related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
       valueClassNames: ["TestSchema.Target"],
     });
 
@@ -850,11 +856,13 @@ describe("buildDistinctValuesQuery", () => {
   });
 
   it("wraps the inner query's own related path joins when the navigation property itself is related", async () => {
-    const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Other")];
+    const path: NonEmptyArray<RelationshipPath[number]> = [
+      makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Other"),
+    ];
     const field = makePropertyField({
       propertyName: "Parent",
       propertyClassName: "TestSchema.Other",
-      pathFromTarget: path,
+      related: { pathFromTarget: path, pathCardinality: "one", propertyClassKind: "target" },
       valueClassNames: ["TestSchema.Other"],
       type: { kind: "navigation", targetClassName: "TestSchema.Target" },
     });

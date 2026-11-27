@@ -16,6 +16,7 @@ import {
   getRelatedPropertyFields,
 } from "./Utils.js";
 
+import type { NonEmptyRelationshipPath } from "@itwin/presentation-content";
 import type { RelationshipPath } from "@itwin/presentation-shared";
 import type { ECDbBuilder } from "../ECDbUtils.js";
 
@@ -169,13 +170,13 @@ describe("Content", () => {
       // Wall1's own aspect (PropA / WallTypeAspectA) is present...
       const propAFields = getPropertyFieldsByName(descriptor, "PropA");
       expect(propAFields).toHaveLength(1);
-      expect(propAFields[0].pathFromTarget).toHaveLength(2);
-      expect(propAFields[0].pathFromTarget[0]).toMatchObject({
+      expect(propAFields[0].related?.pathFromTarget).toHaveLength(2);
+      expect(propAFields[0].related?.pathFromTarget[0]).toMatchObject({
         sourceClassName: setup.schema.items.Wall.fullName,
         targetClassName: setup.schema.items.WallType.fullName,
         relationshipName: setup.schema.items.HasPhysicalType.fullName,
       });
-      expect(propAFields[0].pathFromTarget[1]).toMatchObject({
+      expect(propAFields[0].related?.pathFromTarget[1]).toMatchObject({
         sourceClassName: setup.schema.items.WallType.fullName,
         targetClassName: setup.schema.items.WallTypeAspectA.fullName,
         relationshipName: setup.schema.items.HasUniqueAspect.fullName,
@@ -241,7 +242,7 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [providerA, providerBNotOptedIn] },
       });
 
-      expect(getRelatedPropertyFields(descriptor).filter((f) => f.pathFromTarget.length > 1)).toHaveLength(0);
+      expect(getRelatedPropertyFields(descriptor).filter((f) => f.related.pathFromTarget.length > 1)).toHaveLength(0);
       expect(getPropertyFieldsByName(descriptor, "PropA")).toHaveLength(0);
     });
 
@@ -860,7 +861,7 @@ describe("Content", () => {
                                     targetClassName: items.WallType.fullName,
                                     relationshipName: items.HasPhysicalType.fullName,
                                   },
-                                ],
+                                ] satisfies NonEmptyRelationshipPath,
                               },
                             ]
                           : []),
@@ -876,7 +877,7 @@ describe("Content", () => {
                               targetClassName: items.WallTypeAspect.fullName,
                               relationshipName: items.HasUniqueAspect.fullName,
                             },
-                          ],
+                          ] satisfies NonEmptyRelationshipPath,
                           cardinalityHint: "one" as const,
                           relationshipMeaning: "sameInstance" as const,
                           properties: [{ stepIndex: 1, target: { select: "all" as const } }],

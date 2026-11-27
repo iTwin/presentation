@@ -5,7 +5,8 @@
 
 import { serializeRelationshipPath } from "./Utils.js";
 
-import type { DeepReadonly, InstanceKey, RelationshipPath, Value } from "@itwin/presentation-shared";
+import type { DeepReadonly, InstanceKey, Value } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "../ContentTarget.js";
 import type { ContentDescriptor, ReadonlyContentDescriptor } from "./ContentDescriptor.js";
 import type { Field, PropertyField, ReadonlyField, ReadonlyPropertyField } from "./Field.js";
 
@@ -36,7 +37,7 @@ export interface ContentValues {
    * loaded over, including step instance filters and their binding values
    * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`).
    *
-   * Alignment contract: for a field whose `pathFromTarget` serializes to the same path key and whose
+   * Alignment contract: for a field whose `related.pathFromTarget` serializes to the same path key and whose
    * value is array-shaped due to path cardinality, `values[field.id]` has exactly as many elements as
    * that key's entry array here — element `i` comes from entry `i`, with `undefined` holes where that
    * instance's property is `null`. For single-instance (`"one"`) paths the entry array has length 0 or
@@ -77,15 +78,16 @@ export interface ContentItem {
   getValue(field: ReadonlyField): DeepReadonly<Value>;
 
   /**
-   * Retrieve the related instances reached over the given relationship path (or a property
-   * field's {@link (PropertyField:interface).pathFromTarget}), each paired with a scoped
+   * Retrieve the related instances reached by a property field or over an explicit relationship path, each paired with a scoped
    * `getValue` that reads that instance's value for a field on the same path.
    *
-   * Returns an empty array when no related instance was reached over the path. Order within the
+   * Returns an empty array for a direct property field or when no related instance was reached over the path. Order within the
    * returned array is unspecified but consistent across this item's fields and across paths — index
    * `i` always refers to the same related instance for every array-shaped field on `path`.
    */
-  getRelatedInstances(props: { pathFromTarget: DeepReadonly<RelationshipPath> }): ReadonlyArray<{
+  getRelatedInstances(
+    props: ReadonlyPropertyField | { pathFromTarget: DeepReadonly<NonEmptyRelationshipPath> },
+  ): ReadonlyArray<{
     /** Key of the related instance. */
     key: DeepReadonly<InstanceKey>;
     /** Key of the last step's relationship instance, when present. */
@@ -115,19 +117,30 @@ export function createContentItem({
     getValue(field: DeepReadonly<ReadonlyField>): DeepReadonly<Value> {
       return contentValues.values[field.id];
     },
-    getRelatedInstances(props: { pathFromTarget: DeepReadonly<RelationshipPath> }) {
-      const pathKey = serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true });
+    getRelatedInstances(props) {
+      const path = "kind" in props ? props.related?.pathFromTarget : props.pathFromTarget;
+      if (!path) {
+        return [];
+      }
+      const pathKey = serializeRelationshipPath({ path, includeInstanceFilters: true });
       const entries = contentValues.relatedInstances[pathKey] ?? [];
       return entries.map((entry, index) => ({
         key: entry.key,
         relationshipKey: entry.relationshipKey,
         getValue(field: DeepReadonly<PropertyField>): DeepReadonly<Value> {
-          if (serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true }) !== pathKey) {
+          if (
+            !field.related ||
+            serializeRelationshipPath({ path: field.related.pathFromTarget, includeInstanceFilters: true }) !== pathKey
+          ) {
             return undefined;
           }
           const rawValue = contentValues.values[field.id];
           // `pathCardinality: "many"` is what distinguishes a path-induced array from a genuine EC array property.
-          return field.pathCardinality === "many" ? (Array.isArray(rawValue) ? rawValue[index] : undefined) : rawValue;
+          return field.related.pathCardinality === "many"
+            ? Array.isArray(rawValue)
+              ? rawValue[index]
+              : undefined
+            : rawValue;
         },
       }));
     },

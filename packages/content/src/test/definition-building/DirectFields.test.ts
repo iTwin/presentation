@@ -51,10 +51,8 @@ describe("collectDirectPropertyFields", () => {
         type: { kind: "primitive", type: "String" },
         propertyClassName: "TestSchema.Element",
         propertyName: "CodeValue",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.Element"],
         primaryClassNames: ["TestSchema.Element"],
-        pathCardinality: "one",
         category: { type: "target" },
       },
     ]);
@@ -276,7 +274,7 @@ describe("collectDirectPropertyFields", () => {
     expect(byName.get("FlowRate")?.valueClassNames).to.deep.equal(["TestSchema.Pump"]);
   });
 
-  it("reports each direct field's category facts with a `none` anchor", async () => {
+  it("reports each direct field's category facts", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.Element",
@@ -298,7 +296,6 @@ describe("collectDirectPropertyFields", () => {
     expect(categorization).to.deep.equal({
       categoryContext: [],
       relationshipMeaning: "relatedInstance",
-      anchor: "none",
       category: { source: "propertyCategory", id: "TestSchema.Identity", label: "Identity" },
     });
   });

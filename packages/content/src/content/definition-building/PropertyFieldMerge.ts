@@ -44,7 +44,7 @@ interface PropertyFieldCandidate extends CategorizedField {
  * keyed by field ID, applying the **merge-by-default** contract:
  *
  * - Candidates are grouped by their ID (`PropertyField.computeId` without a `forkKey`), i.e. by
- *   `(propertyClassName, propertyName, pathFromTarget)`. Since paths start at their first relationship's
+ *   `(propertyClassName, propertyName, related.pathFromTarget)`. Since paths start at their first relationship's
  *   constraint class (see `ResolvedPath.path`), a related property reached over the same relationships from
  *   different content targets is one field.
  * - Each group produces a single field whose `valueClassNames` and `primaryClassNames` are each the
@@ -55,7 +55,7 @@ interface PropertyFieldCandidate extends CategorizedField {
  *   - **Inter-provider** (candidates from different providers, or from the same provider applied below
  *     different ancestors) may disagree; the candidate with the highest `priority` wins (ties resolve to
  *     input order). `valueClassNames` and `primaryClassNames` are still unioned.
- * - `pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority (see
+ * - `related.pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority (see
  *   {@link resolveCardinality}). This merges candidates of the same property field, not the shapes
  *   of other fields or external inputs that happen to use the same path.
  *
@@ -80,9 +80,20 @@ export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate
     const winner = group.reduce((best, candidate) => (priorityOf(candidate) > priorityOf(best) ? candidate : best));
     const valueClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.valueClassNames));
     const primaryClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.primaryClassNames));
-    const pathCardinality = resolveCardinality(group.map((candidate) => candidate.field.pathCardinality));
+    // Candidates share the field id, so either all of them or none are related.
+    const related = winner.field.related
+      ? {
+          ...winner.field.related,
+          pathCardinality: resolveCardinality(
+            group.map((candidate) => {
+              assert(candidate.field.related !== undefined);
+              return candidate.field.related.pathCardinality;
+            }),
+          ),
+        }
+      : undefined;
     result.push({
-      field: { ...winner.field, id: baseId, pathCardinality, valueClassNames, primaryClassNames },
+      field: { ...winner.field, id: baseId, ...(related ? { related } : {}), valueClassNames, primaryClassNames },
       categorization: winner.categorization,
     });
   }
@@ -123,7 +134,7 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
     a.field.hidden === b.field.hidden &&
     a.field.readOnly === b.field.readOnly &&
     valueDescriptorsAgree(a.field.type, b.field.type) &&
-    categorizationAgrees(a.categorization, b.categorization)
+    categorizationAgrees(a, b)
   );
 }
 
@@ -132,13 +143,16 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
  * placement: the outermost ancestry entry's meaning, and the field's own meaning when it has a property category or
  * no ancestry.
  */
-function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
+function categorizationAgrees(
+  { field: aField, categorization: a }: CategorizedField,
+  { field: bField, categorization: b }: CategorizedField,
+): boolean {
   if (a.category?.source === "override") {
     return b.category?.source === "override" && a.category.id === b.category.id;
   }
   const ownMeaningAffectsPlacement = a.category?.source === "propertyCategory" || a.categoryContext.length === 0;
   return (
-    a.anchor === b.anchor &&
+    aField.related?.propertyClassKind === bField.related?.propertyClassKind &&
     a.category?.source === b.category?.source &&
     a.category?.id === b.category?.id &&
     (!ownMeaningAffectsPlacement || a.relationshipMeaning === b.relationshipMeaning) &&

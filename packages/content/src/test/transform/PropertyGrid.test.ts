@@ -23,6 +23,7 @@ import {
   createPropertyField,
   createRelatedEntry,
   createRelatedInstance,
+  createRelatedPropertyField,
   getRelatedInstanceValues,
 } from "./Helpers.js";
 
@@ -95,7 +96,9 @@ describe("keepCommonFields", () => {
 
 describe("collapseRelatedInstances", () => {
   const direct = createPropertyField("direct");
-  const singleRelated = createPropertyField("singleRelated", { pathFromTarget: childrenPath, pathCardinality: "one" });
+  const singleRelated = createRelatedPropertyField("singleRelated", {
+    related: { pathFromTarget: childrenPath, pathCardinality: "one", propertyClassKind: "target" },
+  });
   const calculated = createCalculatedField("calculated");
 
   it("leaves non-many fields untouched", () => {
@@ -132,10 +135,9 @@ describe("collapseRelatedInstances", () => {
   });
 
   it("groups fields of the same path and category by related instance", () => {
-    const aspectPropOtherCategory = createPropertyField("aspectPropOtherCategory", {
+    const aspectPropOtherCategory = createRelatedPropertyField("aspectPropOtherCategory", {
       propertyClassName: "BisCore.ElementMultiAspect",
-      pathFromTarget: aspectsPath,
-      pathCardinality: "many",
+      related: { pathFromTarget: aspectsPath, pathCardinality: "many", propertyClassKind: "target" },
     });
     const descriptor = createDescriptor([direct, aspectProp1, aspectPropOtherCategory, aspectProp2]);
     const aspect1: InstanceKey = { className: "BisCore.ElementMultiAspect", id: "0x10" };
@@ -181,8 +183,7 @@ describe("collapseRelatedInstances", () => {
     const createAspectField = (id: string, category: PropertyField["category"]) =>
       createPropertyField(id, {
         propertyClassName: "BisCore.ElementMultiAspect",
-        pathFromTarget: aspectsPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: aspectsPath, pathCardinality: "many", propertyClassKind: "target" },
         category,
       });
     const target1 = createAspectField("target1", { type: "target" });

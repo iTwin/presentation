@@ -162,7 +162,9 @@ interface CreateRelationshipPathJoinClauseProps {
 function createRelationshipPathJoinInfo(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinInfo>;
 
 // @public
-export type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
+export type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? U[] extends T ? ReadonlyArray<DeepReadonly<U>> : {
+    readonly [K in keyof T]: DeepReadonly<T[K]>;
+} : T extends object ? {
     readonly [K in keyof T]: DeepReadonly<T[K]>;
 } : T;
 
@@ -611,6 +613,9 @@ export interface NavigationValueDescriptor {
     kind: "navigation";
     targetClassName: EC.FullClassNameDotNotation;
 }
+
+// @public
+export type NonEmptyArray<T> = [T, ...T[]];
 
 // @public
 export const NOOP_LOGGER: ILogger;

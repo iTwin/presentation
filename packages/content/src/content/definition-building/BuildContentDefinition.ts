@@ -181,7 +181,11 @@ export async function prepareSelectorDefinitions(props: {
   const fieldTypes = new Map<string, ValueDescriptor>();
   for (const field of Object.values(fields)) {
     if (field.kind === "property") {
-      const selectorId = computePropertySelectorId(field);
+      const selectorId = computePropertySelectorId({
+        propertyName: field.propertyName,
+        propertyClassName: field.propertyClassName,
+        pathFromTarget: field.related?.pathFromTarget,
+      });
       fieldTypes.set(selectorId, field.type);
     }
   }

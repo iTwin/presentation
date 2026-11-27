@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // Core data model
-export type { ContentTarget, ContentSource } from "./content/ContentTarget.js";
+export type { ContentTarget, ContentSource, NonEmptyRelationshipPath } from "./content/ContentTarget.js";
 export type { ContentDescriptor, ReadonlyContentDescriptor } from "./content/model/ContentDescriptor.js";
 export type {
   Field,

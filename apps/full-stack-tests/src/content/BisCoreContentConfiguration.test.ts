@@ -38,7 +38,7 @@ import {
 } from "./Utils.js";
 
 import type { ElementAspectProps, ExternalSourceProps } from "@itwin/core-common";
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "@itwin/presentation-content";
 
 /**
  * `BisCore.RepositoryLink`'s *visible* property-field surface.
@@ -236,7 +236,7 @@ describe("Content", () => {
         config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
-      const uniqueAspectPath: RelationshipPath = [
+      const uniqueAspectPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: uniqueAspectClassName,
@@ -256,7 +256,7 @@ describe("Content", () => {
         ],
       });
 
-      const multiAspectPath: RelationshipPath = [
+      const multiAspectPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: multiAspectClassName,
@@ -277,7 +277,7 @@ describe("Content", () => {
         ],
       });
 
-      const linkPath: RelationshipPath = [
+      const linkPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.RepositoryLink",
@@ -290,7 +290,7 @@ describe("Content", () => {
         expect: repositoryLinkFieldValidators({ category: ["Repository Link"] }),
       });
 
-      const modelSourcePath: RelationshipPath = [
+      const modelSourcePath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.PhysicalModel",
@@ -363,7 +363,7 @@ describe("Content", () => {
       const provider = createContentProvider({ imodelAccess, sources, config });
       const descriptor = await provider.getContentDescriptor();
 
-      const groupLinkPath: RelationshipPath = [
+      const groupLinkPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "Generic.Group",
@@ -378,7 +378,7 @@ describe("Content", () => {
       ];
       validateVisibleFieldsAtPath({
         descriptor,
-        path: groupLinkPath.slice(0, 1),
+        path: [groupLinkPath[0]],
         expect: [
           PropertyFieldValidator.create({
             propertyClassName: "BisCore.Element",
@@ -407,7 +407,7 @@ describe("Content", () => {
       });
 
       const [item] = await collect(provider.getItems());
-      const groupPath = groupLinkPath.slice(0, 1);
+      const groupPath: NonEmptyRelationshipPath = [groupLinkPath[0]];
       const groupLabelField = getPropertyFieldsByPath(descriptor, groupPath).find(
         (field) => field.propertyName === "UserLabel",
       )!;
@@ -499,7 +499,7 @@ describe("Content", () => {
         config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
-      const externalSourceAspectPath: RelationshipPath = [
+      const externalSourceAspectPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.ExternalSourceAspect",
@@ -521,7 +521,7 @@ describe("Content", () => {
         ],
       });
 
-      const documentLinkPath: RelationshipPath = [
+      const documentLinkPath: NonEmptyRelationshipPath = [
         ...externalSourceAspectPath,
         {
           sourceClassName: "BisCore.ExternalSourceAspect",
@@ -545,7 +545,7 @@ describe("Content", () => {
         }),
       });
 
-      const secondarySourcesPath: RelationshipPath = [
+      const secondarySourcesPath: NonEmptyRelationshipPath = [
         ...externalSourceAspectPath,
         {
           sourceClassName: "BisCore.ExternalSourceAspect",
@@ -641,12 +641,12 @@ describe("Content", () => {
       const provider = createContentProvider({ imodelAccess, sources, config });
       const labelFields = getPropertyFieldsByName(await provider.getContentDescriptor(), "UserLabel");
       const typeLabelFields = labelFields.filter(
-        (candidate) => candidate.pathFromTarget[0]?.relationshipName === "BisCore.PhysicalElementIsOfType",
+        (candidate) => candidate.related?.pathFromTarget[0].relationshipName === "BisCore.PhysicalElementIsOfType",
       );
       expect(typeLabelFields).toHaveLength(1);
       const [typeLabelField] = typeLabelFields;
 
-      const directField = labelFields.find((candidate) => candidate.pathFromTarget.length === 0);
+      const directField = labelFields.find((candidate) => !candidate.related);
       expect(directField).toBeDefined();
       if (!directField) {
         throw new Error("Missing element label field");
@@ -715,7 +715,7 @@ describe("Content", () => {
         config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
-      const typeDefinitionPath: RelationshipPath = [
+      const typeDefinitionPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.PhysicalElement",
           targetClassName: "Generic.PhysicalType",
@@ -761,10 +761,10 @@ describe("Content", () => {
       const descriptor = await createContentProvider({ imodelAccess, sources, config }).getContentDescriptor();
 
       const userLabelFields = getPropertyFieldsByName(descriptor, "UserLabel").filter(
-        (field) => field.pathFromTarget[0]?.relationshipName === "BisCore.PhysicalElementIsOfType",
+        (field) => field.related?.pathFromTarget[0].relationshipName === "BisCore.PhysicalElementIsOfType",
       );
       expect(userLabelFields).toHaveLength(1);
-      expect(userLabelFields[0].pathFromTarget[0].sourceClassName).toBe("BisCore.PhysicalElement");
+      expect(userLabelFields[0].related?.pathFromTarget[0].sourceClassName).toBe("BisCore.PhysicalElement");
       // Both targets reach the type definition and share the field.
       expect(
         sources.map((source) =>
@@ -827,7 +827,7 @@ describe("Content", () => {
         config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
-      const nestedAspectPath: RelationshipPath = [
+      const nestedAspectPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.PhysicalElement",
           targetClassName: "Generic.PhysicalType",
@@ -936,7 +936,7 @@ describe("Content", () => {
           category: fallback,
         }),
       ];
-      const uniquePath: RelationshipPath = [
+      const uniquePath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: uniqueAspectClassName,
@@ -948,7 +948,7 @@ describe("Content", () => {
         path: uniquePath,
         expect: aspectValidators(uniqueAspectClassName, ["Point Control Category"], ["Unique Aspect Class"]),
       });
-      const multiPath: RelationshipPath = [
+      const multiPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: multiAspectClassName,
@@ -962,7 +962,7 @@ describe("Content", () => {
         expect: aspectValidators(multiAspectClassName, ["Point Control Category"], ["Multi Aspect Class"]),
       });
       // On the element's type definition (reached recursively), the owning context is its class category.
-      const nestedPath: RelationshipPath = [
+      const nestedPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.PhysicalElement",
           targetClassName: "Generic.PhysicalType",
@@ -986,7 +986,7 @@ describe("Content", () => {
 
       // Placement doesn't change which values are loaded.
       const [item] = await collect(provider.getItems());
-      const valueAt = (path: RelationshipPath, propertyName: string) =>
+      const valueAt = (path: NonEmptyRelationshipPath, propertyName: string) =>
         item.getValue(getPropertyFieldsByPath(descriptor, path).find((f) => f.propertyName === propertyName)!);
       expect(valueAt(uniquePath, "Categorized")).toBe(`unique ${elementClassName}`);
       expect(valueAt(uniquePath, "Uncategorized")).toBe("unique uncategorized");
@@ -1034,7 +1034,7 @@ describe("Content", () => {
         config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
-      const typeDefinitionPath: RelationshipPath = [
+      const typeDefinitionPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.GeometricElement2d",
           targetClassName: "Generic.PhysicalType",
@@ -1043,7 +1043,7 @@ describe("Content", () => {
       ];
       validateVisibleFieldsAtPath({ descriptor, path: typeDefinitionPath, expect: physicalTypeFieldValidators() });
 
-      const representedElementPath: RelationshipPath = [
+      const representedElementPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.DrawingGraphic",
           targetClassName: "Generic.PhysicalObject",
@@ -1149,7 +1149,7 @@ describe("Content", () => {
 
       // A request for every 3d element reaches the declaration that only applies to graphical elements,
       // and the resolved path starts at the class it applies to.
-      const representedElementPath: RelationshipPath = [
+      const representedElementPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.GraphicalElement3d",
           targetClassName: representedKey.className,

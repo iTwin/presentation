@@ -26,8 +26,6 @@ const codeField: PropertyField = {
   type: { kind: "primitive", type: "String" },
   propertyClassName: "Schema.A",
   propertyName: "Code",
-  pathFromTarget: [],
-  pathCardinality: "one",
   valueClassNames: ["Schema.A"],
   primaryClassNames: ["Schema.A"],
 };

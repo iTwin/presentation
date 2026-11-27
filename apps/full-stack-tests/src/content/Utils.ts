@@ -18,8 +18,8 @@ import type {
   ContentTarget,
   ExternalField,
   Field,
+  NonEmptyRelationshipPath,
 } from "@itwin/presentation-content";
-import type { RelationshipPath } from "@itwin/presentation-shared";
 
 /**
  * Builds the `imodelAccess` object (schema provider + ECSQL query executor)
@@ -92,13 +92,13 @@ export function getPropertyFieldByName(descriptor: Descriptor, propertyName: str
  * serialization through `PropertyField.computeId`, including instance filters. Recomputing both
  * identities without a fork key allows forked fields to match their source path.
  */
-export function getPropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath = []): PropertyField[] {
+export function getPropertyFieldsByPath(descriptor: Descriptor, path?: NonEmptyRelationshipPath): PropertyField[] {
   return getPropertyFields(descriptor).filter(
     (f) =>
       PropertyField.computeId({
         propertyClassName: f.propertyClassName,
         propertyName: f.propertyName,
-        pathFromTarget: f.pathFromTarget,
+        pathFromTarget: f.related?.pathFromTarget,
       }) ===
       PropertyField.computeId({
         propertyClassName: f.propertyClassName,
@@ -115,18 +115,24 @@ export function getPropertyFieldsByPath(descriptor: Descriptor, path: Relationsh
  * assertions that only care about a descriptor's user-facing (visible) field shape, not its
  * complete (visible + hidden) contents.
  */
-export function getVisiblePropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath = []): PropertyField[] {
+export function getVisiblePropertyFieldsByPath(
+  descriptor: Descriptor,
+  path?: NonEmptyRelationshipPath,
+): PropertyField[] {
   return getPropertyFieldsByPath(descriptor, path).filter((f) => !f.hidden);
 }
 
-/** Returns the direct (non-related) property fields — those with an empty `pathFromTarget`. */
+/** Returns the direct (non-related) property fields — those without `related` attributes. */
 export function getDirectPropertyFields(descriptor: Descriptor): PropertyField[] {
-  return getPropertyFieldsByPath(descriptor, []);
+  return getPropertyFieldsByPath(descriptor);
 }
 
-/** Returns the related property fields — those with a non-empty `pathFromTarget`. */
-export function getRelatedPropertyFields(descriptor: Descriptor): PropertyField[] {
-  return getPropertyFields(descriptor).filter((f) => f.pathFromTarget.length > 0);
+/** A property field that has `related` attributes. */
+export type RelatedPropertyField = PropertyField & Required<Pick<PropertyField, "related">>;
+
+/** Returns the related property fields — those with `related` attributes. */
+export function getRelatedPropertyFields(descriptor: Descriptor): RelatedPropertyField[] {
+  return getPropertyFields(descriptor).filter((f): f is RelatedPropertyField => f.related !== undefined);
 }
 
 /** Finds a single calculated field by its label (throws when ambiguous or missing). */
@@ -154,8 +160,8 @@ export function getFieldById(descriptor: Descriptor, id: string): Descriptor["fi
  * path (the direct/target-class fields) formats as `"<direct>"`. Reversed steps are rendered with a
  * `<-` arrow to reflect that the step's traversal direction is opposite the relationship's own.
  */
-export function formatRelationshipPath(path: RelationshipPath): string {
-  if (path.length === 0) {
+export function formatRelationshipPath(path: NonEmptyRelationshipPath | undefined): string {
+  if (!path) {
     return "<direct>";
   }
   const [{ sourceClassName }] = path;

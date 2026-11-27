@@ -76,7 +76,7 @@ interface NormalizationContext {
 
 /** Only direct fields qualify: related fields are always anchored to a class category. */
 function needsInheritedCategory(field: ReadonlyPropertyField) {
-  return field.category.type === "target" && field.pathFromTarget.length === 0;
+  return field.category.type === "target" && !field.related;
 }
 
 function getPropertyKey(field: ReadonlyPropertyField) {
@@ -142,12 +142,12 @@ function createCanonicalPath(
   field: ReadonlyPropertyField,
   { relationshipNames, constraints }: NormalizationContext,
 ): CanonicalRelationshipStep[] {
-  if (field.pathFromTarget.length === 0) {
+  if (!field.related) {
     return [];
   }
   const names = relationshipNames[id];
   return createCanonicalRelationshipPath({
-    steps: field.pathFromTarget.map((step, index, steps) => ({
+    steps: field.related.pathFromTarget.map((step, index, steps) => ({
       relationshipName: names[index],
       relationshipReverse: step.relationshipReverse ?? false,
       ...(index === steps.length - 1 ? { targetClassName: step.targetClassName } : undefined),
@@ -328,12 +328,11 @@ async function toCanonicalValue(value: CapturedNewValue, type: NewFieldType): Pr
 }
 
 async function createCanonicalValue(item: CapturedNewItem, field: ReadonlyPropertyField): Promise<CanonicalItemValue> {
-  if (field.pathFromTarget.length === 0) {
+  if (!field.related) {
     return toCanonicalValue(item.values[field.id], field.type);
   }
-  const relatedGroup = item.related.find(
-    (group) => stableStringify(group.path) === stableStringify(field.pathFromTarget),
-  );
+  const relatedPath = field.related.pathFromTarget;
+  const relatedGroup = item.related.find((group) => stableStringify(group.path) === stableStringify(relatedPath));
   const relatedValues = await Promise.all(
     (relatedGroup?.entries ?? []).map(async (entry) => ({
       primaryKeys: [entry.key],
@@ -380,7 +379,7 @@ async function getRelationshipNames(
       Object.entries(descriptor.fields)
         .filter((entry): entry is [string, ReadonlyPropertyField] => {
           const field = entry[1];
-          return !field.hidden && field.kind === "property" && field.pathFromTarget.length > 0;
+          return !field.hidden && field.kind === "property" && !!field.related;
         })
         .map(async ([id, field]) => [id, await resolve(field)] as const),
     ),

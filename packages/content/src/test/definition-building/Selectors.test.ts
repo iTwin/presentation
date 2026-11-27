@@ -12,14 +12,19 @@ import { toSortedUniqueClassNames } from "../../content/model/Utils.js";
 
 import type { EC, ECSqlBinding } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
-import type { CalculatedField, Field, PropertyField as PropertyFieldType } from "../../content/model/Field.js";
+import type {
+  CalculatedField,
+  Field,
+  PropertyField as PropertyFieldType,
+  RelatedPropertyFieldAttributes,
+} from "../../content/model/Field.js";
 
 function propertyField(props: {
   propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
   label?: string;
-  pathFromTarget?: PropertyFieldType["pathFromTarget"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
 }): PropertyFieldType {
   const id = PropertyField.computeId({
     propertyClassName: props.propertyClassName,
@@ -34,8 +39,9 @@ function propertyField(props: {
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
-    pathCardinality: "one",
+    ...(props.pathFromTarget
+      ? { related: { pathFromTarget: props.pathFromTarget, pathCardinality: "one", propertyClassKind: "target" } }
+      : {}),
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
     primaryClassNames: props.pathFromTarget
       ? [props.pathFromTarget[0].sourceClassName]
@@ -131,7 +137,7 @@ describe("ValueSelector", () => {
         id,
         propertyClassName: "Stuff.Thing",
         propertyName: "Height",
-        pathFromTarget: [],
+        pathFromTarget: undefined,
       });
     });
 

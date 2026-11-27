@@ -125,11 +125,15 @@ export async function buildSelectProjection(props: {
     if (!ownedPathKeys.has(key)) {
       continue;
     }
-    const alias = resolvePropertyAlias({ selector, group, relationshipClassNames });
+    const alias = resolvePropertyAlias({
+      pathFromTarget: selector.pathFromTarget,
+      isRelationshipProperty: relationshipClassNames.has(selector.propertyClassName),
+      group,
+    });
     if (!alias) {
       continue;
     }
-    if (selector.pathFromTarget.length === 0) {
+    if (!selector.pathFromTarget) {
       projectBlob(alias);
     } else {
       const role = relationshipClassNames.has(selector.propertyClassName) ? "relationship" : "target";
@@ -171,16 +175,12 @@ export async function buildSelectProjection(props: {
   }
 
   const sort: SelectProjection["sort"] = [];
-  const sortingRelationshipClasses = await collectRelationshipClassNames({
-    schemaProvider,
-    selectors: sorting.flatMap((entry) => (entry.field.kind === "property" ? [entry.field] : [])),
-  });
   for (const [index, entry] of sorting.entries()) {
     const column = `${ECSQL_PREFIX}sort_${index}`;
     const selector =
       entry.field.kind === "calculated" && !calculatedFieldAliases.has(entry.field.id)
         ? { selector: "NULL" }
-        : resolveSortSelector({ field: entry.field, group, relationshipClassNames: sortingRelationshipClasses });
+        : resolveSortSelector({ field: entry.field, group });
     // Emit the sort key as a private column so the loader can read its value into the keyset cursor.
     select.push(`${selector.selector} AS [${column}]`);
     mergeBindings(bindings, selector.bindings);
@@ -200,32 +200,32 @@ export async function buildSelectProjection(props: {
 }
 
 function resolvePropertyAlias(props: {
-  selector: PropertyValueSelector;
+  pathFromTarget: RelationshipPath | undefined;
+  isRelationshipProperty: boolean;
   group: BaseQueryGroup;
-  relationshipClassNames: Set<EC.FullClassNameDotNotation>;
 }): string | undefined {
-  const { selector, group, relationshipClassNames } = props;
-  if (selector.pathFromTarget.length === 0) {
+  const { pathFromTarget, isRelationshipProperty, group } = props;
+  if (!pathFromTarget?.length) {
     return group.parts.primaryClassAlias;
   }
   // Keys in `relatedClassAliases` include per-step `instanceFilter`, so the lookup must serialize the path
   // the same way; otherwise a filtered path fails to match its alias.
   const aliases = group.parts.relatedClassAliases.get(
-    serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true }),
+    serializeRelationshipPath({ path: pathFromTarget, includeInstanceFilters: true }),
   );
   if (!aliases) {
     return undefined;
   }
-  return relationshipClassNames.has(selector.propertyClassName) ? aliases.relationship : aliases.target;
+  return isRelationshipProperty ? aliases.relationship : aliases.target;
 }
 
 async function collectRelationshipClassNames(props: {
   schemaProvider: ECSchemaProvider;
-  selectors: { propertyClassName: EC.FullClassNameDotNotation; pathFromTarget: RelationshipPath }[];
+  selectors: PropertyValueSelector[];
 }): Promise<Set<EC.FullClassNameDotNotation>> {
   const classNames = new Set(
     props.selectors
-      .filter((selector) => selector.pathFromTarget.length > 0)
+      .filter((selector) => selector.pathFromTarget !== undefined)
       .map((selector) => selector.propertyClassName),
   );
   const classes = await Promise.all(
@@ -234,16 +234,15 @@ async function collectRelationshipClassNames(props: {
   return new Set(classes.filter((ecClass) => ecClass.isRelationshipClass()).map((ecClass) => ecClass.fullName));
 }
 
-function resolveSortSelector(props: {
-  field: PropertyField | CalculatedField;
-  group: BaseQueryGroup;
-  relationshipClassNames: Set<EC.FullClassNameDotNotation>;
-}): { selector: string; bindings?: Record<string, ECSqlBinding> } {
+function resolveSortSelector(props: { field: PropertyField | CalculatedField; group: BaseQueryGroup }): {
+  selector: string;
+  bindings?: Record<string, ECSqlBinding>;
+} {
   if (props.field.kind === "property") {
     const alias = resolvePropertyAlias({
-      selector: props.field,
+      pathFromTarget: props.field.related?.pathFromTarget,
+      isRelationshipProperty: props.field.related?.propertyClassKind === "relationship",
       group: props.group,
-      relationshipClassNames: props.relationshipClassNames,
     });
     if (!alias) {
       throw new Error(

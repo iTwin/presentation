@@ -13,17 +13,21 @@ import type { DeepReadonly, EC, RelationshipPath } from "@itwin/presentation-sha
  * of the path's last relationship. By default, each step's `instanceFilter` (if any) is appended
  * inline right after that step so paths differing only by a step filter get distinct strings.
  * Callers that intentionally want a filter-blind identity can pass `includeInstanceFilters: false`.
+ * An undefined path serializes to the same empty string as an empty path.
  */
 export function serializeRelationshipPath({
   path,
   omitLastTargetClass,
   includeInstanceFilters = true,
 }: {
-  path: DeepReadonly<RelationshipPath>;
+  path: DeepReadonly<RelationshipPath> | undefined;
   omitLastTargetClass?: boolean;
   includeInstanceFilters?: boolean;
 }): string {
   let result = "";
+  if (!path) {
+    return result;
+  }
   path.forEach((step, index) => {
     if (result.length === 0) {
       result = step.sourceClassName;

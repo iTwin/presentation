@@ -41,9 +41,9 @@ describe("Content items", () => {
           field,
           aspectClassIndex: Number(field.propertyClassName.slice(aspectClassNamePrefix.length)),
         }));
-      expect(aspectFields.every(({ field }) => field.pathCardinality === "one")).toBe(true);
-      const ownedAspectFields = aspectFields.filter(({ field }) => field.pathFromTarget.length === 1);
-      const typeAspectFields = aspectFields.filter(({ field }) => field.pathFromTarget.length === 2);
+      expect(aspectFields.every(({ field }) => field.related?.pathCardinality === "one")).toBe(true);
+      const ownedAspectFields = aspectFields.filter(({ field }) => field.related?.pathFromTarget.length === 1);
+      const typeAspectFields = aspectFields.filter(({ field }) => field.related?.pathFromTarget.length === 2);
       expect(ownedAspectFields).toHaveLength(dataset.meta.aspectClassCount);
       expect(typeAspectFields).toHaveLength(dataset.meta.aspectClassCount);
       return { provider, directFields, ownedAspectFields, typeAspectFields, dataset };

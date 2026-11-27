@@ -7,8 +7,14 @@ import { getClass } from "@itwin/presentation-shared";
 import { buildCategoryContext, collectInParallel } from "../InternalUtils.js";
 import { createPropertyFields } from "./ClassPropertyFields.js";
 
-import type { EC, ECSchemaProvider, Props, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext, ContentSource, RelationshipMeaning } from "../ContentTarget.js";
+import type { EC, ECSchemaProvider, OmitOverUnion, Props } from "@itwin/presentation-shared";
+import type {
+  CardinalityHint,
+  CategoryContext,
+  ContentSource,
+  NonEmptyRelationshipPath,
+  RelationshipMeaning,
+} from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { PathCardinalityClassifier } from "../PathCardinality.js";
@@ -45,7 +51,7 @@ type RelatedCandidate = CategorizedField & {
  * `StepPropertySpec.stepIndex` is relative to the *nested suffix* — `nested.prefixStepCount` is added
  * to translate it into an index of the full (already prefix + suffix) `path` stored on the group.
  *
- * A field's `pathFromTarget` is the sub-path from the content target up to and including the step
+ * A field's `related.pathFromTarget` is the sub-path from the content target up to and including the step
  * whose class supplies the property, and its `valueClassNames` are that step's concrete class. Each
  * field is paired with the contributing provider (so the merge step can resolve cross-provider
  * metadata conflicts) and its `FieldCategorization` facts — target-class fields anchor to
@@ -122,7 +128,7 @@ function describeNestedContext(group: ContentSource["resolvedDeclarations"][numb
 
 /** Creates fields for the properties of `propertiesClass` that are in effect on it (own, inherited and mixin). */
 function collectClassPropertyFields(
-  props: Omit<Props<typeof createPropertyFields>, "properties"> & { propertiesClass: EC.Class },
+  props: OmitOverUnion<Props<typeof createPropertyFields>, "properties"> & { propertiesClass: EC.Class },
 ): CategorizedField[] {
   const { propertiesClass, ...rest } = props;
   return createPropertyFields({ ...rest, properties: propertiesClass.getProperties() });
@@ -134,7 +140,7 @@ async function createFieldsForPath(props: {
   classifier: PathCardinalityClassifier;
   /** The owning declaration's cardinality hint, if any. */
   cardinalityHint: CardinalityHint | undefined;
-  path: RelationshipPath;
+  path: NonEmptyRelationshipPath;
   properties: RelatedPropertiesDeclaration["properties"];
   /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
   primaryClassNames: EC.FullClassNameDotNotation[];
@@ -188,6 +194,7 @@ async function createFieldsForPath(props: {
         cardinalityHint,
         path,
         stepSpec,
+        properties,
         primaryClassNames,
         stepIndexOffset,
         relationshipMeaning,
@@ -195,27 +202,7 @@ async function createFieldsForPath(props: {
       }),
     ),
   );
-  const fields = perStep.flat();
-  for (const { field, categorization } of fields) {
-    const stepIndex = field.pathFromTarget.length - 1;
-    // A property category of a `"sameInstance"` step attaches to the category enclosing its step's classes.
-    const attachesToParent =
-      categorization.relationshipMeaning === "sameInstance" && categorization.category?.source === "propertyCategory";
-    categorization.categoryContext = buildCategoryContext({
-      inheritedContext: props.categoryContext,
-      properties,
-      relationshipMeaning,
-      stepIndexOffset,
-      include: (entry) => {
-        if (entry.stepIndex === stepIndex) {
-          // A step's relationship class encloses that step's target-class fields.
-          return entry.kind === "relationshipClass" && categorization.anchor === "targetClass" && !attachesToParent;
-        }
-        return entry.stepIndex < stepIndex;
-      },
-    });
-  }
-  return fields;
+  return perStep.flat();
 }
 
 /** Enumerates the target-class and relationship-class fields opted in by a single `StepPropertySpec`. */
@@ -223,8 +210,10 @@ async function createFieldsForStep(props: {
   imodelAccess: ECSchemaProvider;
   classifier: PathCardinalityClassifier;
   cardinalityHint: CardinalityHint | undefined;
-  path: RelationshipPath;
+  path: NonEmptyRelationshipPath;
   stepSpec: StepPropertySpec;
+  /** All step specs of the owning declaration, used to build the fields' category context. */
+  properties: StepPropertySpec[];
   /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
   primaryClassNames: EC.FullClassNameDotNotation[];
   /** See {@link createFieldsForPath}. */
@@ -239,6 +228,7 @@ async function createFieldsForStep(props: {
     cardinalityHint,
     path,
     stepSpec,
+    properties,
     primaryClassNames,
     relationshipMeaning,
     stepIndexOffset,
@@ -256,38 +246,66 @@ async function createFieldsForStep(props: {
     );
   }
   const step = path[effectiveStepIndex];
-  const pathFromTarget = path.slice(0, effectiveStepIndex + 1);
+  const [firstStep, ...restSteps] = path;
+  const pathFromTarget: NonEmptyRelationshipPath = [firstStep, ...restSteps.slice(0, effectiveStepIndex)];
   const stepRelationshipMeaning = stepSpec.relationshipMeaning ?? relationshipMeaning;
   const pathCardinality = await classifier.classify({
     path: pathFromTarget,
     declaredPath: path,
     hint: cardinalityHint,
   });
+  const withCategoryContext = (fields: CategorizedField[], anchor: "targetClass" | "relationshipClass") => {
+    for (const { categorization } of fields) {
+      // A property category of a `"sameInstance"` step attaches to the category enclosing its step's classes.
+      const attachesToParent =
+        stepRelationshipMeaning === "sameInstance" && categorization.category?.source === "propertyCategory";
+      categorization.categoryContext = buildCategoryContext({
+        inheritedContext: props.categoryContext,
+        properties,
+        relationshipMeaning,
+        stepIndexOffset,
+        include: (entry) => {
+          if (entry.stepIndex === effectiveStepIndex) {
+            // A step's relationship class encloses that step's target-class fields.
+            return entry.kind === "relationshipClass" && anchor === "targetClass" && !attachesToParent;
+          }
+          return entry.stepIndex < effectiveStepIndex;
+        },
+      });
+    }
+    return fields;
+  };
   const enumerated: CategorizedField[] = [];
   if (stepSpec.target) {
     enumerated.push(
-      ...collectClassPropertyFields({
-        propertiesClass: await getClass(imodelAccess, step.targetClassName),
-        valueClassNames: [step.targetClassName],
-        relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
-        spec: stepSpec.target,
-        anchor: "targetClass",
-        relationshipMeaning: stepRelationshipMeaning,
-        categoryContext: props.categoryContext,
-      }),
+      ...withCategoryContext(
+        collectClassPropertyFields({
+          propertiesClass: await getClass(imodelAccess, step.targetClassName),
+          valueClassNames: [step.targetClassName],
+          relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
+          spec: stepSpec.target,
+          anchor: "targetClass",
+          relationshipMeaning: stepRelationshipMeaning,
+          categoryContext: props.categoryContext,
+        }),
+        "targetClass",
+      ),
     );
   }
   if (stepSpec.relationship) {
     enumerated.push(
-      ...collectClassPropertyFields({
-        propertiesClass: await getClass(imodelAccess, step.relationshipName),
-        valueClassNames: [step.relationshipName],
-        relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
-        spec: stepSpec.relationship,
-        anchor: "relationshipClass",
-        relationshipMeaning: stepRelationshipMeaning,
-        categoryContext: props.categoryContext,
-      }),
+      ...withCategoryContext(
+        collectClassPropertyFields({
+          propertiesClass: await getClass(imodelAccess, step.relationshipName),
+          valueClassNames: [step.relationshipName],
+          relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
+          spec: stepSpec.relationship,
+          anchor: "relationshipClass",
+          relationshipMeaning: stepRelationshipMeaning,
+          categoryContext: props.categoryContext,
+        }),
+        "relationshipClass",
+      ),
     );
   }
   return enumerated;

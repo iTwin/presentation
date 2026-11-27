@@ -12,7 +12,7 @@ import {
   parseInstanceLabel,
 } from "@itwin/presentation-shared";
 import { mergeBindings, stableStringify } from "./InternalUtils.js";
-import { buildTargetScopedQuery, classifyRelationshipClasses, resolveFieldSelector } from "./query/BaseQuery.js";
+import { buildTargetScopedQuery, resolveFieldSelector } from "./query/BaseQuery.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
 
 import type { Observable } from "rxjs";
@@ -110,16 +110,11 @@ export async function buildDistinctValuesQuery(props: {
   }
 
   const parts = await buildTargetScopedQuery({ schemaProvider, target, field, primaryClassScope });
-  const relationshipPropertyClasses =
-    field.kind === "property" && field.pathFromTarget.length > 0
-      ? await classifyRelationshipClasses(schemaProvider, [field.propertyClassName])
-      : new Set<EC.FullClassNameDotNotation>();
 
   const resolved = resolveFieldSelector({
     field,
     relatedClassAliases: parts.relatedClassAliases,
     calculatedFieldAliases: parts.calculatedFieldAliases,
-    isRelationshipClass: (className) => relationshipPropertyClasses.has(className),
   });
 
   const bindings: Record<string, ECSqlBinding> = { ...parts.bindings };
@@ -302,7 +297,7 @@ async function resolveQueryAnchors(props: {
       : [];
   }
 
-  const anchors = [field.pathFromTarget.length > 0 ? field.pathFromTarget[0].sourceClassName : field.propertyClassName];
+  const anchors = [field.related ? field.related.pathFromTarget[0].sourceClassName : field.propertyClassName];
   const paths = await Promise.all(
     field.primaryClassNames.map(async (className) => buildAccessiblePath(schemaProvider, className, anchors)),
   );

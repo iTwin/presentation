@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { type EC, type ECSchemaProvider, type RelationshipPath, trimWhitespace } from "@itwin/presentation-shared";
+import { type EC, type ECSchemaProvider, trimWhitespace } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
 import { SOURCE_CLASS_ALIAS_PREFIX } from "../../content/query/CalculatedFieldSources.js";
@@ -12,11 +12,11 @@ import { buildSelectProjection } from "../../content/query/SelectBuilder.js";
 import { createPrimitiveProperty } from "../MetadataStubs.js";
 
 import type { ValueSelector } from "../../content/definition-building/ValueSelector.js";
-import type { CalculatedField, PropertyField } from "../../content/model/Field.js";
+import type { CalculatedField, PropertyField, RelatedPropertyFieldAttributes } from "../../content/model/Field.js";
 import type { BaseQueryGroup } from "../../content/query/BaseQuery.js";
 
 const primaryClass: EC.FullClassNameDotNotation = "TestSchema.Primary";
-const relatedPath: RelationshipPath = [
+const relatedPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
   { sourceClassName: primaryClass, relationshipName: "TestSchema.Rel", targetClassName: "TestSchema.Target" },
 ];
 const relatedPathKey = serializeRelationshipPath({ path: relatedPath });
@@ -122,13 +122,7 @@ describe("buildSelectProjection", () => {
     const projection = await buildSelectProjection({
       schemaProvider,
       selectors: createSelectors([
-        {
-          kind: "property",
-          id: "TestSchema.Primary.Code",
-          propertyClassName: primaryClass,
-          propertyName: "Code",
-          pathFromTarget: [],
-        },
+        { kind: "property", id: "TestSchema.Primary.Code", propertyClassName: primaryClass, propertyName: "Code" },
         {
           kind: "property",
           id: "TestSchema.Target.Name",
@@ -241,7 +235,9 @@ describe("buildSelectProjection", () => {
   });
 
   it("projects a related property whose path carries a step instance filter", async () => {
-    const filteredPath: RelationshipPath = [{ ...relatedPath[0], instanceFilter: { expression: "this.Prop > 0" } }];
+    const filteredPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
+      { ...relatedPath[0], instanceFilter: { expression: "this.Prop > 0" } },
+    ];
     const group: BaseQueryGroup = {
       paths: [],
       cardinality: "one",
@@ -338,20 +334,8 @@ describe("buildSelectProjection", () => {
     const projection = await buildSelectProjection({
       schemaProvider,
       selectors: createSelectors([
-        {
-          kind: "property",
-          id: "TestSchema.Primary.Code",
-          propertyClassName: primaryClass,
-          propertyName: "Code",
-          pathFromTarget: [],
-        },
-        {
-          kind: "property",
-          id: "TestSchema.Primary.Label",
-          propertyClassName: primaryClass,
-          propertyName: "Label",
-          pathFromTarget: [],
-        },
+        { kind: "property", id: "TestSchema.Primary.Code", propertyClassName: primaryClass, propertyName: "Code" },
+        { kind: "property", id: "TestSchema.Primary.Label", propertyClassName: primaryClass, propertyName: "Label" },
       ]),
       group: createBaseQueryGroup(),
       ownedPathKeys: ownsDirect,
@@ -369,10 +353,8 @@ describe("buildSelectProjection", () => {
       type: { kind: "primitive", type: "String" },
       propertyClassName: primaryClass,
       propertyName: "Code",
-      pathFromTarget: [],
       valueClassNames: [primaryClass],
       primaryClassNames: [primaryClass],
-      pathCardinality: "one",
     };
     const scoreField: CalculatedField = {
       category: { type: "target" },
@@ -424,10 +406,9 @@ describe("buildSelectProjection", () => {
       type: { kind: "primitive", type: "String" },
       propertyClassName: "TestSchema.Target",
       propertyName: "Name",
-      pathFromTarget: relatedPath,
+      related: { pathFromTarget: relatedPath, pathCardinality: "one", propertyClassKind: "target" },
       valueClassNames: ["TestSchema.Target"],
       primaryClassNames: [primaryClass],
-      pathCardinality: "one",
     };
 
     await expect(

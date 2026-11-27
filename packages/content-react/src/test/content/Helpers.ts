@@ -32,8 +32,6 @@ export function createField(props: Partial<Omit<PropertyField, "kind">> & Pick<P
     type: { kind: "primitive", type: "String" },
     propertyClassName: classA,
     propertyName: props.id,
-    pathFromTarget: [],
-    pathCardinality: "one",
     valueClassNames: [classA],
     primaryClassNames: [classA],
     category: { type: "target" },
@@ -53,11 +51,13 @@ export function createItem(props: {
     primaryKey: props.primaryKey ?? { className: classA, id: "0x1" },
     values,
     getValue: (field) => values[field.id],
-    getRelatedInstances: ({ pathFromTarget }) =>
-      (props.related?.find((entry) => deepEqual(entry.path, pathFromTarget))?.instances ?? []).map((instance) => ({
+    getRelatedInstances: (fieldOrPath) => {
+      const path = "kind" in fieldOrPath ? fieldOrPath.related?.pathFromTarget : fieldOrPath.pathFromTarget;
+      return (props.related?.find((entry) => deepEqual(entry.path, path))?.instances ?? []).map((instance) => ({
         key: instance.key,
         getValue: (field) => instance.values[field.id],
-      })),
+      }));
+    },
   };
 }
 

@@ -11,6 +11,7 @@ import {
 } from "../../content/definition-building/BuildContentDefinition.js";
 import { computePropertySelectorId } from "../../content/definition-building/ValueSelector.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
+import { toNonEmptyRelationshipPath } from "../../content/InternalUtils.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { collectPathCardinalities } from "../../content/PathCardinality.js";
@@ -21,8 +22,8 @@ import {
   createSchemaAccess,
 } from "../MetadataStubs.js";
 
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentSource } from "../../content/ContentTarget.js";
+import type { EC } from "@itwin/presentation-shared";
+import type { ContentSource, NonEmptyRelationshipPath } from "../../content/ContentTarget.js";
 import type { ContentDefinition } from "../../content/definition-building/BuildContentDefinition.js";
 import type { DescriptorTransformer } from "../../content/extensions/DescriptorTransformer.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
@@ -67,14 +68,12 @@ describe("buildContentDefinition", () => {
           id: "TestSchema.D1.Prop",
           propertyClassName: "TestSchema.D1",
           propertyName: "Prop",
-          pathFromTarget: [],
         },
         "TestSchema.Base.Inherited": {
           kind: "property",
           id: "TestSchema.Base.Inherited",
           propertyClassName: "TestSchema.Base",
           propertyName: "Inherited",
-          pathFromTarget: [],
         },
       },
       fields: {},
@@ -85,18 +84,45 @@ describe("buildContentDefinition", () => {
     expect(readerOf(definitions, "TestSchema.Base.Inherited")("TestSchema.D1", "base")).to.equal("base");
   });
 
+  it("takes a related selector's type from its backing related field", async () => {
+    const pathFromTarget = toNonEmptyRelationshipPath([
+      { sourceClassName: "TestSchema.A", relationshipName: "TestSchema.AToB", targetClassName: "TestSchema.B" },
+    ]);
+    const field: PropertyField = {
+      kind: "property",
+      id: "field",
+      label: "Prop",
+      type: { kind: "primitive", type: "Integer" },
+      propertyClassName: "TestSchema.B",
+      propertyName: "Prop",
+      related: { pathFromTarget, pathCardinality: "one", propertyClassKind: "target" },
+      valueClassNames: ["TestSchema.B"],
+      primaryClassNames: ["TestSchema.A"],
+      category: { type: "target" },
+    };
+    const id = computePropertySelectorId({ ...field, pathFromTarget });
+    const definitions = await prepareSelectorDefinitions({
+      imodelAccess: createSchemaAccess([
+        createEntityClass({
+          fullName: "TestSchema.B",
+          properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.B" })],
+        }),
+      ]),
+      selectors: {
+        [id]: { kind: "property", id, propertyClassName: "TestSchema.B", propertyName: "Prop", pathFromTarget },
+      },
+      fields: { [field.id]: field },
+    });
+
+    expect(definitions[id]).to.have.property("type").that.deep.equals(field.type);
+  });
+
   it("rejects a prepared property selector whose property does not exist", async () => {
     await expect(
       prepareSelectorDefinitions({
         imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.A" })]),
         selectors: {
-          missing: {
-            kind: "property",
-            id: "missing",
-            propertyClassName: "TestSchema.A",
-            propertyName: "Missing",
-            pathFromTarget: [],
-          },
+          missing: { kind: "property", id: "missing", propertyClassName: "TestSchema.A", propertyName: "Missing" },
         },
         fields: {},
       }),
@@ -120,7 +146,6 @@ describe("buildContentDefinition", () => {
               id: "unsupported",
               propertyClassName: "TestSchema.A",
               propertyName: "Unsupported",
-              pathFromTarget: [],
             },
           },
           fields: {},
@@ -226,7 +251,7 @@ describe("buildContentDefinition", () => {
         properties: [createPrimitiveProperty({ name: "Related", declaringClass: "TestSchema.B" })],
       }),
     ]);
-    const path: RelationshipPath = [
+    const path: NonEmptyRelationshipPath = [
       { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
     ];
     const provider: IModelFieldsProvider = {
@@ -276,7 +301,7 @@ describe("buildContentDefinition", () => {
       }),
     ]);
     // Resolved paths start at the relationship's constraint class, whichever target they were resolved for.
-    const path: RelationshipPath = [
+    const path: NonEmptyRelationshipPath = [
       { sourceClassName: "TestSchema.Base", targetClassName: "TestSchema.B", relationshipName: "TestSchema.BaseToB" },
     ];
     const provider: IModelFieldsProvider = {
@@ -307,11 +332,11 @@ describe("buildContentDefinition", () => {
       "TestSchema.B.Related(TestSchema.Base-[TestSchema.BaseToB]->TestSchema.B)"
     ] as PropertyField;
     expect(related.primaryClassNames).to.deep.equal(["TestSchema.A1", "TestSchema.A2"]);
-    expect(related.pathFromTarget).to.deep.equal(path);
+    expect(related.related?.pathFromTarget).to.deep.equal(path);
   });
 
   describe("related path cardinality", () => {
-    const path: RelationshipPath = [
+    const path: NonEmptyRelationshipPath = [
       { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
     ];
     const relatedFieldId = "TestSchema.B.Related(TestSchema.A-[TestSchema.AtoB]->TestSchema.B)";
@@ -390,12 +415,20 @@ describe("buildContentDefinition", () => {
           sources: [source],
           config: { imodelFieldsProviders: [first, second] },
         });
-        expect(definition.descriptor.fields[relatedFieldId]).to.include({ pathCardinality: firstHint });
+        expect((definition.descriptor.fields[relatedFieldId] as PropertyField).related?.pathCardinality).to.equal(
+          firstHint,
+        );
         expect(
-          definition.descriptor.fields[
-            PropertyField.computeId({ propertyClassName: "TestSchema.B", propertyName: "Other", pathFromTarget: path })
-          ],
-        ).to.include({ pathCardinality: secondHint });
+          (
+            definition.descriptor.fields[
+              PropertyField.computeId({
+                propertyClassName: "TestSchema.B",
+                propertyName: "Other",
+                pathFromTarget: path,
+              })
+            ] as PropertyField
+          ).related?.pathCardinality,
+        ).to.equal(secondHint);
         expect([...collectPathCardinalities(definition.descriptor).values()]).to.deep.equal(["many"]);
       },
     );
@@ -420,7 +453,7 @@ describe("buildContentDefinition", () => {
         sources: [source],
         config: { imodelFieldsProviders: [provider] },
       });
-      expect(definition.descriptor.fields[relatedFieldId]).to.include({ pathCardinality: "one" });
+      expect((definition.descriptor.fields[relatedFieldId] as PropertyField).related?.pathCardinality).to.equal("one");
     });
 
     it.each([
@@ -491,7 +524,9 @@ describe("buildContentDefinition", () => {
           externalFieldsProviders: [createExternalProvider("ext1_v1", inputHint)],
         },
       });
-      expect(definition.descriptor.fields[relatedFieldId]).to.include({ pathCardinality: fieldHint });
+      expect((definition.descriptor.fields[relatedFieldId] as PropertyField).related?.pathCardinality).to.equal(
+        fieldHint,
+      );
       expect(definition.externalProviders[0].inputs[0].cardinality).to.equal(inputHint);
       expect([...collectPathCardinalities(definition.descriptor, definition.externalInputs).values()]).to.deep.equal([
         "many",
@@ -516,7 +551,7 @@ describe("buildContentDefinition", () => {
 
         const field = definition.descriptor.fields[relatedFieldId];
         assert(field.kind === "property");
-        expect(field.pathCardinality).to.equal(schemaCardinality);
+        expect(field.related?.pathCardinality).to.equal(schemaCardinality);
         expect(definition.externalProviders[0].inputs[0].cardinality).to.equal(hint);
       },
     );
@@ -534,12 +569,14 @@ describe("buildContentDefinition", () => {
 
       const field = definition.descriptor.fields[relatedFieldId];
       assert(field.kind === "property");
-      expect(field.pathCardinality).to.equal("one");
+      expect(field.related?.pathCardinality).to.equal("one");
       expect(
-        definition.descriptor.fields[
-          PropertyField.computeId({ propertyClassName: "TestSchema.B", propertyName: "Other", pathFromTarget: path })
-        ],
-      ).to.include({ pathCardinality: "many" });
+        (
+          definition.descriptor.fields[
+            PropertyField.computeId({ propertyClassName: "TestSchema.B", propertyName: "Other", pathFromTarget: path })
+          ] as PropertyField
+        ).related?.pathCardinality,
+      ).to.equal("many");
     });
 
     it("infers input-only cardinality without hints from declarations contributing no fields", async () => {
@@ -571,7 +608,7 @@ describe("buildContentDefinition", () => {
       });
 
       const related = descriptor.fields[relatedFieldId] as PropertyField;
-      expect(related.pathCardinality).to.equal("many");
+      expect(related.related?.pathCardinality).to.equal("many");
       // Cardinality never reshapes the value: an array `type` would mean a genuine EC array property.
       expect(related.type).to.deep.equal({ kind: "primitive", type: "String" });
     });
@@ -584,10 +621,10 @@ describe("buildContentDefinition", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      expect((descriptor.fields[relatedFieldId] as PropertyField).pathCardinality).to.equal("one");
+      expect((descriptor.fields[relatedFieldId] as PropertyField).related?.pathCardinality).to.equal("one");
     });
 
-    it("reports a direct field as single-valued", async () => {
+    it("reports a direct field without related attributes", async () => {
       const imodelAccess = createSchemaAccess([
         createEntityClass({
           fullName: "TestSchema.A",
@@ -595,7 +632,7 @@ describe("buildContentDefinition", () => {
         }),
       ]);
       const { descriptor } = await buildContentDefinition({ imodelAccess, sources: [createSource("TestSchema.A")] });
-      expect((descriptor.fields["TestSchema.A.Direct"] as PropertyField).pathCardinality).to.equal("one");
+      expect((descriptor.fields["TestSchema.A.Direct"] as PropertyField).related).toBeUndefined();
     });
   });
 
@@ -818,7 +855,7 @@ describe("buildContentDefinition", () => {
   });
 
   it("infers a many-valued unhinted external input from schema multiplicity", async () => {
-    const path: RelationshipPath = [
+    const path: NonEmptyRelationshipPath = [
       { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
     ];
     const imodelAccess = createSchemaAccess([
@@ -873,10 +910,10 @@ describe("buildContentDefinition", () => {
   it.each([undefined, "one", "many"] as const)(
     "maps polymorphic input selectors without sharing their %s hint across providers",
     async (cardinalityHint) => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.Rel" },
       ];
-      const concretePaths: RelationshipPath[] = [
+      const concretePaths: NonEmptyRelationshipPath[] = [
         [{ ...path[0], targetClassName: "TestSchema.B1", relationshipName: "TestSchema.Rel1" }],
         [{ ...path[0], targetClassName: "TestSchema.B2", relationshipName: "TestSchema.Rel2" }],
       ];
@@ -920,7 +957,11 @@ describe("buildContentDefinition", () => {
       });
 
       const selectorIds = concretePaths.map((pathFromTarget) =>
-        computePropertySelectorId({ propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget }),
+        computePropertySelectorId({
+          propertyClassName: "TestSchema.B",
+          propertyName: "Name",
+          pathFromTarget: toNonEmptyRelationshipPath(pathFromTarget),
+        }),
       );
       expect(Object.keys(definition.selectors)).to.deep.equal(selectorIds);
       expect(definition.externalInputs.map((input) => input.pathFromTarget)).to.deep.equal([
@@ -950,7 +991,7 @@ describe("buildContentDefinition", () => {
   it.each([undefined, "one", "many"] as const)(
     "keeps a related field's `one` hint independent of an external input hint of %s on the same path",
     async (cardinalityHint) => {
-      const path: RelationshipPath = [
+      const path: NonEmptyRelationshipPath = [
         { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
       ];
       const provider: IModelFieldsProvider = {
@@ -1003,7 +1044,7 @@ describe("buildContentDefinition", () => {
         });
         const field = definition.descriptor.fields[fieldId];
         assert(field.kind === "property");
-        expect(field.pathCardinality).to.equal("one");
+        expect(field.related?.pathCardinality).to.equal("one");
       }
       expect(definition.externalProviders[0].inputs[0]).to.include({
         key: "name",
@@ -1182,7 +1223,7 @@ describe("buildContentDefinition", () => {
         properties: [createPrimitiveProperty({ name: "Rel", declaringClass: "TestSchema.B" })],
       }),
     ]);
-    const path: RelationshipPath = [
+    const path: NonEmptyRelationshipPath = [
       { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
     ];
     const provider: IModelFieldsProvider = {

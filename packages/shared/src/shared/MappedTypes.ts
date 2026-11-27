@@ -66,13 +66,21 @@ type PropsFromParameters<TParams> = TParams extends [infer TProps]
 export type Props<TFunc extends (...args: any[]) => any> = PropsFromParameters<OverloadParameters<TFunc>>;
 
 /**
- * Recursively marks all properties as readonly with no depth limit.
+ * An array type that is guaranteed to have at least one element.
+ * @public
+ */
+export type NonEmptyArray<T> = [T, ...T[]];
+
+/**
+ * Recursively marks all properties as readonly, preserving tuple shapes, including {@link NonEmptyArray}.
  * @public
  */
 export type DeepReadonly<T> = T extends (...args: any[]) => any
   ? T
   : T extends (infer U)[]
-    ? ReadonlyArray<DeepReadonly<U>>
+    ? U[] extends T
+      ? ReadonlyArray<DeepReadonly<U>>
+      : { readonly [K in keyof T]: DeepReadonly<T[K]> }
     : T extends object
       ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
       : T;

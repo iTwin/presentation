@@ -5,7 +5,8 @@
 
 import { computePropertySelectorId } from "./ValueSelector.js";
 
-import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, ECSqlBinding } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "../ContentTarget.js";
 import type { Field } from "../model/Field.js";
 import type { ExternalInput } from "./ExternalProviders.js";
 import type { CalculatedValueSelector, PropertyValueSelector, ValueSelector } from "./ValueSelector.js";
@@ -37,7 +38,12 @@ export function collectValueRequirements(props: {
   for (const field of fields) {
     switch (field.kind) {
       case "property": {
-        const selector = createPropertySelector({ ...field, id: computePropertySelectorId(field) });
+        const pathFromTarget = field.related?.pathFromTarget;
+        const selector = createPropertySelector({
+          ...field,
+          pathFromTarget,
+          id: computePropertySelectorId({ ...field, pathFromTarget }),
+        });
         selectors[selector.id] = selector;
         fieldSelectorIds[field.id] = selector.id;
         break;
@@ -63,14 +69,14 @@ function createPropertySelector(props: {
   id: string;
   propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
-  pathFromTarget?: RelationshipPath;
+  pathFromTarget?: NonEmptyRelationshipPath;
 }): PropertyValueSelector {
   return {
     kind: "property",
     id: props.id,
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
+    pathFromTarget: props.pathFromTarget,
   };
 }
 

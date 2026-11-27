@@ -67,9 +67,9 @@ interface PropertyGridRelatedInstancesEntry extends PropertyGridEntryBase {
   kind: "related-instances";
   /**
    * Fields of the related instances, in display order. There's at least one field, and all fields share the same
-   * `pathFromTarget` - the relationship path from content target to the related instances - and `category`.
+   * `related.pathFromTarget` - the relationship path from content target to the related instances - and `category`.
    */
-  fields: ReadonlyPropertyField[];
+  fields: Array<ReadonlyPropertyField & Required<Pick<ReadonlyPropertyField, "related">>>;
   /**
    * Related instances of each transformed content item, as returned by `ContentItem.getRelatedInstances`:
    * `values[i]` belongs to `items[i]`. Use `getValue` of a related instance to get its value of one of `fields`.
@@ -159,11 +159,11 @@ export function keepCommonFields(fields: FieldValues[], items: ContentItem[]): F
   return fields.filter(({ field }) => items.every((item) => isFieldApplicable(field, item)));
 }
 
-type RelatedFieldValues = FieldValues & { field: ReadonlyPropertyField };
+type RelatedFieldValues = FieldValues & { field: RelatedInstancesValues["fields"][number] };
 type RelatedInstancesPerItem = RelatedInstancesValues["values"];
 
 /**
- * Reshapes values of fields reached over many-cardinality relationship paths (`pathCardinality: "many"`), which are
+ * Reshapes values of fields reached over many-cardinality relationship paths (`related.pathCardinality: "many"`), which are
  * loaded as arrays with one value per related instance:
  *
  * - When every item reaches at most one related instance over the path, values are unwrapped: an empty array
@@ -171,7 +171,7 @@ type RelatedInstancesPerItem = RelatedInstancesValues["values"];
  * - Otherwise, fields of the path within the same category are grouped into a single `RelatedInstancesValues`,
  *   positioned where the first of them was, holding related instances of every item.
  *
- * Related instances of an item are looked up by the field's `pathFromTarget`.
+ * Related instances of an item are looked up by the field's `related.pathFromTarget`.
  */
 export function collapseRelatedInstances(
   fields: FieldValues[],
@@ -185,7 +185,8 @@ export function collapseRelatedInstances(
       result.push(fieldValues);
       continue;
     }
-    const { pathFromTarget, category } = fieldValues.field;
+    const { related, category } = fieldValues.field;
+    const { pathFromTarget } = related;
     const pathKey = serializeRelationshipPath({ path: pathFromTarget });
     const instances = getOrCreate({
       map: instancesByPath,
@@ -212,7 +213,7 @@ export function collapseRelatedInstances(
 }
 
 function isManyFieldValues(fieldValues: FieldValues): fieldValues is RelatedFieldValues {
-  return fieldValues.field.kind === "property" && fieldValues.field.pathCardinality === "many";
+  return fieldValues.field.kind === "property" && fieldValues.field.related?.pathCardinality === "many";
 }
 
 function getElement(value: DeepReadonly<Value>, index: number): DeepReadonly<Value> {

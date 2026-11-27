@@ -7,9 +7,10 @@ import { describe, expect, it } from "vitest";
 import { mergePropertyFieldsByIdentity } from "../../content/definition-building/PropertyFieldMerge.js";
 import { PropertyField } from "../../content/model/Field.js";
 
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, Props } from "@itwin/presentation-shared";
 import type { CategoryContext } from "../../content/ContentTarget.js";
 import type { FieldCategorization } from "../../content/definition-building/ClassPropertyFields.js";
+import type { RelatedPropertyFieldAttributes } from "../../content/model/Field.js";
 
 function createField(props: {
   propertyClassName: EC.FullClassNameDotNotation;
@@ -20,15 +21,15 @@ function createField(props: {
   hidden?: boolean;
   readOnly?: boolean;
   type?: PropertyField["type"];
-  pathFromTarget?: PropertyField["pathFromTarget"];
-  pathCardinality?: PropertyField["pathCardinality"];
+  pathFromTarget?: RelatedPropertyFieldAttributes["pathFromTarget"];
+  pathCardinality?: RelatedPropertyFieldAttributes["pathCardinality"];
+  propertyClassKind?: RelatedPropertyFieldAttributes["propertyClassKind"];
 }): PropertyField {
   const id = PropertyField.computeId({
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget,
   });
-  const pathCardinality = props.pathCardinality ?? "one";
   return {
     category: { type: "target" },
     kind: "property",
@@ -39,10 +40,17 @@ function createField(props: {
     readOnly: props.readOnly,
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget ?? [],
+    ...(props.pathFromTarget
+      ? {
+          related: {
+            pathFromTarget: props.pathFromTarget,
+            pathCardinality: props.pathCardinality ?? "one",
+            propertyClassKind: props.propertyClassKind ?? "target",
+          },
+        }
+      : {}),
     valueClassNames: props.valueClassNames,
     primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
-    pathCardinality,
   };
 }
 
@@ -58,11 +66,7 @@ describe("mergePropertyFieldsByIdentity", () => {
       mergePropertyFieldsByIdentity(
         fields.map((field) => ({
           field,
-          categorization: {
-            anchor: "none" as const,
-            relationshipMeaning: "relatedInstance" as const,
-            categoryContext: [],
-          },
+          categorization: { relationshipMeaning: "relatedInstance" as const, categoryContext: [] },
         })),
       ),
     );
@@ -86,7 +90,6 @@ describe("mergePropertyFieldsByIdentity", () => {
         id,
         valueClassNames: ["Stuff.Door", "Stuff.Window"],
         primaryClassNames: ["Stuff.Door", "Stuff.Window"],
-        pathCardinality: "one",
       },
     });
   });
@@ -154,7 +157,7 @@ describe("mergePropertyFieldsByIdentity", () => {
   });
 
   it("unions related-endpoint candidates that share identity", () => {
-    const path: PropertyField["pathFromTarget"] = [
+    const path: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       {
         sourceClassName: "BisCore.Element",
         targetClassName: "BisCore.ExternalSourceAspect",
@@ -197,7 +200,7 @@ describe("mergePropertyFieldsByIdentity", () => {
   });
 
   it("keeps the same property reached through different filtered paths separate", () => {
-    const pathA: PropertyField["pathFromTarget"] = [
+    const pathA: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       {
         sourceClassName: "Stuff.Thing",
         relationshipName: "Stuff.RelA",
@@ -205,7 +208,7 @@ describe("mergePropertyFieldsByIdentity", () => {
         instanceFilter: { expression: "this.Kind = 1" },
       },
     ];
-    const pathB: PropertyField["pathFromTarget"] = [
+    const pathB: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       {
         sourceClassName: "Stuff.Thing",
         relationshipName: "Stuff.RelA",
@@ -238,7 +241,7 @@ describe("mergePropertyFieldsByIdentity", () => {
   it("merges to `many` when candidates disagree about the path cardinality", () => {
     // Describing a many-valued path as single-valued would drop every related instance but one, so
     // `many` wins regardless of candidate order.
-    const path: PropertyField["pathFromTarget"] = [
+    const path: RelatedPropertyFieldAttributes["pathFromTarget"] = [
       {
         sourceClassName: "BisCore.Element",
         targetClassName: "BisCore.ExternalSourceAspect",
@@ -270,7 +273,7 @@ describe("mergePropertyFieldsByIdentity", () => {
       [many, one],
     ]) {
       const merged = merge(candidates)[id];
-      expect(merged.pathCardinality).to.equal("many");
+      expect(merged.related?.pathCardinality).to.equal("many");
       expect(merged.type).to.deep.equal({ kind: "primitive", type: "String" });
     }
   });
@@ -307,7 +310,6 @@ describe("mergePropertyFieldsByIdentity", () => {
         {
           field: a,
           categorization: {
-            anchor: "none",
             relationshipMeaning: "relatedInstance",
             categoryContext: [],
             category: { source: "override", id: "a" },
@@ -316,7 +318,6 @@ describe("mergePropertyFieldsByIdentity", () => {
         {
           field: b,
           categorization: {
-            anchor: "none",
             relationshipMeaning: "relatedInstance",
             categoryContext: [],
             category: { source: "override", id: "b" },
@@ -326,7 +327,11 @@ describe("mergePropertyFieldsByIdentity", () => {
     ).to.throw(/divergent metadata/);
   });
 
-  it.each<{ name: string; placement: Partial<FieldCategorization> }>([
+  it.each<{
+    name: string;
+    placement?: Partial<FieldCategorization>;
+    propertyClassKind?: RelatedPropertyFieldAttributes["propertyClassKind"];
+  }>([
     {
       name: "ancestry",
       placement: {
@@ -334,18 +339,18 @@ describe("mergePropertyFieldsByIdentity", () => {
       },
     },
     { name: "relationship meaning", placement: { relationshipMeaning: "sameInstance" } },
-    { name: "anchor", placement: { anchor: "relationshipClass" } },
-  ])("merges identical explicit category overrides with different $name", ({ placement }) => {
-    const field = createField({
+    { name: "class kind", propertyClassKind: "relationship" },
+  ])("merges identical explicit category overrides with different $name", ({ placement, propertyClassKind }) => {
+    const fieldProps = {
       propertyClassName: "Stuff.Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff.Thing"],
       pathFromTarget: [
         { sourceClassName: "Stuff.Source", relationshipName: "Stuff.HasThing", targetClassName: "Stuff.Thing" },
       ],
-    });
+    } satisfies Props<typeof createField>;
+    const field = createField(fieldProps);
     const categorization: FieldCategorization = {
-      anchor: "targetClass",
       relationshipMeaning: "relatedInstance",
       categoryContext: [],
       category: { source: "override", id: "custom" },
@@ -353,12 +358,16 @@ describe("mergePropertyFieldsByIdentity", () => {
     const provider = { id: "provider_v1" } as const;
     const candidates = [
       { field, provider, categorization },
-      { field, provider, categorization: { ...categorization, ...placement } },
+      {
+        field: createField({ ...fieldProps, propertyClassKind }),
+        provider,
+        categorization: { ...categorization, ...placement },
+      },
     ];
 
     for (const ordered of [candidates, [...candidates].reverse()]) {
       expect(mergePropertyFieldsByIdentity(ordered)).to.deep.equal([
-        { field, categorization: ordered[0].categorization },
+        { field: ordered[0].field, categorization: ordered[0].categorization },
       ]);
     }
   });
@@ -376,7 +385,6 @@ describe("mergePropertyFieldsByIdentity", () => {
       valueClassNames: ["Stuff.Thing"],
     });
     const categorization: FieldCategorization = {
-      anchor: "targetClass",
       relationshipMeaning: "relatedInstance",
       categoryContext: [],
       category: { source: "override", id: "Stuff.Custom" },
@@ -414,7 +422,6 @@ describe("mergePropertyFieldsByIdentity", () => {
         candidates.map(({ meaning, context, category, providerId, priority }, index) => ({
           field: create(`Stuff.V${index}`),
           categorization: {
-            anchor: "targetClass" as const,
             relationshipMeaning: meaning ?? "relatedInstance",
             ...(category ? { category } : undefined),
             categoryContext: context ?? [],
@@ -430,19 +437,17 @@ describe("mergePropertyFieldsByIdentity", () => {
           { ...candidate, providerId: "a_v1" },
           { ...candidate, providerId: "b_v1" },
         ]),
-      ).to.deep.equal({ anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: innerContext });
+      ).to.deep.equal({ relationshipMeaning: "sameInstance", categoryContext: innerContext });
     });
 
     it("keeps the first candidate's placement when priorities tie", () => {
       const sameInstance = { meaning: "sameInstance", providerId: "a_v1" } as const;
       const related = { context: outerContext, providerId: "b_v1" } as const;
       expect(placementOf([sameInstance, related])).to.deep.equal({
-        anchor: "targetClass",
         relationshipMeaning: "sameInstance",
         categoryContext: [],
       });
       expect(placementOf([related, sameInstance])).to.deep.equal({
-        anchor: "targetClass",
         relationshipMeaning: "relatedInstance",
         categoryContext: outerContext,
       });
@@ -454,7 +459,7 @@ describe("mergePropertyFieldsByIdentity", () => {
           { providerId: "a_v1", priority: 1 },
           { meaning: "sameInstance", context: innerContext, providerId: "b_v1", priority: 2 },
         ]),
-      ).to.deep.equal({ anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: innerContext });
+      ).to.deep.equal({ relationshipMeaning: "sameInstance", categoryContext: innerContext });
     });
 
     it("rejects divergent meanings of property categories from the same provider", () => {
@@ -472,7 +477,7 @@ describe("mergePropertyFieldsByIdentity", () => {
           { providerId: "a_v1", context: outerContext },
           { providerId: "a_v1", context: outerContext, meaning: "sameInstance" },
         ]),
-      ).to.deep.equal({ anchor: "targetClass", relationshipMeaning: "relatedInstance", categoryContext: outerContext });
+      ).to.deep.equal({ relationshipMeaning: "relatedInstance", categoryContext: outerContext });
     });
 
     it("rejects divergent meanings of fields without property categories and context from the same provider", () => {
@@ -499,7 +504,7 @@ describe("mergePropertyFieldsByIdentity", () => {
             context: [innerContext[0], { ...innerContext[1], relationshipMeaning: "sameInstance" }],
           },
         ]),
-      ).to.deep.equal({ anchor: "targetClass", relationshipMeaning: "relatedInstance", categoryContext: innerContext });
+      ).to.deep.equal({ relationshipMeaning: "relatedInstance", categoryContext: innerContext });
     });
 
     it("rejects divergent contexts from the same provider", () => {
@@ -530,11 +535,7 @@ describe("mergePropertyFieldsByIdentity", () => {
         const contexts: CategoryContext[] = [[...inherited[0]], [...inherited[1], innerContext[1]]];
         const candidates = inherited.map((inheritedCategoryContext, index) => ({
           field: create(`Stuff.V${index}`),
-          categorization: {
-            anchor: "targetClass" as const,
-            relationshipMeaning: "relatedInstance" as const,
-            categoryContext: contexts[index],
-          },
+          categorization: { relationshipMeaning: "relatedInstance" as const, categoryContext: contexts[index] },
           provider: { id: "nested_v1" as const },
           inheritedCategoryContext,
         }));
@@ -543,7 +544,6 @@ describe("mergePropertyFieldsByIdentity", () => {
           expect(mergeCandidates).to.throw(/divergent metadata/);
         } else {
           expect(mergeCandidates()).to.deep.equal({
-            anchor: "targetClass",
             relationshipMeaning: "relatedInstance",
             categoryContext: outerContext,
           });
@@ -557,7 +557,7 @@ describe("mergePropertyFieldsByIdentity", () => {
           { providerId: "a_v1", context: innerContext },
           { providerId: "a_v1", context: [...innerContext] },
         ]),
-      ).to.deep.equal({ anchor: "targetClass", relationshipMeaning: "relatedInstance", categoryContext: innerContext });
+      ).to.deep.equal({ relationshipMeaning: "relatedInstance", categoryContext: innerContext });
     });
 
     it("rejects same-length contexts with divergent step indexes from the same provider", () => {
@@ -597,7 +597,6 @@ describe("mergePropertyFieldsByIdentity", () => {
       valueClassNames: ["Stuff.Window"],
     });
     const categorization = {
-      anchor: "targetClass",
       relationshipMeaning: "relatedInstance",
       categoryContext: [],
       category: { source: "propertyCategory", id: "Stuff.Geo", label: "Geometry" },
@@ -806,12 +805,12 @@ describe("mergePropertyFieldsByIdentity", () => {
       mergePropertyFieldsByIdentity([
         {
           field: a,
-          categorization: { anchor: "none", relationshipMeaning: "relatedInstance", categoryContext: [] },
+          categorization: { relationshipMeaning: "relatedInstance", categoryContext: [] },
           provider: { id: "a_v1", priority: 1 },
         },
         {
           field: b,
-          categorization: { anchor: "none", relationshipMeaning: "relatedInstance", categoryContext: [] },
+          categorization: { relationshipMeaning: "relatedInstance", categoryContext: [] },
           provider: { id: "b_v1", priority: 2 },
         },
       ]),
@@ -838,12 +837,12 @@ describe("mergePropertyFieldsByIdentity", () => {
       mergePropertyFieldsByIdentity([
         {
           field: a,
-          categorization: { anchor: "none", relationshipMeaning: "relatedInstance", categoryContext: [] },
+          categorization: { relationshipMeaning: "relatedInstance", categoryContext: [] },
           provider: { id: "a_v1", priority: 5 },
         },
         {
           field: b,
-          categorization: { anchor: "none", relationshipMeaning: "relatedInstance", categoryContext: [] },
+          categorization: { relationshipMeaning: "relatedInstance", categoryContext: [] },
           provider: { id: "b_v1", priority: 5 },
         },
       ]),
@@ -869,12 +868,12 @@ describe("mergePropertyFieldsByIdentity", () => {
       mergePropertyFieldsByIdentity([
         {
           field: a,
-          categorization: { anchor: "none", relationshipMeaning: "relatedInstance", categoryContext: [] },
+          categorization: { relationshipMeaning: "relatedInstance", categoryContext: [] },
           provider: { id: "p_v1" },
         },
         {
           field: b,
-          categorization: { anchor: "none", relationshipMeaning: "relatedInstance", categoryContext: [] },
+          categorization: { relationshipMeaning: "relatedInstance", categoryContext: [] },
           provider: { id: "p_v1" },
         },
       ]),

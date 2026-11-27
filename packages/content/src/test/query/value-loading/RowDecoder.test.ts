@@ -16,11 +16,12 @@ import {
   mergeGroupValues,
 } from "../../../content/query/value-loading/RowDecoder.js";
 
-import type { ECSqlQueryRow, InstanceKey, RelationshipPath, Value, ValueDescriptor } from "@itwin/presentation-shared";
+import type { ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../../content/ContentTarget.js";
 import type { ValueSelector } from "../../../content/definition-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { RelatedInstanceEntry } from "../../../content/model/ContentItem.js";
+import type { RelatedPropertyFieldAttributes } from "../../../content/model/Field.js";
 import type { SelectProjection } from "../../../content/query/SelectBuilder.js";
 import type { GroupValues } from "../../../content/query/value-loading/RowDecoder.js";
 
@@ -40,55 +41,19 @@ const defaultDecoderTypes: Record<string, ValueDescriptor> = {
 };
 
 const selectors: Record<ValueSelector["id"], ValueSelector> = {
-  "Schema.A.Code": {
-    kind: "property",
-    id: "Schema.A.Code",
-    propertyClassName: "Schema.A",
-    propertyName: "Code",
-    pathFromTarget: [],
-  },
-  "Schema.A.Label": {
-    kind: "property",
-    id: "Schema.A.Label",
-    propertyClassName: "Schema.A",
-    propertyName: "Label",
-    pathFromTarget: [],
-  },
+  "Schema.A.Code": { kind: "property", id: "Schema.A.Code", propertyClassName: "Schema.A", propertyName: "Code" },
+  "Schema.A.Label": { kind: "property", id: "Schema.A.Label", propertyClassName: "Schema.A", propertyName: "Label" },
   "calc:score": { kind: "calculated", id: "calc:score", expression: "1", sourceClassName: "Schema.A" },
-  "Schema.B.Name": {
-    kind: "property",
-    id: "Schema.B.Name",
-    propertyClassName: "Schema.B",
-    propertyName: "Name",
-    pathFromTarget: [],
-  },
-  "Schema.B.Code": {
-    kind: "property",
-    id: "Schema.B.Code",
-    propertyClassName: "Schema.B",
-    propertyName: "Code",
-    pathFromTarget: [],
-  },
+  "Schema.B.Name": { kind: "property", id: "Schema.B.Name", propertyClassName: "Schema.B", propertyName: "Name" },
+  "Schema.B.Code": { kind: "property", id: "Schema.B.Code", propertyClassName: "Schema.B", propertyName: "Code" },
 };
 
 const descriptor = {
   sources: [],
   categories: {},
   fields: {
-    "Schema.A.Code": {
-      kind: "property",
-      id: "Schema.A.Code",
-      pathFromTarget: [],
-      pathCardinality: "one",
-      valueClassNames: ["Schema.A"],
-    },
-    "Schema.A.Label": {
-      kind: "property",
-      id: "Schema.A.Label",
-      pathFromTarget: [],
-      pathCardinality: "one",
-      valueClassNames: ["Schema.A"],
-    },
+    "Schema.A.Code": { kind: "property", id: "Schema.A.Code", valueClassNames: ["Schema.A"] },
+    "Schema.A.Label": { kind: "property", id: "Schema.A.Label", valueClassNames: ["Schema.A"] },
     "calc:score": { kind: "calculated", id: "calc:score", type: stringType },
     "ext:note": { kind: "external", id: "ext:note", providerId: "ext", type: stringType },
   },
@@ -556,11 +521,14 @@ describe("RowDecoder", () => {
   });
 
   describe("createContentValuesProjector", () => {
+    const relatedPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
+      { sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" },
+    ];
+
     function createPropertyField(overrides: Partial<PropertyField> = {}): PropertyField {
       const props = {
         propertyClassName: "Schema.Base",
         propertyName: "Code",
-        pathFromTarget: [],
         ...overrides,
       } satisfies Partial<PropertyField>;
       return {
@@ -570,7 +538,6 @@ describe("RowDecoder", () => {
         category: { type: "category", id: "test" },
         readOnly: false,
         type: stringType,
-        pathCardinality: "one",
         valueClassNames: ["Schema.B", "Schema.C"],
         primaryClassNames: ["Schema.B", "Schema.C"],
         ...props,
@@ -616,7 +583,7 @@ describe("RowDecoder", () => {
     ] as const)(
       "scopes $pathCardinality related $propertyClassKind values without changing shared selectors",
       ({ pathCardinality, propertyClassKind }) => {
-        const path: RelationshipPath = [
+        const path: RelatedPropertyFieldAttributes["pathFromTarget"] = [
           {
             sourceClassName: "Schema.A",
             relationshipName: "Schema.Rel",
@@ -626,9 +593,7 @@ describe("RowDecoder", () => {
         ];
         const pathKey = serializeRelationshipPath({ path, includeInstanceFilters: true });
         const field = createPropertyField({
-          pathFromTarget: path,
-          pathCardinality,
-          propertyClassKind,
+          related: { pathFromTarget: path, pathCardinality, propertyClassKind },
           propertyClassName: propertyClassKind === "relationship" ? "Schema.Rel" : "Schema.Base",
           primaryClassNames: ["Schema.A"],
         });
@@ -666,13 +631,10 @@ describe("RowDecoder", () => {
       "preserves missing or empty to-many values: $value",
       ({ value }) => {
         const field = createPropertyField({
-          pathFromTarget: [
-            { sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" },
-          ],
-          pathCardinality: "many",
+          related: { pathFromTarget: relatedPath, pathCardinality: "many", propertyClassKind: "target" },
           primaryClassNames: ["Schema.A"],
         });
-        const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
+        const pathKey = serializeRelationshipPath({ path: relatedPath, includeInstanceFilters: true });
         const contentValues = createContentValuesProjector({
           descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
           fieldSelectorIds: { [field.id]: field.id },
@@ -691,8 +653,7 @@ describe("RowDecoder", () => {
 
     it("preserves an empty to-many value when the path has no related-instance entry", () => {
       const field = createPropertyField({
-        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
-        pathCardinality: "many",
+        related: { pathFromTarget: relatedPath, pathCardinality: "many", propertyClassKind: "target" },
         primaryClassNames: ["Schema.A"],
       });
       const contentValues = createContentValuesProjector({
@@ -708,11 +669,11 @@ describe("RowDecoder", () => {
 
     it("keeps an EC array property intact on a one-cardinality related path", () => {
       const field = createPropertyField({
-        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        related: { pathFromTarget: relatedPath, pathCardinality: "one", propertyClassKind: "target" },
         type: { kind: "array", elementType: stringType },
         primaryClassNames: ["Schema.A"],
       });
-      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
+      const pathKey = serializeRelationshipPath({ path: relatedPath, includeInstanceFilters: true });
       const value = ["first", "second"];
       const contentValues = createContentValuesProjector({
         descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
@@ -743,12 +704,16 @@ describe("RowDecoder", () => {
       },
     ])("projects one and many field shapes from shared loading with $description", ({ values, type }) => {
       const field = createPropertyField({
-        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        related: { pathFromTarget: relatedPath, pathCardinality: "one", propertyClassKind: "target" },
         primaryClassNames: ["Schema.A"],
         type,
       });
-      const manyField = { ...field, id: `${field.id}#many`, pathCardinality: "many" as const };
-      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget });
+      const manyField: PropertyField = {
+        ...field,
+        id: `${field.id}#many`,
+        related: { pathFromTarget: relatedPath, pathCardinality: "many", propertyClassKind: "target" },
+      };
+      const pathKey = serializeRelationshipPath({ path: relatedPath });
       const selectorValues = new Map([[field.id, values]]);
       const contentValues = createContentValuesProjector({
         descriptor: { sources: [], categories: {}, fields: { [field.id]: field, [manyField.id]: manyField } },
@@ -771,10 +736,10 @@ describe("RowDecoder", () => {
       { description: "an absent selector", value: undefined },
     ])("rejects multiple instances for a one field with $description", ({ value }) => {
       const field = createPropertyField({
-        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        related: { pathFromTarget: relatedPath, pathCardinality: "one", propertyClassKind: "target" },
         primaryClassNames: ["Schema.A"],
       });
-      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget });
+      const pathKey = serializeRelationshipPath({ path: relatedPath });
       expect(() =>
         createContentValuesProjector({
           descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },

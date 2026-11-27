@@ -10,7 +10,13 @@ import type { InstanceKey, RelationshipPath, Value } from "@itwin/presentation-s
 import type { CategoryDefinition } from "../../content/model/Category.js";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
 import type { ContentItem, RelatedInstanceEntry } from "../../content/model/ContentItem.js";
-import type { CalculatedField, ExternalField, Field, PropertyField } from "../../content/model/Field.js";
+import type {
+  CalculatedField,
+  ExternalField,
+  Field,
+  PropertyField,
+  RelatedPropertyFieldAttributes,
+} from "../../content/model/Field.js";
 import type { FieldValues, RelatedInstancesValues } from "../../content/transform/PropertyGrid.js";
 
 export function createPropertyField(id: string, overrides?: Partial<PropertyField>): PropertyField {
@@ -21,13 +27,21 @@ export function createPropertyField(id: string, overrides?: Partial<PropertyFiel
     type: { kind: "primitive", type: "String" },
     propertyClassName: "BisCore.Element",
     propertyName: id,
-    pathFromTarget: [],
-    pathCardinality: "one",
     valueClassNames: ["BisCore.Element"],
     primaryClassNames: ["BisCore.Element"],
     category: { type: "target" },
     ...overrides,
   };
+}
+
+/** A property field reached over a relationship path, as listed by a related instances entry. */
+export type RelatedPropertyField = PropertyField & Required<Pick<PropertyField, "related">>;
+
+export function createRelatedPropertyField(
+  id: string,
+  overrides: Partial<PropertyField> & Pick<RelatedPropertyField, "related">,
+): RelatedPropertyField {
+  return { ...createPropertyField(id), ...overrides };
 }
 
 export function createCalculatedField(id: string, overrides?: Partial<CalculatedField>): CalculatedField {
@@ -82,7 +96,7 @@ export function createItem(props: {
   });
 }
 
-export const aspectsPath: RelationshipPath = [
+export const aspectsPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
   {
     sourceClassName: "BisCore.Element",
     targetClassName: "BisCore.ElementMultiAspect",
@@ -90,7 +104,7 @@ export const aspectsPath: RelationshipPath = [
   },
 ];
 
-export const childrenPath: RelationshipPath = [
+export const childrenPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
   {
     sourceClassName: "BisCore.Element",
     targetClassName: "BisCore.Element",
@@ -99,16 +113,14 @@ export const childrenPath: RelationshipPath = [
 ];
 
 /** Properties of the same related class, `BisCore.ElementMultiAspect`, reached over `aspectsPath`. */
-export const aspectProp1 = createPropertyField("aspectProp1", {
+export const aspectProp1 = createRelatedPropertyField("aspectProp1", {
   propertyClassName: "BisCore.ElementMultiAspect",
-  pathFromTarget: aspectsPath,
-  pathCardinality: "many",
+  related: { pathFromTarget: aspectsPath, pathCardinality: "many", propertyClassKind: "target" },
   category: { type: "category", id: "aspects" },
 });
-export const aspectProp2 = createPropertyField("aspectProp2", {
+export const aspectProp2 = createRelatedPropertyField("aspectProp2", {
   propertyClassName: "BisCore.ElementMultiAspect",
-  pathFromTarget: aspectsPath,
-  pathCardinality: "many",
+  related: { pathFromTarget: aspectsPath, pathCardinality: "many", propertyClassKind: "target" },
   category: { type: "category", id: "aspects" },
 });
 

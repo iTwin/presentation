@@ -14,7 +14,13 @@ import { CAPTURE_FORMAT_VERSION, stableStringify } from "../Persistence.js";
 import { QueryScope, runInQueryContext, summarizeCanceledQueries } from "../QueryScope.js";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { ContentItem, ContentTarget, PropertyField, ReadonlyContentDescriptor } from "@itwin/presentation-content";
+import type {
+  ContentItem,
+  ContentTarget,
+  NonEmptyRelationshipPath,
+  PropertyField,
+  ReadonlyContentDescriptor,
+} from "@itwin/presentation-content";
 import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
 import type {
   AllElementsDescriptorScenario,
@@ -50,10 +56,10 @@ export type NewCapture = NewCaptureEnvelope &
 
 function captureNewItem(item: ContentItem, descriptor: ReadonlyContentDescriptor): CapturedNewItem {
   const fields = Object.values(descriptor.fields);
-  const relatedPaths = new Map<string, RelationshipPath>();
+  const relatedPaths = new Map<string, NonEmptyRelationshipPath>();
   for (const field of fields) {
-    if (field.kind === "property" && field.pathFromTarget.length > 0) {
-      relatedPaths.set(stableStringify(field.pathFromTarget), field.pathFromTarget as RelationshipPath);
+    if (field.kind === "property" && field.related) {
+      relatedPaths.set(stableStringify(field.related.pathFromTarget), [...field.related.pathFromTarget]);
     }
   }
   const related = [...relatedPaths.values()].map((path) => ({
@@ -67,7 +73,8 @@ function captureNewItem(item: ContentItem, descriptor: ReadonlyContentDescriptor
           fields
             .filter(
               (field): field is PropertyField =>
-                field.kind === "property" && stableStringify(field.pathFromTarget) === stableStringify(path),
+                field.kind === "property" &&
+                stableStringify(field.related?.pathFromTarget ?? []) === stableStringify(path),
             )
             .map((field) => [field.id, entry.getValue(field)]),
         ),

@@ -8,10 +8,11 @@ import { createContentItem } from "../../content/model/ContentItem.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
 
-import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
+import type { InstanceKey } from "@itwin/presentation-shared";
+import type { NonEmptyRelationshipPath } from "../../content/ContentTarget.js";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
 import type { ContentValues } from "../../content/model/ContentItem.js";
-import type { Field } from "../../content/model/Field.js";
+import type { Field, RelatedPropertyFieldAttributes } from "../../content/model/Field.js";
 
 function createTestDescriptor(fields: Field[]): ContentDescriptor {
   const fieldMap: Record<string, Field> = {};
@@ -30,15 +31,13 @@ function createTestPropertyField(id: string, overrides?: Partial<PropertyField>)
     type: { kind: "primitive", type: "String" },
     propertyClassName: "BisCore.Element",
     propertyName: id,
-    pathFromTarget: [],
     valueClassNames: ["BisCore.Element"],
     primaryClassNames: ["BisCore.Element"],
-    pathCardinality: "one",
     ...overrides,
   };
 }
 
-const testPath: RelationshipPath = [
+const testPath: NonEmptyRelationshipPath = [
   {
     sourceClassName: "BisCore.Element",
     targetClassName: "BisCore.ElementAspect",
@@ -82,15 +81,13 @@ describe("createContentItem", () => {
       const nameField = createTestPropertyField("BisCore.ElementAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: testPath, pathCardinality: "many", propertyClassKind: "target" },
         valueClassNames: ["BisCore.ElementAspect"],
       });
       const statusField = createTestPropertyField("BisCore.ElementAspect.Status(path)", {
         propertyName: "Status",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: testPath, pathCardinality: "many", propertyClassKind: "target" },
         valueClassNames: ["BisCore.ElementAspect"],
       });
       const descriptor = createTestDescriptor([nameField, statusField]);
@@ -118,8 +115,7 @@ describe("createContentItem", () => {
       const nameField = createTestPropertyField("BisCore.ElementAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: testPath, pathCardinality: "many", propertyClassKind: "target" },
       });
       const descriptor = createTestDescriptor([nameField]);
       const contentValues: ContentValues = {
@@ -144,8 +140,7 @@ describe("createContentItem", () => {
       const nameField = createTestPropertyField("BisCore.UniqueAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.UniqueAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "one",
+        related: { pathFromTarget: testPath, pathCardinality: "one", propertyClassKind: "target" },
       });
       const descriptor = createTestDescriptor([nameField]);
       const aspectKey: InstanceKey = { className: "BisCore.UniqueAspect", id: "0x20" };
@@ -166,8 +161,7 @@ describe("createContentItem", () => {
       const relField = createTestPropertyField("BisCore.ElementOwnsMultiAspects.Priority(path)", {
         propertyName: "Priority",
         propertyClassName: "BisCore.ElementOwnsMultiAspects",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: testPath, pathCardinality: "many", propertyClassKind: "relationship" },
       });
       const descriptor = createTestDescriptor([relField]);
       const aspectKey: InstanceKey = { className: "BisCore.ElementAspect", id: "0x10" };
@@ -189,8 +183,7 @@ describe("createContentItem", () => {
       const arrayField = createTestPropertyField("BisCore.ElementAspect.Tags(path)", {
         propertyName: "Tags",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "one",
+        related: { pathFromTarget: testPath, pathCardinality: "one", propertyClassKind: "target" },
         type: { kind: "array", elementType: { kind: "primitive", type: "String" } },
       });
       const descriptor = createTestDescriptor([arrayField]);
@@ -210,8 +203,7 @@ describe("createContentItem", () => {
       const nameField = createTestPropertyField("BisCore.ElementAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: testPath, pathCardinality: "many", propertyClassKind: "target" },
       });
       const descriptor = createTestDescriptor([nameField]);
       const contentValues: ContentValues = {
@@ -227,7 +219,7 @@ describe("createContentItem", () => {
     });
 
     it("returns an empty array for an unknown path", () => {
-      const otherPath: RelationshipPath = [
+      const otherPath: NonEmptyRelationshipPath = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.ElementUniqueAspect",
@@ -237,8 +229,7 @@ describe("createContentItem", () => {
       const nameField = createTestPropertyField("BisCore.ElementAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: testPath, pathCardinality: "many", propertyClassKind: "target" },
       });
       const descriptor = createTestDescriptor([nameField]);
       const contentValues: ContentValues = {
@@ -253,7 +244,7 @@ describe("createContentItem", () => {
     });
 
     it("returns undefined for a field not on the path", () => {
-      const otherPath: RelationshipPath = [
+      const otherPath: RelatedPropertyFieldAttributes["pathFromTarget"] = [
         {
           sourceClassName: "BisCore.Element",
           targetClassName: "BisCore.ElementUniqueAspect",
@@ -263,14 +254,12 @@ describe("createContentItem", () => {
       const nameField = createTestPropertyField("BisCore.ElementAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related: { pathFromTarget: testPath, pathCardinality: "many", propertyClassKind: "target" },
       });
       const unrelatedField = createTestPropertyField("BisCore.ElementUniqueAspect.Note", {
         propertyName: "Note",
         propertyClassName: "BisCore.ElementUniqueAspect",
-        pathFromTarget: otherPath,
-        pathCardinality: "one",
+        related: { pathFromTarget: otherPath, pathCardinality: "one", propertyClassKind: "target" },
       });
       const descriptor = createTestDescriptor([nameField, unrelatedField]);
       const contentValues: ContentValues = {
@@ -285,12 +274,33 @@ describe("createContentItem", () => {
       expect(entries[0].getValue(unrelatedField)).toBeUndefined();
     });
 
-    it("resolves to the same entries via a field and its equivalent path", () => {
+    it("returns undefined for a direct field", () => {
+      const directField = createTestPropertyField("BisCore.Element.CodeValue");
+      const descriptor = createTestDescriptor([directField]);
+      const contentValues: ContentValues = {
+        primaryKey: { className: "BisCore.Element", id: "0x1" },
+        values: { [directField.id]: "Code" },
+        relatedInstances: { [testPathKey]: [{ key: { className: "BisCore.ElementAspect", id: "0x10" } }] },
+      };
+
+      const item = createContentItem({ descriptor, contentValues });
+      const entries = item.getRelatedInstances({ pathFromTarget: testPath });
+
+      expect(entries).to.have.lengthOf(1);
+      expect(entries[0].getValue(directField)).toBeUndefined();
+      expect(item.getRelatedInstances(directField)).to.deep.equal([]);
+    });
+
+    it("resolves to the same entries via a property field and its equivalent path", () => {
+      const related: RelatedPropertyFieldAttributes = {
+        pathFromTarget: testPath,
+        pathCardinality: "many",
+        propertyClassKind: "target",
+      };
       const nameField = createTestPropertyField("BisCore.ElementAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
-        pathCardinality: "many",
+        related,
       });
       const descriptor = createTestDescriptor([nameField]);
       const aspectKey: InstanceKey = { className: "BisCore.ElementAspect", id: "0x10" };
@@ -311,8 +321,12 @@ describe("createContentItem", () => {
     });
 
     it("loads the same property through different filtered paths using distinct computed field IDs", () => {
-      const filteredPathA: RelationshipPath = [{ ...testPath[0], instanceFilter: { expression: "this.Kind = 1" } }];
-      const filteredPathB: RelationshipPath = [{ ...testPath[0], instanceFilter: { expression: "this.Kind = 2" } }];
+      const filteredPathA: RelatedPropertyFieldAttributes["pathFromTarget"] = [
+        { ...testPath[0], instanceFilter: { expression: "this.Kind = 1" } },
+      ];
+      const filteredPathB: RelatedPropertyFieldAttributes["pathFromTarget"] = [
+        { ...testPath[0], instanceFilter: { expression: "this.Kind = 2" } },
+      ];
       const filteredPathAKey = serializeRelationshipPath({ path: filteredPathA, includeInstanceFilters: true });
       const filteredPathBKey = serializeRelationshipPath({ path: filteredPathB, includeInstanceFilters: true });
       const nameFieldA = createTestPropertyField(
@@ -324,8 +338,7 @@ describe("createContentItem", () => {
         {
           propertyName: "Name",
           propertyClassName: "BisCore.ElementAspect",
-          pathFromTarget: filteredPathA,
-          pathCardinality: "many",
+          related: { pathFromTarget: filteredPathA, pathCardinality: "many", propertyClassKind: "target" },
         },
       );
       const nameFieldB = createTestPropertyField(
@@ -337,8 +350,7 @@ describe("createContentItem", () => {
         {
           propertyName: "Name",
           propertyClassName: "BisCore.ElementAspect",
-          pathFromTarget: filteredPathB,
-          pathCardinality: "many",
+          related: { pathFromTarget: filteredPathB, pathCardinality: "many", propertyClassKind: "target" },
         },
       );
       const descriptor = createTestDescriptor([nameFieldA, nameFieldB]);
@@ -374,7 +386,7 @@ describe("createContentItem", () => {
       const unrelatedField = createTestPropertyField("BisCore.ElementAspect.Name", {
         propertyName: "Name",
         propertyClassName: "BisCore.ElementAspect",
-        pathFromTarget: testPath,
+        related: { pathFromTarget: testPath, pathCardinality: "one", propertyClassKind: "target" },
       });
 
       const item = createContentItem({ descriptor, contentValues });

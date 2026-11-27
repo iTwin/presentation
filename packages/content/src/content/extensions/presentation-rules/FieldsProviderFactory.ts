@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
-import { resolveEffectiveSourceClass, stableStringify } from "../../InternalUtils.js";
+import { resolveEffectiveSourceClass, stableStringify, toNonEmptyRelationshipPath } from "../../InternalUtils.js";
 import { hashString } from "../../model/Utils.js";
 import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
 import { checkRequiredSchemas, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
@@ -306,7 +306,7 @@ async function mapRelatedPropertiesSpec(props: {
       : undefined;
 
   return {
-    path,
+    path: toNonEmptyRelationshipPath(path),
     properties: [
       {
         stepIndex: steps.length - 1,
